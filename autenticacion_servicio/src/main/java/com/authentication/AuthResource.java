@@ -1,4 +1,4 @@
-package uja.authentication;
+package com.authentication;
 
 import io.smallrye.jwt.build.Jwt;
 import jakarta.ws.rs.*;
