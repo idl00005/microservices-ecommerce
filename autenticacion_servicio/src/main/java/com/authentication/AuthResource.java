@@ -20,7 +20,7 @@ public class AuthResource {
         if ("user".equals(credentials.username()) && "password".equals(credentials.password())) {
             String token = Jwt.issuer("https://example.com")
                     .subject(credentials.username())
-                    .groups(Set.of("user"))
+                    .claim("roles", Set.of("user"))  // Asigna el rol "user"
                     .expiresIn(Duration.ofHours(1))
                     .sign();
             return Response.ok(new TokenResponse(token)).build();

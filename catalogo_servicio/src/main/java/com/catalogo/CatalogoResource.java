@@ -11,7 +11,6 @@ import java.util.List;
 public class CatalogoResource {
 
     @GET
-    @Path("/login")
     @RolesAllowed("user") // Solo accesible con un token válido
     public List<String> getProducts() {
         return List.of("Producto 1", "Producto 2", "Producto 3");
