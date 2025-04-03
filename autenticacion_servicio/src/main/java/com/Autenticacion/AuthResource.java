@@ -29,8 +29,8 @@ public class AuthResource {
         if (user != null && user.getPassword().equals(credentials.password())) {
             // Generar el token JWT con el rol extraído de la base de datos
             String token = Jwt.issuer("https://example.com")
-                    .subject(user.getUsername())
-                    .claim("roles", Collections.singletonList(user.getRole())) // El rol del usuario
+                    .subject(user.getCorreo())
+                    .claim("roles", Collections.singletonList(user.getRol()))
                     .expiresIn(Duration.ofHours(1))
                     .sign();
 

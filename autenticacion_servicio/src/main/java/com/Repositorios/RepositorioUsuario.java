@@ -14,7 +14,7 @@ public class RepositorioUsuario implements PanacheRepository<Usuario> {
     EntityManager em;
 
     public Usuario findByUsername(String username) {
-        return find("username", username).firstResult();
+        return find("correo", username).firstResult();
     }
 
     // Guardar uno o varios usuarios
@@ -24,6 +24,4 @@ public class RepositorioUsuario implements PanacheRepository<Usuario> {
             em.persist(usuario);
         }
     }
-
-
 }

@@ -27,16 +27,10 @@ public class ApplicationInitializer {
             logger.info("No se encontraron usuarios. Creando usuarios iniciales...");
 
             // Crear usuario 1
-            Usuario admin = new Usuario();
-            admin.setUsername("admin");
-            admin.setPassword("admin123"); // En el futuro, encriptar la contraseña
-            admin.setRole("admin");
+            Usuario admin = new Usuario("Ignacio","Delgado","idl00005@red.ujaen.es","123321123","1234","admin");
 
             // Crear usuario 2
-            Usuario user = new Usuario();
-            user.setUsername("user");
-            user.setPassword("user123");
-            user.setRole("user");
+            Usuario user = new Usuario("Pedro","Rodríguez","pdr00033@red.ujaen.es","123321123","1234","user");
 
             // Usar el método `save` del repositorio para guardar los usuarios
             usuarioRepository.save(admin, user);

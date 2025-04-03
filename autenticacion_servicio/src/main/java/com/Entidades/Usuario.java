@@ -11,26 +11,57 @@ public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String username;
-    // @TODO Encriptar la contraseña
+
+    private String nombre;
+    private String apellidos;
+    private String correo;
+    private String telefono;
     private String password;
-    private String role;
+    private String rol;
 
-    // Getters y setters
-    public Long getId() {
-        return id;
+    public Usuario() {
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public Usuario(String nombre, String apellidos, String correo, String telefono, String password, String rol) {
+        this.nombre = nombre;
+        this.apellidos = apellidos;
+        this.correo = correo;
+        this.telefono = telefono;
+        this.password = password;
+        this.rol = rol;
     }
 
-    public String getUsername() {
-        return username;
+    // Getters y Setters
+    public String getNombre() {
+        return nombre;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getApellidos() {
+        return apellidos;
+    }
+
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
+    }
+
+    public String getCorreo() {
+        return correo;
+    }
+
+    public void setCorreo(String correo) {
+        this.correo = correo;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
     }
 
     public String getPassword() {
@@ -41,11 +72,31 @@ public class Usuario {
         this.password = password;
     }
 
-    public String getRole() {
-        return role;
+    public String getRol() {
+        return rol;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setRol(String rol) {
+        this.rol = rol;
+    }
+
+    // Método toString (opcional, dependiendo de necesidades de depuración)
+    @Override
+    public String toString() {
+        return "Usuario{" +
+                "nombre='" + nombre + '\'' +
+                ", apellidos='" + apellidos + '\'' +
+                ", correo='" + correo + '\'' +
+                ", telefono='" + telefono + '\'' +
+                ", rol='" + rol + '\'' +
+                '}';
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getId() {
+        return id;
     }
 }
