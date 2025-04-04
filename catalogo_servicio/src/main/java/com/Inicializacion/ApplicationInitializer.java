@@ -1,11 +1,13 @@
 package com.Inicializacion;
 
 import com.Entidades.Producto;
+import com.Repositorios.RepositorioProducto;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 
@@ -14,97 +16,154 @@ import java.math.BigDecimal;
 public class ApplicationInitializer {
 
     @Inject
-    EntityManager entityManager; // Inyección para interactuar con la base de datos
+    RepositorioProducto repositorioProducto;
+
+    @Inject
+    ObjectMapper objectMapper; // Jackson para construir detalles JSON
 
     @PostConstruct
     @Transactional // Indica que el método se ejecuta dentro de una transacción
     public void init() {
-        // Lista de productos reales de electrónica con el constructor de Producto
-        persistirProducto(new Producto(
-                "Smartphone Samsung Galaxy S21",
-                "Teléfono móvil de última generación con cámara de alta resolución.",
-                BigDecimal.valueOf(799.99),
-                50,
-                "{\"color\": \"Negro\", \"almacenamiento\": \"128GB\", \"procesador\": \"Exynos 2100\"}"
-        ));
+        if(repositorioProducto.count() == 0) {
+            agregarProducto(new Producto("Smartphone Samsung Galaxy S21",
+                    "Teléfono móvil de última generación con cámara de alta resolución.",
+                    new BigDecimal("799.99"),
+                    100,
+                    createJsonNode("color:Negro", "almacenamiento:128GB", "procesador:Exynos 2100")));
 
-        persistirProducto(new Producto(
-                "Laptop Dell XPS 13",
-                "Ultrabook de alto rendimiento con pantalla InfinityEdge.",
-                BigDecimal.valueOf(1199.99),
-                30,
-                "{\"procesador\": \"Intel Core i7\", \"RAM\": \"16GB\", \"almacenamiento\": \"512GB SSD\"}"
-        ));
+            agregarProducto(new Producto("iPhone 13",
+                    "El último iPhone, con un rendimiento increíble y sistema operativo iOS.",
+                    new BigDecimal("999.99"),
+                    50,
+                    createJsonNode("color:Blanco", "almacenamiento:256GB", "procesador:A15 Bionic")));
 
-        persistirProducto(new Producto(
-                "Smart TV LG OLED55",
-                "Televisor OLED de 55 pulgadas con resolución 4K.",
-                BigDecimal.valueOf(1399.99),
-                20,
-                "{\"pantalla\": \"55 pulgadas\", \"resolucion\": \"4K\", \"sistema\": \"WebOS\"}"
-        ));
+            agregarProducto(new Producto("Televisor LG 65OLED",
+                    "Televisor OLED 4K con colores vibrantes y negros profundos.",
+                    new BigDecimal("1499.99"),
+                    30,
+                    createJsonNode("pantalla:65 pulgadas", "resolución:4K", "tecnología:OLED")));
 
-        persistirProducto(new Producto(
-                "Auriculares Sony WH-1000XM4",
-                "Auriculares inalámbricos con cancelación de ruido de alta calidad.",
-                BigDecimal.valueOf(349.99),
-                100,
-                "{\"color\": \"Plateado\", \"autonomia\": \"30 horas\", \"conectividad\": \"Bluetooth 5.0\"}"
-        ));
+            agregarProducto(new Producto("MacBook Pro M2",
+                    "Potente laptop con procesador Apple M2 y diseño ultradelgado.",
+                    new BigDecimal("1999.99"),
+                    20,
+                    createJsonNode("almacenamiento:512GB", "procesador:M2", "ram:16GB")));
 
-        persistirProducto(new Producto(
-                "Cámara Canon EOS R5",
-                "Cámara profesional de fotograma completo con capacidades de video 8K.",
-                BigDecimal.valueOf(3899.99),
-                10,
-                "{\"resolucion\": \"45MP\", \"video\": \"8K UHD\", \"almacenamiento\": \"CFExpress\"}"
-        ));
+            agregarProducto(new Producto("Cámara Web Logitech C920",
+                    "Una de las cámaras web más populares para streaming y videoconferencia.",
+                    new BigDecimal("99.99"),
+                    200,
+                    createJsonNode("resolución:1080p", "fps:60", "conexión:HDMI")));
 
-        persistirProducto(new Producto(
-                "Reloj Inteligente Apple Watch Series 7",
-                "Último modelo del Apple Watch con características avanzadas de salud y fitness.",
-                BigDecimal.valueOf(429.99),
-                70,
-                "{\"tamaño\": \"45mm\", \"color\": \"Rojo\", \"sistema\": \"watchOS\"}"
-        ));
+            agregarProducto(new Producto("Disco Duro Seagate 1TB",
+                    "Almacenamiento confiable para tus documentos y multimedia.",
+                    new BigDecimal("59.99"),
+                    500,
+                    createJsonNode("almacenamiento:1TB", "tecnología:HDD", "velocidad:7200RPM")));
 
-        persistirProducto(new Producto(
-                "Disco Duro Externo Seagate 2TB",
-                "Almacenamiento externo de alta capacidad para copias de seguridad.",
-                BigDecimal.valueOf(89.99),
-                150,
-                "{\"capacidad\": \"2TB\", \"conexion\": \"USB 3.0\", \"color\": \"Negro\"}"
-        ));
+            agregarProducto(new Producto("Auriculares Sony WH-1000XM4",
+                    "Auriculares inalámbricos con cancelación activa de ruido.",
+                    new BigDecimal("349.99"),
+                    70,
+                    createJsonNode("conectividad:Bluetooth", "duración batería:40 horas")));
 
-        persistirProducto(new Producto(
-                "Teclado Mecánico Razer BlackWidow",
-                "Teclado mecánico para gaming con iluminación RGB.",
-                BigDecimal.valueOf(129.99),
-                60,
-                "{\"switches\": \"Razer Green\", \"conectividad\": \"Cable USB\", \"retroiluminacion\": \"RGB\"}"
-        ));
+            agregarProducto(new Producto("Monitor Dell UltraSharp 27",
+                    "Monitor profesional con colores precisos y tecnología IPS.",
+                    new BigDecimal("499.99"),
+                    40,
+                    createJsonNode("tecnología:IPS", "resolución:1440p", "tamaño:27 pulgadas")));
 
-        persistirProducto(new Producto(
-                "Mouse Logitech MX Master 3",
-                "Ratón inalámbrico ergonómico de alta precisión.",
-                BigDecimal.valueOf(99.99),
-                120,
-                "{\"dpi\": \"4000\", \"conexiones\": \"Bluetooth, USB\", \"autonomia\": \"70 días\"}"
-        ));
+            agregarProducto(new Producto("Power Bank Anker 30000mAh",
+                    "Batería portátil de gran capacidad para cargar varios dispositivos.",
+                    new BigDecimal("79.99"),
+                    150,
+                    createJsonNode("capacidad:30000mAh", "puertos:USB-C y USB-A", "peso:600g")));
 
-        persistirProducto(new Producto(
-                "Consola Sony PlayStation 5",
-                "Consola de última generación con capacidades avanzadas de gráficos y rendimiento.",
-                BigDecimal.valueOf(499.99),
-                15,
-                "{\"almacenamiento\": \"825GB SSD\", \"resolucion\": \"4K HDR\", \"color\": \"Blanco\"}"
-        ));
+            agregarProducto(new Producto("Laptop MSI Gaming",
+                    "Laptop diseñada para gamers con alto rendimiento.",
+                    new BigDecimal("1499.99"),
+                    25,
+                    createJsonNode("procesador:Ryzen 7", "almacenamiento:1TB SSD", "ram:16GB")));
 
-        System.out.println("Se han insertado productos reales de electrónica en la base de datos utilizando el constructor.");
+            agregarProducto(new Producto("Router TP-Link Archer AX50",
+                    "Router Wi-Fi 6 para una conexión más rápida y estable.",
+                    new BigDecimal("129.99"),
+                    100,
+                    createJsonNode("velocidad:600 Mbps", "tipo:Wi-Fi 6", "puertos:RJ45")));
+
+            agregarProducto(new Producto("Impresora Láser HP LaserJet Pro",
+                    "Impresora láser rápida con alta calidad de impresión.",
+                    new BigDecimal("299.99"),
+                    40,
+                    createJsonNode("velocidad:35 ppm", "resolución:1200 DPI", "tecnología:Láser")));
+
+            agregarProducto(new Producto("Tablet Samsung Galaxy Tab A7",
+                    "Tablet económica con excelentes prestaciones multimedia.",
+                    new BigDecimal("179.99"),
+                    120,
+                    createJsonNode("almacenamiento:64GB", "ram:4GB", "procesador:MediaTek Helio P22")));
+
+            agregarProducto(new Producto("Teclado Bluetooth Logitech K380",
+                    "Teclado inalámbrico compacto compatible con múltiples dispositivos.",
+                    new BigDecimal("49.99"),
+                    200,
+                    createJsonNode("tamaño:10 pulgadas", "conectividad:Bluetooth", "batería:Recargable")));
+
+            agregarProducto(new Producto("Reloj Inteligente Fitbit Versa 3",
+                    "Reloj deportivo con funciones avanzadas de salud y fitness.",
+                    new BigDecimal("229.99"),
+                    80,
+                    createJsonNode("sensores:Corazón y Oxígeno", "batería:7 días", "resistencia:5ATM")));
+
+            agregarProducto(new Producto("SSD Samsung 980 Pro 2TB",
+                    "Unidad SSD de alto rendimiento para PC y consolas.",
+                    new BigDecimal("349.99"),
+                    60,
+                    createJsonNode("almacenamiento:2TB", "tipo:SSD", "interfaz:NVMe")));
+
+            agregarProducto(new Producto("Smartphone Xiaomi Redmi Note 11",
+                    "Smartphone económico con excelentes especificaciones.",
+                    new BigDecimal("249.99"),
+                    150,
+                    createJsonNode("tamaño pantalla:6.5 pulgadas", "batería:5000mAh", "ram:6GB")));
+
+            agregarProducto(new Producto("Cargador Rápido Anker PowerPort",
+                    "Cargador rápido compatible con múltiples dispositivos.",
+                    new BigDecimal("59.99"),
+                    250,
+                    createJsonNode("conectividad:USB-C", "potencia:100W", "peso:200g")));
+
+            agregarProducto(new Producto("Proyector Epson Home Cinema",
+                    "Proyector LED Full HD ideal para cine en casa.",
+                    new BigDecimal("799.99"),
+                    30,
+                    createJsonNode("resolución:1080p", "fps:120", "tecnología:LED")));
+
+            agregarProducto(new Producto("Monitor Ultrawide LG 34WN80C-B",
+                    "Monitor ultrapanorámico de 34 pulgadas ideal para productividad.",
+                    new BigDecimal("699.99"),
+                    45,
+                    createJsonNode("resolución:2K", "tamaño:34 pulgadas", "relación aspecto:21:9")));
+            System.out.println("Se han insertado los productos en la base de datos.");
+        }
     }
 
-    // Método auxiliar para persistir un Producto
-    private void persistirProducto(Producto producto) {
-        entityManager.persist(producto);
+    @Transactional
+    protected void agregarProducto(Producto producto) {
+        // Persistimos el producto a través del repositorio
+        repositorioProducto.persist(producto);
+    }
+
+    // Método para construir un ObjectNode con atributos personalizados
+    private ObjectNode createJsonNode(String... atributos) {
+        ObjectNode detalles = objectMapper.createObjectNode();
+        for (String atributo : atributos) {
+            // Dividimos el atributo en clave y valor
+            String[] partes = atributo.split(":");
+            if (partes.length == 2) {
+                detalles.put(partes[0].trim(), partes[1].trim());
+            }
+        }
+        return detalles;
     }
 }

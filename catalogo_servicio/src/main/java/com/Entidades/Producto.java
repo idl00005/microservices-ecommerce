@@ -1,6 +1,12 @@
 package com.Entidades;
 
+import com.Otros.JsonbConverter;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Type;
+
+
 import java.math.BigDecimal;
 
 @Entity
@@ -15,12 +21,14 @@ public class Producto {
     private BigDecimal precio;
     private Integer stock;
 
-    @Column(name = "detalles", columnDefinition = "JSONB")
-    private String detalles;
+    @Type(JsonBinaryType.class) // Esta anotación es crucial
+    @Column(columnDefinition = "jsonb")
+    private JsonNode detalles;
 
     public Producto() {
     }
-    public Producto(String nombre, String descripcion, BigDecimal precio, Integer stock, String detalles) {
+
+    public Producto(String nombre, String descripcion, BigDecimal precio, Integer stock, JsonNode detalles) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
@@ -69,11 +77,11 @@ public class Producto {
         this.stock = stock;
     }
 
-    public String getDetalles() {
+    public JsonNode getDetalles() {
         return detalles;
     }
 
-    public void setDetalles(String detalles) {
+    public void setDetalles(JsonNode detalles) {
         this.detalles = detalles;
     }
 }
