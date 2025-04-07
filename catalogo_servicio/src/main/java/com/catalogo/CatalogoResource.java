@@ -1,10 +1,10 @@
 package com.catalogo;
 
 import com.Entidades.Producto;
+import com.Otros.ResponseMessage;
 import com.Repositorios.RepositorioProducto;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject; // Para inyectar el repositorio
-import jakarta.persistence.Entity;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -34,12 +34,18 @@ public class CatalogoResource {
         try {
             productoRepository.add(producto);
 
+            // Crear una respuesta estructurada como un objeto JSON
+            ResponseMessage responseMessage = new ResponseMessage("Producto añadido con éxito.", producto);
+
             return Response.status(Response.Status.CREATED)
-                    .entity("Producto añadido con éxito.")
+                    .entity(responseMessage)  // Devolvemos el objeto que será convertido a JSON
                     .build();
         } catch (Exception e) {
+            // Si hay un error, devolvemos una respuesta con mensaje de error
+            ResponseMessage responseMessage = new ResponseMessage("Error al añadir el producto: " + e.getMessage(), null);
+
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al añadir el producto: " + e.getMessage())
+                    .entity(responseMessage)  // Devolvemos el objeto con el mensaje de error
                     .build();
         }
     }

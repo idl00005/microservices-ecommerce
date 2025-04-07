@@ -2,137 +2,189 @@ package com.catalogo;
 
 import com.Entidades.Producto;
 import com.Repositorios.RepositorioProducto;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 
-import java.util.Arrays;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-public class CatalogoTest {
+class CatalogoTest {
 
     @InjectMocks
-    CatalogoResource catalogoResource; // Clase que vamos a probar
+    CatalogoResource catalogoResource;
 
     @Mock
-    RepositorioProducto productoRepository; // Mock del repositorio
+    RepositorioProducto mockRepositorio;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this); // Inicializar los mocks
+    void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    private Producto crearProductoEjemplo() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode detalles = mapper.createObjectNode();
+        detalles.put("color", "verde");
+
+        Producto producto = new Producto();
+        producto.setNombre("Camiseta");
+        producto.setDescripcion("Camiseta de algodón");
+        producto.setPrecio(new BigDecimal("29.99"));
+        producto.setStock(10);
+        producto.setDetalles(detalles);
+
+        return producto;
     }
 
     @Test
     void testGetProducts() {
-        // Datos de prueba
-        Producto producto1 = new Producto();
-        producto1.setId(1L);
-        producto1.setNombre("Producto 1");
-        producto1.setDescripcion("Descripción 1");
+        Producto producto = crearProductoEjemplo();
+        when(mockRepositorio.listAll()).thenReturn(List.of(producto));
 
-        Producto producto2 = new Producto();
-        producto2.setId(2L);
-        producto2.setNombre("Producto 2");
-        producto2.setDescripcion("Descripción 2");
-
-        List<Producto> productosEsperados = Arrays.asList(producto1, producto2);
-
-        // Simular el comportamiento del repositorio
-        when(productoRepository.listAll()).thenReturn(productosEsperados);
-
-        // Llamar al método
         List<Producto> resultado = catalogoResource.getProducts();
 
-        // Verificar el resultado
-        assertEquals(2, resultado.size());
-        assertEquals("Producto 1", resultado.get(0).getNombre());
-        assertEquals("Producto 2", resultado.get(1).getNombre());
+        assertEquals(1, resultado.size());
+        assertEquals("Camiseta", resultado.get(0).getNombre());
     }
 
     @Test
-    void testAddProduct() {
-        // Simular producto de entrada
-        Producto productoNuevo = new Producto();
-        productoNuevo.setNombre("Nuevo Producto");
-        productoNuevo.setDescripcion("Descripción del nuevo producto");
+    void testAddProduct_Success() {
+        Producto producto = crearProductoEjemplo();
 
-        // No necesitamos simular nada en el repositorio, ya que no devuelve resultado
+        // No se necesita mockear 'add' si no lanza excepción
+        Response response = catalogoResource.addProduct(producto);
 
-        // Llamar al método
-        Response response = catalogoResource.addProduct(productoNuevo);
-
-        // Verificar el resultado
         assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
         assertEquals("Producto añadido con éxito.", response.getEntity());
+        verify(mockRepositorio).add(producto);
     }
 
     @Test
-    void testUpdateProduct_Success() {
-        // Producto actualizado
-        Producto productoActualizado = new Producto();
-        productoActualizado.setNombre("Producto Actualizado");
-        productoActualizado.setDescripcion("Descripción Actualizada");
+    void testAddProduct_Error() {
+        Producto producto = crearProductoEjemplo();
+        doThrow(new RuntimeException("Falló")).when(mockRepositorio).add(producto);
 
-        // Simular que el producto existe y se actualiza correctamente
-        when(productoRepository.updateProduct(1L, "Producto Actualizado", "Descripción Actualizada", null, null, null))
-                .thenReturn(true);
+        Response response = catalogoResource.addProduct(producto);
 
-        // Llamar al método
-        Response response = catalogoResource.updateProduct(1L, productoActualizado);
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("Error al añadir el producto"));
+    }
 
-        // Verificar el resultado
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        assertEquals("Producto actualizado con éxito.", response.getEntity());
+    @Test
+    void testUpdateProduct() {
+        // Crear producto original
+        Producto original = new Producto("Original", "Desc", new BigDecimal("10.00"), 5, null);
+        original.setId(1L);
+
+        // Guardar en una lista simulando la base de datos
+        List<Producto> fakeDB = new ArrayList<>();
+        fakeDB.add(original);
+
+        // Simular comportamiento del repositorio
+        when(mockRepositorio.findById(1L)).thenReturn(original);
+        when(mockRepositorio.updateProduct(eq(1L), anyString(), anyString(), any(), any(), any()))
+                .thenAnswer(invocation -> {
+                    original.setNombre("Actualizado");
+                    original.setDescripcion("Nueva descripción");
+                    original.setPrecio(new BigDecimal("20.00"));
+                    original.setStock(10);
+                    return true;
+                });
+
+        when(mockRepositorio.listAll()).thenReturn(fakeDB);
+
+        // Llamar a la actualización
+        Producto actualizado = new Producto("Actualizado", "Nueva descripción", new BigDecimal("20.00"), 10, null);
+        Response updateResponse = catalogoResource.updateProduct(1L, actualizado);
+        assertEquals(Response.Status.OK.getStatusCode(), updateResponse.getStatus());
+
+        // Llamar al get y comprobar los valores cambiados
+        List<Producto> productos = catalogoResource.getProducts();
+        Producto producto = productos.get(0);
+
+        assertEquals("Actualizado", producto.getNombre());
+        assertEquals("Nueva descripción", producto.getDescripcion());
+        assertEquals(new BigDecimal("20.00"), producto.getPrecio());
+        assertEquals(10, producto.getStock());
     }
 
     @Test
     void testUpdateProduct_NotFound() {
-        // Producto actualizado
-        Producto productoActualizado = new Producto();
-        productoActualizado.setNombre("Producto Actualizado");
-        productoActualizado.setDescripcion("Descripción Actualizada");
+        Producto producto = crearProductoEjemplo();
+        when(mockRepositorio.updateProduct(anyLong(), any(), any(), any(), any(), any())).thenReturn(false);
 
-        // Simular que el producto no existe
-        when(productoRepository.updateProduct(1L, "Producto Actualizado", "Descripción Actualizada", null, null, null))
-                .thenReturn(false);
+        Response response = catalogoResource.updateProduct(1L, producto);
 
-        // Llamar al método
-        Response response = catalogoResource.updateProduct(1L, productoActualizado);
-
-        // Verificar el resultado
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
-        assertEquals("Producto con ID 1 no encontrado.", response.getEntity());
+        assertTrue(response.getEntity().toString().contains("no encontrado"));
     }
 
     @Test
-    void testDeleteProduct_Success() {
-        // Simular que el producto existe y es eliminado
-        when(productoRepository.deleteById(1L)).thenReturn(true);
+    void testUpdateProduct_Error() {
+        Producto producto = crearProductoEjemplo();
+        when(mockRepositorio.updateProduct(anyLong(), any(), any(), any(), any(), any()))
+                .thenThrow(new RuntimeException("Error interno"));
 
-        // Llamar al método
-        Response response = catalogoResource.deleteProduct(1L);
+        Response response = catalogoResource.updateProduct(1L, producto);
 
-        // Verificar el resultado
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        assertEquals("Producto eliminado con éxito.", response.getEntity());
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("Error al actualizar el producto"));
+    }
+
+    @Test
+    void testDeleteProduct() {
+        // Producto simulado en la "base de datos"
+        Producto producto = new Producto("Eliminar", "Producto a borrar", new BigDecimal("30.00"), 1, null);
+        producto.setId(1L);
+        List<Producto> fakeDB = new ArrayList<>();
+        fakeDB.add(producto);
+
+        // Simular findById y delete
+        when(mockRepositorio.findById(1L)).thenReturn(producto);
+        doAnswer(invocation -> {
+            fakeDB.remove(producto);
+            return null;
+        }).when(mockRepositorio).delete(producto);
+
+        when(mockRepositorio.listAll()).thenAnswer(invocation -> fakeDB);
+
+        // Borrar producto
+        Response deleteResponse = catalogoResource.deleteProduct(1L);
+        assertEquals(Response.Status.OK.getStatusCode(), deleteResponse.getStatus());
+
+        // Comprobar que ya no está
+        List<Producto> productosRestantes = catalogoResource.getProducts();
+        assertTrue(productosRestantes.isEmpty());
     }
 
     @Test
     void testDeleteProduct_NotFound() {
-        // Simular que el producto no existe
-        when(productoRepository.deleteById(1L)).thenReturn(false);
+        when(mockRepositorio.findById(99L)).thenReturn(null);
 
-        // Llamar al método
+        Response response = catalogoResource.deleteProduct(99L);
+
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("no encontrado"));
+    }
+
+    @Test
+    void testDeleteProduct_Error() {
+        when(mockRepositorio.findById(1L)).thenReturn(crearProductoEjemplo());
+        doThrow(new RuntimeException("Error")).when(mockRepositorio).delete(any());
+
         Response response = catalogoResource.deleteProduct(1L);
 
-        // Verificar el resultado
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
-        assertEquals("Producto con ID 1 no encontrado.", response.getEntity());
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("Error al eliminar el producto"));
     }
+
 }
+
