@@ -1,7 +1,6 @@
 package com.catalogo;
 
 import com.Entidades.Producto;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
@@ -15,8 +14,6 @@ import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
 class CatalogoTestIntegracion {
-
-    ObjectMapper objectMapper = new ObjectMapper();
 
     private Producto crearProductoTest() {
         return new Producto("Zapato", "Zapato deportivo", new BigDecimal("59.99"), 10, null);

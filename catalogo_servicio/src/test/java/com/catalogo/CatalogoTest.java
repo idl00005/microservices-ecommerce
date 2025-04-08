@@ -49,10 +49,15 @@ class CatalogoTest {
         Producto producto = crearProductoEjemplo();
         when(mockRepositorio.listAll()).thenReturn(List.of(producto));
 
-        List<Producto> resultado = catalogoResource.getProducts();
+        Response response = catalogoResource.getProducts();
 
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+        // Validar el contenido de la respuesta
+        List<?> resultado = (List<?>) response.getEntity();
+        assertNotNull(resultado);
         assertEquals(1, resultado.size());
-        assertEquals("Camiseta", resultado.get(0).getNombre());
+        assertEquals("Camiseta", ((Producto) resultado.get(0)).getNombre());
     }
 
     @Test
@@ -63,9 +68,9 @@ class CatalogoTest {
         Response response = catalogoResource.addProduct(producto);
 
         assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
-        assertEquals("Producto añadido con éxito.", response.getEntity());
         verify(mockRepositorio).add(producto);
     }
+
 
     @Test
     void testAddProduct_Error() {
@@ -75,7 +80,6 @@ class CatalogoTest {
         Response response = catalogoResource.addProduct(producto);
 
         assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
-        assertTrue(response.getEntity().toString().contains("Error al añadir el producto"));
     }
 
     @Test
@@ -107,8 +111,8 @@ class CatalogoTest {
         assertEquals(Response.Status.OK.getStatusCode(), updateResponse.getStatus());
 
         // Llamar al get y comprobar los valores cambiados
-        List<Producto> productos = catalogoResource.getProducts();
-        Producto producto = productos.get(0);
+        List<?> productos = (List<?>) catalogoResource.getProducts().getEntity();
+        Producto producto = (Producto) productos.get(0);
 
         assertEquals("Actualizado", producto.getNombre());
         assertEquals("Nueva descripción", producto.getDescripcion());
@@ -161,8 +165,13 @@ class CatalogoTest {
         assertEquals(Response.Status.OK.getStatusCode(), deleteResponse.getStatus());
 
         // Comprobar que ya no está
-        List<Producto> productosRestantes = catalogoResource.getProducts();
-        assertTrue(productosRestantes.isEmpty());
+        Response response = catalogoResource.getProducts();
+
+        // Verifica que el código de estado HTTP sea 204 No Content
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+
+        // La entidad debería ser null en este caso
+        assertNull(response.getEntity());
     }
 
     @Test

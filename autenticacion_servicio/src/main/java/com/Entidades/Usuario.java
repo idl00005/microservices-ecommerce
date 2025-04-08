@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.*;
 
 @Entity
 public class Usuario {
@@ -12,12 +13,28 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "El nombre no puede estar vacío.") // No permite nulo ni cadenas vacías
+    @Size(max = 50, message = "El nombre no puede superar los 50 caracteres.") // Longitud máxima de 50 caracteres
     private String nombre;
+
+    @NotBlank(message = "El apellido no puede estar vacío.")
+    @Size(max = 50, message = "El apellido no puede superar los 50 caracteres.")
     private String apellidos;
+
+    @NotBlank(message = "El correo no puede estar vacío.")
+    @Email(message = "El correo debe tener un formato válido.") // Validación del formato de correo electrónico
     private String correo;
+
+    @Pattern(regexp = "\\d{9,15}", message = "El teléfono debe tener entre 10 y 15 dígitos.") // Solo dígitos y una longitud específica
     private String telefono;
+
+    @NotBlank(message = "La contraseña no puede estar vacía.")
+    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres.") // Longitud mínima de 8 caracteres
     private String password;
+
+    @NotBlank(message = "El rol no puede estar vacío.") // Obligatorio
     private String rol;
+
 
     public Usuario() {
     }

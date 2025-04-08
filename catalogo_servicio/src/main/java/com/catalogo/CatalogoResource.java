@@ -23,9 +23,17 @@ public class CatalogoResource {
 
     @GET
     @RolesAllowed({"admin","user"}) // Solo accesible con un token válido
-    public List<Producto> getProducts() {
-        // Retorna todos los productos desde la base de datos
-        return productoRepository.listAll();
+    public Response getProducts() {
+        List<Producto> productos = productoRepository.listAll();
+
+        if (productos.isEmpty()) {
+            // Si no hay productos, devolver código 204 (sin contenido)
+            return Response.noContent().build();
+        }
+
+        // Devolver la lista de productos con código 200 OK
+        return Response.ok(productos).build();
+
     }
 
     @POST
