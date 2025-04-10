@@ -21,6 +21,8 @@ public class AuthResource {
 
     @Inject
     RepositorioUsuario userRepository;
+    @Inject
+    BCryptPasswordEncoder passwordEncoder;
 
     private static final Logger logger = Logger.getLogger(AuthResource.class);
 
@@ -36,9 +38,6 @@ public class AuthResource {
         if (user == null) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
-
-        // Crear instancia del encriptador para verificar la contraseña
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         // Verificar que las contraseñas coincidan
         if (passwordEncoder.matches(credentials.password(), user.getPassword())) {
@@ -83,7 +82,6 @@ public class AuthResource {
             validateUsuario(usuario);
 
             // Encriptar la contraseña
-            BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
             usuario.setPassword(passwordEncoder.encode(newUser.password()));
 
             // Guardar en la base de datos
