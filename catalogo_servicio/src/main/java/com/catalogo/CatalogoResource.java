@@ -11,6 +11,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Path("/catalogo")
@@ -22,19 +23,47 @@ public class CatalogoResource {
     RepositorioProducto productoRepository; // Inyección del repositorio de productos
 
     @GET
-    @RolesAllowed({"admin","user"}) // Solo accesible con un token válido
-    public Response getProducts() {
-        List<Producto> productos = productoRepository.listAll();
+    @RolesAllowed({"admin", "user"})
+    public Response getProducts(@QueryParam("page") @DefaultValue("1") int page,
+                                @QueryParam("size") @DefaultValue("10") int size,
+                                @QueryParam("nombre") String nombre,
+                                @QueryParam("categoria") String categoria,
+                                @QueryParam("precioMin") Double precioMin,
+                                @QueryParam("precioMax") Double precioMax) {
+
+        // Validate page and size parameters
+        if (page < 1 || size < 1) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Los parámetros 'page' y 'size' deben ser mayores o iguales a 1.")
+                    .build();
+        }
+
+        // Filter products
+        List<Producto> productos = productoRepository.listAll().stream()
+                .filter(p -> nombre == null || p.getNombre().toLowerCase().contains(nombre.toLowerCase()))
+                .filter(p -> categoria == null || (p.getCategoria() != null && p.getCategoria().equalsIgnoreCase(categoria)))
+                .filter(p -> precioMin == null || p.getPrecio().compareTo(BigDecimal.valueOf(precioMin)) >= 0)
+                .filter(p -> precioMax == null || p.getPrecio().compareTo(BigDecimal.valueOf(precioMax)) <= 0)
+                .toList();
 
         if (productos.isEmpty()) {
-            // Si no hay productos, devolver código 204 (sin contenido)
             return Response.noContent().build();
         }
 
-        // Devolver la lista de productos con código 200 OK
-        return Response.ok(productos).build();
+        // Pagination
+        int startIndex = (page - 1) * size;
+        int endIndex = Math.min(startIndex + size, productos.size());
 
+        if (startIndex >= productos.size()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Página fuera de rango.")
+                    .build();
+        }
+
+        List<Producto> paginated = productos.subList(startIndex, endIndex);
+        return Response.ok(paginated).build();
     }
+
 
     @POST
     @RolesAllowed("admin")

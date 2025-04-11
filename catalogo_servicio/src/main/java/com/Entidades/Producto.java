@@ -23,9 +23,14 @@ public class Producto {
     @Size(max = 255, message = "La descripción no puede tener más de 255 caracteres")
     private String descripcion;
 
-    private @NotNull(message = "El precio del producto es obligatorio")
+    @NotNull(message = "El precio del producto es obligatorio")
     @DecimalMin(value = "0.0", inclusive = false, message = "El precio debe ser mayor que 0")
-    @Digits(integer = 10, fraction = 2, message = "El precio debe tener un formato válido (hasta 10 dígitos enteros y 2 decimales)") BigDecimal precio;
+    @Digits(integer = 10, fraction = 2, message = "El precio debe tener un formato válido (hasta 10 dígitos enteros y 2 decimales)")
+    private BigDecimal precio;
+
+    @NotBlank(message = "La categoría no puede estar vacía")
+    @Size(max = 50, message = "La categoría no puede tener más de 50 caracteres")
+    private String categoria;
 
     @NotNull(message = "El stock no puede ser nulo")
     @Min(value = 0, message = "El stock no puede ser menor que 0")
@@ -39,11 +44,12 @@ public class Producto {
     public Producto() {
     }
 
-    public Producto(String nombre, String descripcion, @NotNull(message = "El precio del producto es obligatorio") @DecimalMin(value = "0.0", inclusive = false, message = "El precio debe ser mayor que 0") @Digits(integer = 10, fraction = 2, message = "El precio debe tener un formato válido (hasta 10 dígitos enteros y 2 decimales)") BigDecimal precio, int stock, JsonNode detalles) {
+    public Producto(String nombre, String descripcion, BigDecimal precio, int stock, String categoria, JsonNode detalles) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
         this.stock = stock;
+        this.categoria = categoria;
         this.detalles = detalles;
     }
 
@@ -86,6 +92,14 @@ public class Producto {
 
     public void setStock(Integer stock) {
         this.stock = stock;
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
     }
 
     public JsonNode getDetalles() {

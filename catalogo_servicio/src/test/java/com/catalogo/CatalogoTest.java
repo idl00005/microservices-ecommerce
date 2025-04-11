@@ -46,18 +46,56 @@ class CatalogoTest {
 
     @Test
     void testGetProducts() {
-        Producto producto = crearProductoEjemplo();
-        when(mockRepositorio.listAll()).thenReturn(List.of(producto));
+        Producto producto1 = new Producto("Camiseta", "Camiseta de algodón", new BigDecimal("29.99"), 10, "Ropa", null);
+        Producto producto2 = new Producto("Pantalón", "Pantalón de mezclilla", new BigDecimal("49.99"), 20, "Ropa", null);
+        Producto producto3 = new Producto("Zapatos", "Zapatos deportivos", new BigDecimal("79.99"), 15, "Calzado", null);
 
-        Response response = catalogoResource.getProducts();
+        when(mockRepositorio.listAll()).thenReturn(List.of(producto1, producto2, producto3));
+
+        // Solicitar la primera página con tamaño 2 y filtro por categoría "Ropa"
+        Response response = catalogoResource.getProducts(1, 2, null, "Ropa", null, null);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
         // Validar el contenido de la respuesta
         List<?> resultado = (List<?>) response.getEntity();
         assertNotNull(resultado);
-        assertEquals(1, resultado.size());
+        assertEquals(2, resultado.size());
         assertEquals("Camiseta", ((Producto) resultado.get(0)).getNombre());
+        assertEquals("Pantalón", ((Producto) resultado.get(1)).getNombre());
+    }
+
+    @Test
+    void testGetProducts_Empty() {
+        // Simular que el repositorio no tiene productos
+        when(mockRepositorio.listAll()).thenReturn(new ArrayList<>());
+
+        // Llamar al método con parámetros de paginación y filtros
+        Response response = catalogoResource.getProducts(1, 10, null, null, null, null);
+
+        // Verificar que el código de estado HTTP sea 204 No Content
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+
+        // La entidad debería ser null en este caso
+        assertNull(response.getEntity());
+    }
+
+    @Test
+    void testGetProducts_InvalidParameters() {
+        // Test with invalid page number
+        Response response = catalogoResource.getProducts(0, 10, null, null, null, null);
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("Los parámetros 'page' y 'size' deben ser mayores o iguales a 1."));
+
+        // Test with invalid size
+        response = catalogoResource.getProducts(1, 0, null, null, null, null);
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("Los parámetros 'page' y 'size' deben ser mayores o iguales a 1."));
+
+        // Test with invalid page
+        response = catalogoResource.getProducts(0, 1, null, null, null, null);
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("Los parámetros 'page' y 'size' deben ser mayores o iguales a 1."));
     }
 
     @Test
@@ -84,15 +122,11 @@ class CatalogoTest {
 
     @Test
     void testUpdateProduct() {
-        // Crear producto original
-        Producto original = new Producto("Original", "Desc", new BigDecimal("10.00"), 5, null);
+        // Create the original product
+        Producto original = new Producto("Original", "Descripción original", new BigDecimal("10.00"), 5, "Categoría", null);
         original.setId(1L);
 
-        // Guardar en una lista simulando la base de datos
-        List<Producto> fakeDB = new ArrayList<>();
-        fakeDB.add(original);
-
-        // Simular comportamiento del repositorio
+        // Mock repository behavior
         when(mockRepositorio.findById(1L)).thenReturn(original);
         when(mockRepositorio.updateProduct(eq(1L), anyString(), anyString(), any(), any(), any()))
                 .thenAnswer(invocation -> {
@@ -100,24 +134,24 @@ class CatalogoTest {
                     original.setDescripcion("Nueva descripción");
                     original.setPrecio(new BigDecimal("20.00"));
                     original.setStock(10);
+                    original.setCategoria("Nueva Categoría");
                     return true;
                 });
 
-        when(mockRepositorio.listAll()).thenReturn(fakeDB);
-
-        // Llamar a la actualización
-        Producto actualizado = new Producto("Actualizado", "Nueva descripción", new BigDecimal("20.00"), 10, null);
+        // Call the update method
+        Producto actualizado = new Producto("Actualizado", "Nueva descripción", new BigDecimal("20.00"), 10, "Nueva Categoría", null);
         Response updateResponse = catalogoResource.updateProduct(1L, actualizado);
+
+        // Validate the response
         assertEquals(Response.Status.OK.getStatusCode(), updateResponse.getStatus());
+        assertTrue(updateResponse.getEntity().toString().contains("actualizado"));
 
-        // Llamar al get y comprobar los valores cambiados
-        List<?> productos = (List<?>) catalogoResource.getProducts().getEntity();
-        Producto producto = (Producto) productos.get(0);
-
-        assertEquals("Actualizado", producto.getNombre());
-        assertEquals("Nueva descripción", producto.getDescripcion());
-        assertEquals(new BigDecimal("20.00"), producto.getPrecio());
-        assertEquals(10, producto.getStock());
+        // Verify the updated product
+        assertEquals("Actualizado", original.getNombre());
+        assertEquals("Nueva descripción", original.getDescripcion());
+        assertEquals(new BigDecimal("20.00"), original.getPrecio());
+        assertEquals(10, original.getStock());
+        assertEquals("Nueva Categoría", original.getCategoria());
     }
 
     @Test
@@ -145,33 +179,23 @@ class CatalogoTest {
 
     @Test
     void testDeleteProduct() {
-        // Producto simulado en la "base de datos"
-        Producto producto = new Producto("Eliminar", "Producto a borrar", new BigDecimal("30.00"), 1, null);
+        // Simulate a product in the "database"
+        Producto producto = new Producto("Eliminar", "Producto a borrar", new BigDecimal("30.00"), 1, "Categoria", null);
         producto.setId(1L);
-        List<Producto> fakeDB = new ArrayList<>();
-        fakeDB.add(producto);
 
-        // Simular findById y delete
+        // Mock repository behavior
         when(mockRepositorio.findById(1L)).thenReturn(producto);
-        doAnswer(invocation -> {
-            fakeDB.remove(producto);
-            return null;
-        }).when(mockRepositorio).delete(producto);
+        doNothing().when(mockRepositorio).delete(producto);
 
-        when(mockRepositorio.listAll()).thenAnswer(invocation -> fakeDB);
-
-        // Borrar producto
+        // Call the delete method
         Response deleteResponse = catalogoResource.deleteProduct(1L);
+
+        // Validate the response
         assertEquals(Response.Status.OK.getStatusCode(), deleteResponse.getStatus());
+        assertTrue(deleteResponse.getEntity().toString().contains("eliminado"));
 
-        // Comprobar que ya no está
-        Response response = catalogoResource.getProducts();
-
-        // Verifica que el código de estado HTTP sea 204 No Content
-        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
-
-        // La entidad debería ser null en este caso
-        assertNull(response.getEntity());
+        // Verify the delete method was called
+        verify(mockRepositorio).delete(producto);
     }
 
     @Test

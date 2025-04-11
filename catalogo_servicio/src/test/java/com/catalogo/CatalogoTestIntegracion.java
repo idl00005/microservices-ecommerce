@@ -16,7 +16,7 @@ import static org.hamcrest.Matchers.*;
 class CatalogoTestIntegracion {
 
     private Producto crearProductoTest() {
-        return new Producto("Zapato", "Zapato deportivo", new BigDecimal("59.99"), 10, null);
+        return new Producto("Zapato", "Zapato deportivo", new BigDecimal("59.99"), 10,"Ropa", null);
     }
 
     @Test
@@ -121,7 +121,7 @@ class CatalogoTestIntegracion {
     @TestSecurity(user = "admin", roles = {"admin"})
     @TestTransaction
     void testAddInvalidProduct() {
-        Producto producto = new Producto("", "", new BigDecimal("-10"), -5, null);
+        Producto producto = new Producto("", "", new BigDecimal("-10"), -5,"Ropa", null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -130,6 +130,78 @@ class CatalogoTestIntegracion {
                 .post("/catalogo")
                 .then()
                 .statusCode(400); // Esperado por Bean Validation
+    }
+
+    @Test
+    @TestSecurity(user = "admin", roles = {"admin"})
+    @TestTransaction
+    void testSearchProductByName() {
+        Producto producto = new Producto("Zapato Deportivo", "Zapato cómodo para correr", new BigDecimal("59.99"), 10, "Calzado", null);
+
+        // Añadir el producto
+        given()
+                .contentType(ContentType.JSON)
+                .body(producto)
+                .when()
+                .post("/catalogo")
+                .then()
+                .statusCode(201);
+
+        // Buscar por nombre
+        when()
+                .get("/catalogo?nombre=Zapato")
+                .then()
+                .statusCode(200)
+                .body("size()", greaterThan(0))
+                .body("[0].nombre", containsString("Zapato"));
+    }
+
+    @Test
+    @TestSecurity(user = "admin", roles = {"admin"})
+    @TestTransaction
+    void testSearchProductByCategory() {
+        Producto producto = new Producto("Camiseta Deportiva", "Camiseta de algodón", new BigDecimal("29.99"), 20, "Ropa", null);
+
+        // Añadir el producto
+        given()
+                .contentType(ContentType.JSON)
+                .body(producto)
+                .when()
+                .post("/catalogo")
+                .then()
+                .statusCode(201);
+
+        // Buscar por categoría
+        when()
+                .get("/catalogo?categoria=Ropa")
+                .then()
+                .statusCode(200)
+                .body("size()", greaterThan(0))
+                .body("[0].categoria", equalTo("Ropa"));
+    }
+
+    @Test
+    @TestSecurity(user = "admin", roles = {"admin"})
+    @TestTransaction
+    void testSearchProductByPriceRange() {
+        Producto producto = new Producto("Monitor", "Monitor Full HD", new BigDecimal("199.99"), 15, "Electrónica", null);
+
+        // Añadir el producto
+        given()
+                .contentType(ContentType.JSON)
+                .body(producto)
+                .when()
+                .post("/catalogo")
+                .then()
+                .statusCode(201);
+
+        // Buscar por rango de precio
+        when()
+                .get("/catalogo?precioMin=100&precioMax=200")
+                .then()
+                .statusCode(200)
+                .body("size()", greaterThan(0))
+                .body("[0].precio", equalTo(199.99f));
     }
 }
 
