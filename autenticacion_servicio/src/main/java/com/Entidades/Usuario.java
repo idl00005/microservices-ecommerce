@@ -25,7 +25,8 @@ public class Usuario {
     @Email(message = "El correo debe tener un formato válido.") // Validación del formato de correo electrónico
     private String correo;
 
-    @Pattern(regexp = "\\d{9,15}", message = "El teléfono debe tener entre 10 y 15 dígitos.") // Solo dígitos y una longitud específica
+    @Pattern(regexp = "\\d{9,15}", message = "El teléfono debe tener entre 10 y 15 dígitos.")
+    // Solo dígitos y una longitud específica
     private String telefono;
 
     @NotBlank(message = "La contraseña no puede estar vacía.")

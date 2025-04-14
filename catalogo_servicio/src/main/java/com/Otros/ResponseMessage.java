@@ -7,7 +7,8 @@ public class ResponseMessage {
     private Producto producto;
 
     // Constructor por defecto (requerido por algunas bibliotecas de serialización JSON)
-    public ResponseMessage() {}
+    public ResponseMessage() {
+    }
 
     // Constructor con parámetros
     public ResponseMessage(String message, Producto producto) {

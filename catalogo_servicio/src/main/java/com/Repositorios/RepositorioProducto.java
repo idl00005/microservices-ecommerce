@@ -48,5 +48,4 @@ public class RepositorioProducto implements PanacheRepository<Producto> {
     }
 
 
-
 }

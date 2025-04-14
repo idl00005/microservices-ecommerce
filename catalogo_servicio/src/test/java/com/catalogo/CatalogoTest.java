@@ -1,6 +1,7 @@
 package com.catalogo;
 
 import com.Entidades.Producto;
+import com.Recursos.CatalogoResource;
 import com.Repositorios.RepositorioProducto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -217,6 +218,40 @@ class CatalogoTest {
 
         assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
         assertTrue(response.getEntity().toString().contains("Error al eliminar el producto"));
+    }
+
+    @Test
+    void testGetProductById_Found() {
+        // Crear un producto de ejemplo
+        Producto producto = new Producto("Camiseta", "Camiseta de algodón", new BigDecimal("29.99"), 10, "Ropa", null);
+        producto.setId(1L);
+
+        // Simular que el repositorio encuentra el producto
+        when(mockRepositorio.findById(1L)).thenReturn(producto);
+
+        // Llamar al método
+        Response response = catalogoResource.getProductById(1L);
+
+        // Verificar que el estado sea 200 OK
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+        // Verificar que el producto devuelto sea el esperado
+        assertEquals(producto, response.getEntity());
+    }
+
+    @Test
+    void testGetProductById_NotFound() {
+        // Simular que el repositorio no encuentra el producto
+        when(mockRepositorio.findById(1L)).thenReturn(null);
+
+        // Llamar al método
+        Response response = catalogoResource.getProductById(1L);
+
+        // Verificar que el estado sea 404 Not Found
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+
+        // Verificar que el mensaje de error sea el esperado
+        assertTrue(response.getEntity().toString().contains("Producto con ID 1 no encontrado."));
     }
 
 }

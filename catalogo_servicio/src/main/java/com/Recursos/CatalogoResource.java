@@ -1,4 +1,4 @@
-package com.catalogo;
+package com.Recursos;
 
 import com.Entidades.Producto;
 import com.Otros.ResponseMessage;
@@ -23,7 +23,6 @@ public class CatalogoResource {
     RepositorioProducto productoRepository; // Inyección del repositorio de productos
 
     @GET
-    @RolesAllowed({"admin", "user"})
     public Response getProducts(@QueryParam("page") @DefaultValue("1") int page,
                                 @QueryParam("size") @DefaultValue("10") int size,
                                 @QueryParam("nombre") String nombre,
@@ -138,6 +137,18 @@ public class CatalogoResource {
                     .entity("Error al eliminar el producto: " + e.getMessage())
                     .build();
         }
+    }
+
+    @GET
+    @Path("/{id}")
+    public Response getProductById(@PathParam("id") Long id) {
+        Producto producto = productoRepository.findById(id);
+        if (producto == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Producto con ID " + id + " no encontrado.")
+                    .build();
+        }
+        return Response.ok(producto).build();
     }
 
 }

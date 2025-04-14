@@ -16,7 +16,7 @@ import static org.hamcrest.Matchers.*;
 class CatalogoTestIntegracion {
 
     private Producto crearProductoTest() {
-        return new Producto("Zapato", "Zapato deportivo", new BigDecimal("59.99"), 10,"Ropa", null);
+        return new Producto("Zapato", "Zapato deportivo", new BigDecimal("59.99"), 10, "Ropa", null);
     }
 
     @Test
@@ -52,15 +52,15 @@ class CatalogoTestIntegracion {
 
         // Añadir primero
         Integer id = given()
-            .contentType(ContentType.JSON)
-            .body(producto)
-            .when()
-            .post("/catalogo")
-            .then()
-            .log().all()
-            .statusCode(201)
-            .extract()
-            .path("producto.id");
+                .contentType(ContentType.JSON)
+                .body(producto)
+                .when()
+                .post("/catalogo")
+                .then()
+                .log().all()
+                .statusCode(201)
+                .extract()
+                .path("producto.id");
 
         // Actualizar
         producto.setNombre("Zapatilla Pro");
@@ -121,7 +121,7 @@ class CatalogoTestIntegracion {
     @TestSecurity(user = "admin", roles = {"admin"})
     @TestTransaction
     void testAddInvalidProduct() {
-        Producto producto = new Producto("", "", new BigDecimal("-10"), -5,"Ropa", null);
+        Producto producto = new Producto("", "", new BigDecimal("-10"), -5, "Ropa", null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -202,6 +202,45 @@ class CatalogoTestIntegracion {
                 .statusCode(200)
                 .body("size()", greaterThan(0))
                 .body("[0].precio", equalTo(199.99f));
+    }
+
+    @Test
+    @TestSecurity(user = "admin", roles = {"admin"})
+    @TestTransaction
+    void testGetProductById_Found() {
+        Producto producto = new Producto("Laptop", "Laptop de alta gama", new BigDecimal("999.99"), 5, "Electrónica", null);
+
+        // Añadir el producto
+        Integer id = given()
+                .contentType(ContentType.JSON)
+                .body(producto)
+                .when()
+                .post("/catalogo")
+                .then()
+                .statusCode(201)
+                .extract()
+                .path("producto.id");
+
+        // Obtener el producto por ID
+        when()
+                .get("/catalogo/" + id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(id))
+                .body("nombre", equalTo("Laptop"))
+                .body("categoria", equalTo("Electrónica"));
+    }
+
+    @Test
+    @TestSecurity(user = "admin", roles = {"admin"})
+    @TestTransaction
+    void testGetProductById_NotFound() {
+        // Intentar obtener un producto con un ID inexistente
+        when()
+                .get("/catalogo/9999")
+                .then()
+                .statusCode(404)
+                .body(containsString("Producto con ID 9999 no encontrado."));
     }
 }
 
