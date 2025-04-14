@@ -10,7 +10,9 @@ import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-@Path("/api/carrito")
+import java.util.List;
+
+@Path("/carrito")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class CarritoResource {
@@ -20,6 +22,7 @@ public class CarritoResource {
 
     @POST
     @Path("/agregar")
+    @RolesAllowed({"user", "admin"})
     public Response agregarProducto(AgregarProductoRequest req, @Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
 
@@ -28,7 +31,17 @@ public class CarritoResource {
     }
 
     public static class AgregarProductoRequest {
-        public String productoId;
+        public int productoId;
         public int cantidad;
+    }
+
+    @GET
+    @Path("/")
+    @RolesAllowed({"user", "admin"})
+    public Response obtenerCarrito(@Context SecurityContext ctx) {
+        String userId = ctx.getUserPrincipal().getName();
+
+        List<CarritoItem> carrito = carritoService.obtenerCarrito(userId);
+        return Response.ok(carrito).build();
     }
 }

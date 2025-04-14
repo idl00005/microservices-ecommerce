@@ -1,9 +1,8 @@
 package DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.math.BigDecimal;
 
-public class ProductoDTO {
-    public String id;
-    public String nombre;
-    public BigDecimal precio;
-}
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record ProductoDTO (String id, String nombre, BigDecimal precio, Integer stock) {}

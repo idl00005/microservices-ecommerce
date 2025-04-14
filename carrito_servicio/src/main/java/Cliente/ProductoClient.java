@@ -1,18 +1,26 @@
 package Cliente;
 
 import DTO.ProductoDTO;
-import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.core.MediaType;
 
+@ApplicationScoped
+public class ProductoClient {
 
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
+    private final String baseUrl = "http://localhost:8081/catalogo";
 
-@Path("/catalogo")
-@RegisterRestClient(configKey = "catalogo-api")
-public interface ProductoClient {
-
-    @GET
-    @Path("/{id}")
-    ProductoDTO obtenerProductoPorId(@PathParam("id") String id);
+    public ProductoDTO obtenerProductoPorId(Integer id) {
+        Client client = ClientBuilder.newBuilder().build();
+        try {
+            return client.target(baseUrl)
+                    .path("/{id}")
+                    .resolveTemplate("id", id)
+                    .request(MediaType.APPLICATION_JSON)
+                    .get(ProductoDTO.class);
+        } finally {
+            client.close();
+        }
+    }
 }

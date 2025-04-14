@@ -1,6 +1,7 @@
 package com.Recursos;
 
 import com.Entidades.Producto;
+import com.Otros.ProductEvent;
 import com.Otros.ResponseMessage;
 import com.Repositorios.RepositorioProducto;
 import jakarta.annotation.security.RolesAllowed;
@@ -10,6 +11,9 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.jboss.logging.Logger;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -21,6 +25,12 @@ public class CatalogoResource {
 
     @Inject
     RepositorioProducto productoRepository; // Inyección del repositorio de productos
+
+    @Inject
+    @Channel("product-events")
+    Emitter<ProductEvent> productEventEmitter;
+
+    private static final Logger LOG = Logger.getLogger(CatalogoResource.class);
 
     @GET
     public Response getProducts(@QueryParam("page") @DefaultValue("1") int page,
@@ -88,31 +98,36 @@ public class CatalogoResource {
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed("admin") // Solo accesible por administradores
+    @RolesAllowed("admin")
     public Response updateProduct(@PathParam("id") Long id, @Valid Producto producto) {
+        boolean updated;
+
+        // Ejecutar la transacción en un método separado
         try {
-            // Llamar al método del repositorio para actualizar el producto con los datos proporcionados
-            boolean updated = productoRepository.updateProduct(
-                    id,
-                    producto.getNombre(),
-                    producto.getDescripcion(),
-                    producto.getPrecio(),
-                    producto.getStock(),
-                    producto.getDetalles()
-            );
-
-            if (!updated) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity("Producto con ID " + id + " no encontrado.")
-                        .build();
-            }
-
-            return Response.ok("Producto actualizado con éxito.").build();
+            updated = updateProductInTx(id, producto);
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al actualizar el producto: " + e.getMessage())
-                    .build();
+            LOG.error("Error actualizando producto", e);
+            return Response.serverError().entity("Error actualizando el producto.").build();
         }
+
+        if (updated) {
+            ProductEvent event = new ProductEvent(id, "UPDATED", producto);
+            LOG.info("Publicando evento de actualización para producto " + id);
+            productEventEmitter.send(event); // Fuera del contexto transaccional
+            return Response.ok("Producto actualizado con éxito.").build();
+        }
+
+        return Response.status(Response.Status.NOT_FOUND)
+                .entity("Producto con ID " + id + " no encontrado.")
+                .build();
+    }
+
+    @Transactional
+    public boolean updateProductInTx(Long id, Producto producto) {
+        return productoRepository.updateProduct(
+                id, producto.getNombre(), producto.getDescripcion(),
+                producto.getPrecio(), producto.getStock(), producto.getDetalles()
+        );
     }
 
     @DELETE
@@ -120,23 +135,17 @@ public class CatalogoResource {
     @RolesAllowed("admin")
     @Transactional
     public Response deleteProduct(@PathParam("id") Long id) {
-        try {
-            Producto producto = productoRepository.findById(id);
-            if (producto == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity("Producto con ID " + id + " no encontrado.")
-                        .build();
-            }
-
-            // Eliminar el producto si existe
+        Producto producto = productoRepository.findById(id);
+        if (producto != null) {
             productoRepository.delete(producto);
 
-            return Response.ok("Producto eliminado con éxito.").build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al eliminar el producto: " + e.getMessage())
-                    .build();
+            // Publicar evento de eliminación
+
         }
+
+        return Response.status(Response.Status.NOT_FOUND)
+                .entity("Producto con ID " + id + " no encontrado.")
+                .build();
     }
 
     @GET
