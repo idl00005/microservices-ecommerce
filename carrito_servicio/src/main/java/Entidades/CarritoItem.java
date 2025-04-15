@@ -9,7 +9,7 @@ public class CarritoItem extends PanacheEntity {
 
     public String userId;
 
-    public String productoId;
+    public Long productoId;
     public String nombreProducto;
     public BigDecimal precio;
 

@@ -11,7 +11,7 @@ public class ProductoClient {
 
     private final String baseUrl = "http://localhost:8081/catalogo";
 
-    public ProductoDTO obtenerProductoPorId(Integer id) {
+    public ProductoDTO obtenerProductoPorId(Long id) {
         Client client = ClientBuilder.newBuilder().build();
         try {
             return client.target(baseUrl)

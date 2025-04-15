@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ProductEvent {
-    private String  productId;
+    private long  productId;
     private String action; // "UPDATED" o "DELETED"
     private ProductoDTO producto;
 
     @JsonCreator
-    public ProductEvent(@JsonProperty("productId") String productId,
+    public ProductEvent(@JsonProperty("productId") long productId,
                         @JsonProperty("action") String action,
                         @JsonProperty("producto")ProductoDTO producto) {
         this.productId = productId;
@@ -21,7 +21,7 @@ public class ProductEvent {
     }
 
     // Getters y setters
-    public String getProductId() {
+    public long getProductId() {
         return productId;
     }
 

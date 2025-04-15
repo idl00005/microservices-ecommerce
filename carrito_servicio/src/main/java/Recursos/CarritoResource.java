@@ -31,7 +31,7 @@ public class CarritoResource {
     }
 
     public static class AgregarProductoRequest {
-        public int productoId;
+        public Long productoId;
         public int cantidad;
     }
 
@@ -43,5 +43,66 @@ public class CarritoResource {
 
         List<CarritoItem> carrito = carritoService.obtenerCarrito(userId);
         return Response.ok(carrito).build();
+    }
+
+    @DELETE
+    @Path("/{productoId}")
+    @RolesAllowed({"user", "admin"})
+    public Response eliminarProducto(@PathParam("productoId") Long productoId, @Context SecurityContext ctx) {
+        String userId = ctx.getUserPrincipal().getName();
+        try {
+            carritoService.eliminarProducto(userId, productoId);
+            return Response.noContent().build();
+        } catch (WebApplicationException e) {
+            return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
+        }
+    }
+
+    @DELETE
+    @Path("/")
+    @RolesAllowed({"user", "admin"})
+    public Response vaciarCarrito(@Context SecurityContext ctx) {
+        String userId = ctx.getUserPrincipal().getName();
+        try {
+            carritoService.vaciarCarrito(userId);
+            return Response.noContent().build(); // Retorna 204 si es exitoso
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error al vaciar el carrito").build(); // Maneja errores genéricos
+        }
+    }
+
+    @PUT
+    @Path("/{productoId}")
+    @RolesAllowed({"user","admin"})
+    public Response actualizarCantidad(@PathParam("productoId") Long productoId,
+                                       ActualizarCantidadRequest cantidad,
+                                       @Context SecurityContext securityContext) {
+        String userId = securityContext.getUserPrincipal().getName();
+        try {
+            // Si la cantidad es 0, se interpreta como eliminación.
+            if (cantidad.getCantidad() == 0) {
+                carritoService.eliminarProducto(userId, productoId);
+                return Response.ok("Producto eliminado del carrito.").build();
+            } else {
+                CarritoItem actualizado = carritoService.actualizarCantidadProducto(userId, productoId, cantidad.getCantidad());
+                return Response.ok(actualizado).build();
+            }
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    public static class ActualizarCantidadRequest {
+        private int cantidad;
+
+        public int getCantidad() {
+            return cantidad;
+        }
+        public void setCantidad(int cantidad) {
+            this.cantidad = cantidad;
+        }
     }
 }
