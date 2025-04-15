@@ -104,7 +104,7 @@ public class CatalogoResource {
 
         // Ejecutar la transacción en un método separado
         try {
-            updated = updateProductInTx(id, producto);
+            updated = updateProductInDB(id, producto);
         } catch (Exception e) {
             LOG.error("Error actualizando producto", e);
             return Response.serverError().entity("Error actualizando el producto.").build();
@@ -123,7 +123,7 @@ public class CatalogoResource {
     }
 
     @Transactional
-    public boolean updateProductInTx(Long id, Producto producto) {
+    public boolean updateProductInDB(Long id, Producto producto) {
         return productoRepository.updateProduct(
                 id, producto.getNombre(), producto.getDescripcion(),
                 producto.getPrecio(), producto.getStock(), producto.getDetalles()
@@ -133,21 +133,27 @@ public class CatalogoResource {
     @DELETE
     @Path("/{id}")
     @RolesAllowed("admin")
-    @Transactional
     public Response deleteProduct(@PathParam("id") Long id) {
-        Producto producto = productoRepository.findById(id);
-        if (producto != null) {
-            productoRepository.delete(producto);
+        if (deleteProductInDB(id)) {
+            ProductEvent event = new ProductEvent(id, "DELETED", null);
+            productEventEmitter.send(event);
 
-            // Publicar evento de eliminación
-
+            return Response.ok("Producto eliminado con éxito.").build();
         }
-
         return Response.status(Response.Status.NOT_FOUND)
                 .entity("Producto con ID " + id + " no encontrado.")
                 .build();
     }
 
+    @Transactional
+    public boolean deleteProductInDB(Long id) {
+        Producto producto = productoRepository.findById(id);
+        if (producto != null) {
+            productoRepository.delete(producto);
+            return true;
+        }
+        return false;
+    }
     @GET
     @Path("/{id}")
     public Response getProductById(@PathParam("id") Long id) {
