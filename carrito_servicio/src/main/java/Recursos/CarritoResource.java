@@ -4,6 +4,9 @@ import Entidades.CarritoItem;
 import Servicios.CarritoService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
@@ -23,7 +26,7 @@ public class CarritoResource {
     @POST
     @Path("/agregar")
     @RolesAllowed({"user", "admin"})
-    public Response agregarProducto(AgregarProductoRequest req, @Context SecurityContext ctx) {
+    public Response agregarProducto(@Valid AgregarProductoRequest req, @Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
 
         CarritoItem item = carritoService.agregarProducto(userId, req.productoId, req.cantidad);
@@ -31,7 +34,10 @@ public class CarritoResource {
     }
 
     public static class AgregarProductoRequest {
+        @NotNull(message = "El productoId no puede ser nulo")
         public Long productoId;
+        @Min(value = 1, message = "La cantidad debe ser al menos 1")
+        @NotNull(message = "La cantidad no puede ser nula")
         public int cantidad;
     }
 
@@ -76,7 +82,7 @@ public class CarritoResource {
     @Path("/{productoId}")
     @RolesAllowed({"user","admin"})
     public Response actualizarCantidad(@PathParam("productoId") Long productoId,
-                                       ActualizarCantidadRequest cantidad,
+                                       @Valid ActualizarCantidadRequest cantidad,
                                        @Context SecurityContext securityContext) {
         String userId = securityContext.getUserPrincipal().getName();
         try {
@@ -96,6 +102,8 @@ public class CarritoResource {
     }
 
     public static class ActualizarCantidadRequest {
+        @Min(value = 1, message = "La cantidad debe ser al menos 0")
+        @NotNull(message = "La cantidad no puede ser nula")
         private int cantidad;
 
         public int getCantidad() {
