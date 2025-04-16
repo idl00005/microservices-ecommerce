@@ -3,6 +3,7 @@ package Servicios;
 import Cliente.ProductoClient;
 import DTO.ProductoDTO;
 import Entidades.CarritoItem;
+import Entidades.OrdenPago;
 import Otros.ProductEvent;
 import Repositorios.CarritoItemRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -17,6 +18,8 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +34,33 @@ public class CarritoService {
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CarritoService.class);
+
+    @Transactional
+    public OrdenPago iniciarPago(String userId) {
+        List<CarritoItem> carrito = carritoItemRepository.findByUserId(userId);
+        if (carrito.isEmpty()) {
+            throw new WebApplicationException("El carrito está vacío", 400);
+        }
+
+        BigDecimal total = carrito.stream()
+                .map(item -> item.precio.multiply(BigDecimal.valueOf(item.cantidad)))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        OrdenPago orden = new OrdenPago();
+        orden.userId = userId;
+        orden.montoTotal = total;
+        orden.estado = "PENDIENTE";
+        orden.fechaCreacion = LocalDateTime.now();
+        orden.persist();
+
+        // Aquí integrás con el proveedor de pagos
+        // Ejemplo (pseudocódigo):
+        // PaymentResponse resp = stripeClient.crearPago(total, orden.id);
+        // orden.referenciaExterna = resp.id;
+        // orden.proveedor = "Stripe";
+
+        return orden;
+    }
 
     @Transactional
     public CarritoItem agregarProducto(String userId, Long productoId, int cantidad) {

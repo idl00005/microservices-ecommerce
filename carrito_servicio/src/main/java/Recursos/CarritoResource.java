@@ -1,6 +1,7 @@
 package Recursos;
 
 import Entidades.CarritoItem;
+import Entidades.OrdenPago;
 import Servicios.CarritoService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -24,7 +25,16 @@ public class CarritoResource {
     CarritoService carritoService;
 
     @POST
-    @Path("/agregar")
+    @Path("/pago")
+    @RolesAllowed({"user","admin"})
+    public Response iniciarPago(@Context SecurityContext ctx) {
+        String userId = ctx.getUserPrincipal().getName();
+        OrdenPago orden = carritoService.iniciarPago(userId);
+        return Response.ok(orden).build();
+    }
+
+    @POST
+    @Path("/")
     @RolesAllowed({"user", "admin"})
     public Response agregarProducto(@Valid AgregarProductoRequest req, @Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();

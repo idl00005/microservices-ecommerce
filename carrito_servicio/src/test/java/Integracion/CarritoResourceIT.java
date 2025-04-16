@@ -45,7 +45,7 @@ public class CarritoResourceIT {
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
-                .post("/carrito/agregar")
+                .post("/carrito/")
                 .then()
                 .statusCode(200)
                 .body("nombreProducto", notNullValue())
