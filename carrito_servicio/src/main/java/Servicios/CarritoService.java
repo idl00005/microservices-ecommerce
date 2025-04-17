@@ -8,6 +8,8 @@ import Otros.ProductEvent;
 import Repositorios.CarritoItemRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -21,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -34,6 +37,9 @@ public class CarritoService {
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CarritoService.class);
+
+    @Inject
+    StripeService stripeService;
 
     @Transactional
     public OrdenPago iniciarPago(String userId) {
@@ -52,12 +58,20 @@ public class CarritoService {
         orden.estado = "PENDIENTE";
         orden.fechaCreacion = LocalDateTime.now();
         orden.persist();
-
-        // Aquí integrás con el proveedor de pagos
-        // Ejemplo (pseudocódigo):
-        // PaymentResponse resp = stripeClient.crearPago(total, orden.id);
-        // orden.referenciaExterna = resp.id;
-        // orden.proveedor = "Stripe";
+        if(orden.montoTotal.equals(new BigDecimal("0.0"))){
+            orden.estado = "COMPLETADO";
+            // Crear pedido sin pago
+        } else {
+            try {
+                // Crear el pago en Stripe
+                PaymentIntent paymentIntent = stripeService.crearPago(orden);
+                orden.referenciaExterna = paymentIntent.getId();
+                orden.proveedor = "Stripe";
+                orden.estado = "CREADO";
+            } catch (StripeException e) {
+                throw new WebApplicationException("Error al procesar el pago: " + e.getMessage(), 500);
+            }
+        }
 
         return orden;
     }

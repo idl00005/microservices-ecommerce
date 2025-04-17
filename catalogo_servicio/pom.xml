@@ -95,10 +95,6 @@
             <groupId>org.eclipse</groupId>
             <artifactId>yasson</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-validator</artifactId>
-        </dependency>
         <!-- Solo para tests -->
         <dependency>
             <groupId>io.quarkus</groupId>
