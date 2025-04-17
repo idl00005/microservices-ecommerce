@@ -7,10 +7,10 @@ import Recursos.CarritoResource;
 import Recursos.CarritoResource.AgregarProductoRequest;
 import Repositorios.CarritoItemRepository;
 import io.quarkus.test.InjectMock;
-import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
+import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
@@ -145,6 +146,96 @@ public class CarritoResourceIT {
                 .then()
                 .statusCode(200)
                 .body("cantidad", equalTo(5));
+    }
+
+    @Test
+    @TestSecurity(user = "user", roles = {"user"})
+    public void testIniciarPagoExitoso() {
+        // Mock del carrito con productos
+        CarritoItem item = new CarritoItem();
+        item.userId = "user";
+        item.productoId = 1L;
+        item.nombreProducto = "Producto Test";
+        item.precio = BigDecimal.valueOf(100);
+        item.cantidad = 2;
+
+        when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
+
+        // Realizar la solicitud
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .post("/carrito/pago")
+                .then()
+                .statusCode(200)
+                .body("estado", equalTo("CREADO"))
+                .body("montoTotal", equalTo(200));
+    }
+
+    @Test
+    @TestSecurity(user = "user", roles = {"user"})
+    public void testIniciarPagoCarritoVacio() {
+        when(carritoItemRepository.findByUserId("user")).thenReturn(List.of());
+
+        // Realizar la solicitud
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .post("/carrito/pago")
+                .then()
+                .statusCode(400)
+                .body(containsString("El carrito está vacío"));
+    }
+
+    @Test
+    @TestSecurity(user = "user", roles = {"user"})
+    public void testIniciarPagoMontoCero() {
+        // Mock del carrito con productos gratuitos
+        CarritoItem item = new CarritoItem();
+        item.userId = "user";
+        item.productoId = 1L;
+        item.nombreProducto = "Producto Gratis";
+        item.precio = BigDecimal.ZERO;
+        item.cantidad = 1;
+
+        when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
+
+        // Realizar la solicitud
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .post("/carrito/pago")
+                .then()
+                .statusCode(200)
+                .body("estado", equalTo("COMPLETADO"))
+                .body("montoTotal", equalTo(0));
+    }
+
+    @Test
+    @TestSecurity(user = "user", roles = {"user"})
+    public void testIniciarPagoErrorStripe() {
+        // Mock del carrito con productos
+        CarritoItem item = new CarritoItem();
+        item.userId = "user";
+        item.productoId = 1L;
+        item.nombreProducto = "Producto Test";
+        item.precio = BigDecimal.valueOf(100);
+        item.cantidad = 2;
+
+        when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
+
+        // Simula un error en Stripe
+        doThrow(new WebApplicationException("Error al procesar el pago: StripeException", 500))
+                .when(carritoItemRepository).persist(item);
+
+        // Realizar la solicitud
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .post("/carrito/pago")
+                .then()
+                .statusCode(500)
+                .body(containsString("Error al procesar el pago"));
     }
 
 }

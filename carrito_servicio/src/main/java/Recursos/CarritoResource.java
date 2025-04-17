@@ -29,8 +29,15 @@ public class CarritoResource {
     @RolesAllowed({"user","admin"})
     public Response iniciarPago(@Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
-        OrdenPago orden = carritoService.iniciarPago(userId);
-        return Response.ok(orden).build();
+        try{
+            OrdenPago orden = carritoService.iniciarPago(userId);
+            return Response.ok(orden).build();
+        } catch (WebApplicationException e) {
+            return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error al iniciar el pago").build(); // Maneja errores genéricos
+        }
     }
 
     @POST

@@ -6,6 +6,7 @@ import Entidades.CarritoItem;
 import Entidades.OrdenPago;
 import Otros.ProductEvent;
 import Repositorios.CarritoItemRepository;
+import Repositorios.OrdenPagoRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.StripeException;
@@ -13,7 +14,6 @@ import com.stripe.model.PaymentIntent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -41,6 +40,9 @@ public class CarritoService {
     @Inject
     StripeService stripeService;
 
+    @Inject
+    OrdenPagoRepository ordenPagoRepository;
+
     @Transactional
     public OrdenPago iniciarPago(String userId) {
         List<CarritoItem> carrito = carritoItemRepository.findByUserId(userId);
@@ -57,10 +59,10 @@ public class CarritoService {
         orden.montoTotal = total;
         orden.estado = "PENDIENTE";
         orden.fechaCreacion = LocalDateTime.now();
-        orden.persist();
-        if(orden.montoTotal.equals(new BigDecimal("0.0"))){
+        ordenPagoRepository.persist(orden);
+        if(orden.montoTotal.equals(BigDecimal.ZERO)){
             orden.estado = "COMPLETADO";
-            // Crear pedido sin pago
+            return orden;
         } else {
             try {
                 // Crear el pago en Stripe
