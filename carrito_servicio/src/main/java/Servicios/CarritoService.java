@@ -1,6 +1,7 @@
 package Servicios;
 
 import Cliente.ProductoClient;
+import DTO.CarritoEventDTO;
 import DTO.ProductoDTO;
 import Entidades.CarritoItem;
 import Entidades.OrdenPago;
@@ -16,6 +17,8 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +46,10 @@ public class CarritoService {
     @Inject
     OrdenPagoRepository ordenPagoRepository;
 
+    @Inject
+    @Channel("carrito-a-pedidos-out")
+    Emitter<CarritoEventDTO> carritoEventEmitter;
+
     @Transactional
     public OrdenPago iniciarPago(String userId) {
         List<CarritoItem> carrito = carritoItemRepository.findByUserId(userId);
@@ -60,8 +67,9 @@ public class CarritoService {
         orden.estado = "PENDIENTE";
         orden.fechaCreacion = LocalDateTime.now();
         ordenPagoRepository.persist(orden);
-        if(orden.montoTotal.equals(BigDecimal.ZERO)){
-            orden.estado = "COMPLETADO";
+        if(orden.montoTotal.compareTo(BigDecimal.ZERO) == 0) {
+            orden.estado = "PAGADO";
+            procesarCompra(userId,carrito);
             return orden;
         } else {
             try {
@@ -76,6 +84,22 @@ public class CarritoService {
         }
 
         return orden;
+    }
+
+    @Transactional
+    public void procesarCompra(String userId, List<CarritoItem> carrito) {
+
+        System.out.println("Enviando pedido...");//
+        // Crear el evento
+        CarritoEventDTO carritoEvent = new CarritoEventDTO();
+        carritoEvent.setUserId(userId);
+        carritoEvent.setItems(carrito);
+
+        // Enviar el evento a Kafka
+        carritoEventEmitter.send(carritoEvent);
+
+        // Vaciar el carrito
+        carritoItemRepository.delete("userId", userId);
     }
 
     @Transactional

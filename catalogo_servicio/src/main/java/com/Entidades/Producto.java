@@ -24,7 +24,7 @@ public class Producto {
     private String descripcion;
 
     @NotNull(message = "El precio del producto es obligatorio")
-    @DecimalMin(value = "0.0", inclusive = false, message = "El precio debe ser mayor que 0")
+    @DecimalMin(value = "0.0", inclusive = true, message = "El precio debe ser mayor que 0")
     @Digits(integer = 10, fraction = 2, message = "El precio debe tener un formato válido (hasta 10 dígitos enteros y 2 decimales)")
     private BigDecimal precio;
 

@@ -25,7 +25,7 @@ public class RepositorioProducto implements PanacheRepository<Producto> {
     }
 
     @Transactional
-    public boolean updateProduct(Long id, String nombre, String descripcion, @NotNull(message = "El precio del producto es obligatorio") @DecimalMin(value = "0.0", inclusive = false, message = "El precio debe ser mayor que 0") @Digits(integer = 10, fraction = 2, message = "El precio debe tener un formato válido (hasta 10 dígitos enteros y 2 decimales)") BigDecimal precio, Integer stock, JsonNode detalles) {
+    public boolean updateProduct(Long id, String nombre, String descripcion, @NotNull(message = "El precio del producto es obligatorio") @DecimalMin(value = "0.00", inclusive = true, message = "El precio debe ser mayor que 0") @Digits(integer = 10, fraction = 2, message = "El precio debe tener un formato válido (hasta 10 dígitos enteros y 2 decimales)") BigDecimal precio, Integer stock, JsonNode detalles) {
         // Buscar el producto por ID
         Producto producto = entityManager.find(Producto.class, id);
         if (producto == null) {

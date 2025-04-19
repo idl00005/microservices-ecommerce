@@ -18,7 +18,7 @@ public class CarritoItem extends PanacheEntity {
     public String nombreProducto;
 
     @NotNull(message = "El precio no puede ser nulo")
-    @DecimalMin(value = "0.0", inclusive = false, message = "El precio debe ser mayor que 0")
+    @DecimalMin(value = "0.0", message = "El precio debe ser mayor que 0")
     public BigDecimal precio;
 
     @NotNull(message = "La cantidad no puede ser nula")
