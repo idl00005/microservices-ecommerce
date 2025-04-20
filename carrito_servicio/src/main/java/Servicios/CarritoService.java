@@ -3,6 +3,7 @@ package Servicios;
 import Cliente.ProductoClient;
 import DTO.CarritoEventDTO;
 import DTO.ProductoDTO;
+import DTO.ReducirStockDTO;
 import Entidades.CarritoItem;
 import Entidades.OrdenPago;
 import Entidades.OutboxEvent;
@@ -29,7 +30,9 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class CarritoService {
@@ -95,7 +98,7 @@ public class CarritoService {
 
         System.out.println("Enviando pedido...");//
 
-        // Crear el evento
+        // Crear el evento para el servicio de pedidos
         CarritoEventDTO carritoEvent = new CarritoEventDTO();
         carritoEvent.setUserId(userId);
         carritoEvent.setItems(carrito);
@@ -108,6 +111,22 @@ public class CarritoService {
         evt.eventType = "Carrito.CompraProcesada";
         evt.payload = payloadJson;
         outboxRepo.persist(evt);
+
+        // Crear el evento para el servicio de catálogo
+        ReducirStockDTO compraEvent = new ReducirStockDTO();
+        compraEvent.setUserId(userId);
+        Map<Long, Integer> productosComprados = carrito.stream()
+                .collect(Collectors.toMap(item -> item.productoId, item -> item.cantidad));
+        compraEvent.setProductosComprados(productosComprados);
+
+        // Enviar el evento al servicio de catálogo
+        String catalogoPayload = JsonbBuilder.create().toJson(compraEvent);
+        OutboxEvent catalogoEvent = new OutboxEvent();
+        catalogoEvent.aggregateType = "Catalogo";
+        catalogoEvent.aggregateId = userId;
+        catalogoEvent.eventType = "Catalogo.ActualizarStock";
+        catalogoEvent.payload = catalogoPayload;
+        outboxRepo.persist(catalogoEvent);
 
         // Vaciar el carrito
         carritoItemRepository.delete("userId", userId);

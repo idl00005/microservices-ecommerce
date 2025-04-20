@@ -1,7 +1,7 @@
 package Otros;
 
 import DTO.CarritoEventDTO;
-import Entidades.CarritoItem;
+import DTO.ReducirStockDTO;
 import Entidades.OutboxEvent;
 import Repositorios.OutboxEventRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,7 +13,6 @@ import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import jakarta.transaction.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
@@ -25,23 +24,45 @@ public class OutboxEventPublisher {
     @Channel("carrito-a-pedidos-out")
     Emitter<CarritoEventDTO> emitter;
 
+    @Channel("catalogo-out")
+    Emitter<ReducirStockDTO> catalogoEmitter;
+
     @Inject
     ObjectMapper objectMapper;
 
-    // Se ejecuta cada 5 segundos
     @Scheduled(every = "5s")
     public void publishPending() {
         List<OutboxEvent> pendientes = outboxRepo.findPending();
         for (OutboxEvent evt : pendientes) {
-            CarritoEventDTO carritoEvent= mapToCarritoEvent(evt);
-            emitter.send(carritoEvent)
-                    .whenComplete((r, ex) -> {
-                        if (ex == null) {
-                            markPublished(evt);
-                        } else {
-                            ex.printStackTrace(); // Log del error
-                        }
-                    });
+            if ("Carrito".equals(evt.aggregateType)) {
+                CarritoEventDTO carritoEvent = mapToCarritoEvent(evt);
+                emitter.send(carritoEvent)
+                        .whenComplete((r, ex) -> {
+                            if (ex == null) {
+                                markPublished(evt);
+                            } else {
+                                ex.printStackTrace(); // Log del error
+                            }
+                        });
+            } else if ("Catalogo".equals(evt.aggregateType)) {
+                ReducirStockDTO reducirStockEvent = mapToReducirStockEvent(evt);
+                catalogoEmitter.send(reducirStockEvent)
+                        .whenComplete((r, ex) -> {
+                            if (ex == null) {
+                                markPublished(evt);
+                            } else {
+                                ex.printStackTrace(); // Log del error
+                            }
+                        });
+            }
+        }
+    }
+
+    private ReducirStockDTO mapToReducirStockEvent(OutboxEvent evt) {
+        try {
+            return objectMapper.readValue(evt.payload, ReducirStockDTO.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al deserializar el payload: " + evt.payload, e);
         }
     }
 
