@@ -30,15 +30,12 @@ public class Pedido {
     @Pattern(regexp = "\\+?[0-9]{9,15}", message = "El número de teléfono debe ser válido")
     private String telefono;
 
-    @NotNull(message = "El ID del pedido no puede ser nulo")
-    private Long pedidoId;
-
     @NotNull(message = "El precio total no puede ser nulo")
     @DecimalMin(value = "0.0", message = "El precio total no puede ser negativo")
     private BigDecimal precioTotal;
 
     @NotBlank(message = "El estado no puede estar vacío")
-    @Pattern(regexp = "PENDIENTE|EN_PROCESO|COMPLETADO|CANCELADO", message = "El estado debe ser uno de los valores permitidos")
+    @Pattern(regexp = "PENDIENTE|ENVIADO|EN REPARTO|COMPLETADO|CANCELADO", message = "El estado debe ser uno de los valores permitidos")
     private String estado;
 
     @NotNull(message = "La fecha de creación no puede ser nula")
@@ -92,14 +89,6 @@ public class Pedido {
 
     public void setTelefono(String telefono) {
         this.telefono = telefono;
-    }
-
-    public Long getPedidoId() {
-        return pedidoId;
-    }
-
-    public void setPedidoId(Long pedidoId) {
-        this.pedidoId = pedidoId;
     }
 
     public BigDecimal getPrecioTotal() {

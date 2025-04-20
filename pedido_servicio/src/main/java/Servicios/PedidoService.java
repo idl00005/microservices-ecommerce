@@ -51,10 +51,9 @@ public class PedidoService {
                 pedido.setPrecioTotal(item.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())));
                 pedido.setFechaCreacion(LocalDateTime.now());
 
-                pedido.setTelefono("123456789"); // Ejemplo de valor predeterminado
+                pedido.setTelefono(carritoEvent.getTelefono());
                 pedido.setEstado("PENDIENTE");  // Estado inicial
-                pedido.setDireccion("Dirección predeterminada"); // Dirección predeterminada
-                pedido.setPedidoId((long) 12.00); // Generar un ID único
+                pedido.setDireccion(carritoEvent.getDireccion());
 
                 // Guardar el pedido
                 pedidoRepository.guardar(pedido);

@@ -206,7 +206,7 @@ public class CarritoResourceTest {
         ordenMock.estado = "CREADO";
 
         // Llamada al método
-        OrdenPago orden = carritoService.iniciarPago("user1");
+        OrdenPago orden = carritoService.iniciarPago("user1","Calle tralala","6834345454");
 
         // Verificaciones
         assertNotNull(orden);
@@ -221,7 +221,7 @@ public class CarritoResourceTest {
         when(carritoItemRepository.findByUserId("user1")).thenReturn(List.of());
 
         WebApplicationException exception = assertThrows(WebApplicationException.class, () -> {
-            carritoService.iniciarPago("user1");
+            carritoService.iniciarPago("user1","Calle de ejemplo","2342233244");
         });
 
         assertEquals(400, exception.getResponse().getStatus());
@@ -242,7 +242,7 @@ public class CarritoResourceTest {
         when(carritoItemRepository.findByUserId("user1")).thenReturn(List.of(item));
 
         // Llamada al método
-        OrdenPago orden = carritoService.iniciarPago("user1");
+        OrdenPago orden = carritoService.iniciarPago("user1","Calle de ejemplo","6778798984");
 
         // Verificaciones
         assertNotNull(orden);

@@ -53,7 +53,7 @@ public class CarritoService {
     OutboxEventRepository outboxRepo;
 
     @Transactional
-    public OrdenPago iniciarPago(String userId) {
+    public OrdenPago iniciarPago(String userId, String direccion, String telefono) {
         List<CarritoItem> carrito = carritoItemRepository.findByUserId(userId);
         if (carrito.isEmpty()) {
             throw new WebApplicationException("El carrito está vacío", 400);
@@ -72,7 +72,7 @@ public class CarritoService {
 
         if(orden.montoTotal.compareTo(BigDecimal.ZERO) == 0) {
             orden.estado = "PAGADO";
-            procesarCompra(userId);
+            procesarCompra(userId,direccion,telefono);
             return orden;
         } else {
             try {
@@ -90,7 +90,7 @@ public class CarritoService {
     }
 
     @Transactional
-    public void procesarCompra(String userId) {
+    public void procesarCompra(String userId, String direccion, String telefono) {
         List<CarritoItem> carrito = carritoItemRepository.findByUserId(userId);
 
         System.out.println("Enviando pedido...");//
@@ -99,6 +99,8 @@ public class CarritoService {
         CarritoEventDTO carritoEvent = new CarritoEventDTO();
         carritoEvent.setUserId(userId);
         carritoEvent.setItems(carrito);
+        carritoEvent.setDireccion(direccion);
+        carritoEvent.setTelefono(telefono);
         String payloadJson = JsonbBuilder.create().toJson(carritoEvent);
         OutboxEvent evt = new OutboxEvent();
         evt.aggregateType = "Carrito";

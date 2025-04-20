@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
@@ -26,19 +27,25 @@ public class CarritoResource {
 
     @POST
     @Path("/pago")
-    @RolesAllowed({"user","admin"})
-    public Response iniciarPago(@Context SecurityContext ctx) {
+    @RolesAllowed({"user", "admin"})
+    public Response iniciarPago(@Context SecurityContext ctx, @Valid IniciarPagoRequest request) {
         String userId = ctx.getUserPrincipal().getName();
-        try{
-            OrdenPago orden = carritoService.iniciarPago(userId);
+        try {
+            OrdenPago orden = carritoService.iniciarPago(userId, request.direccion, request.telefono);
             return Response.ok(orden).build();
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al iniciar el pago").build(); // Maneja errores genéricos
+                    .entity("Error al iniciar el pago").build();
         }
     }
+
+    public record IniciarPagoRequest(
+            @NotNull(message = "La dirección no puede ser nula")
+            @Pattern(regexp = "\\+?[0-9]{9,15}", message = "El número de teléfono debe ser válido") String telefono,
+            @NotNull(message = "El teléfono no puede ser nulo") String direccion
+    ) {}
 
     @POST
     @Path("/")
