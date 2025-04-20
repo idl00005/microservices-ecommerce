@@ -6,6 +6,9 @@ public class CarritoEventDTO {
     private String userId;
     private List<CarritoItemDTO> items;
 
+    public CarritoEventDTO() {
+    }
+
     public String getUserId() {
         return userId;
     }

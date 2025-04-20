@@ -27,7 +27,7 @@ public class Pedido {
     private String direccion;
 
     @NotBlank(message = "El número de teléfono no puede estar vacío")
-    @Pattern(regexp = "\\+?[0-9]{10,15}", message = "El número de teléfono debe ser válido")
+    @Pattern(regexp = "\\+?[0-9]{9,15}", message = "El número de teléfono debe ser válido")
     private String telefono;
 
     @NotNull(message = "El ID del pedido no puede ser nulo")

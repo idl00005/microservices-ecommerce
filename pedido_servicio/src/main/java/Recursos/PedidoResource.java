@@ -1,4 +1,4 @@
-package Controladores;
+package Recursos;
 
 import Entidades.Pedido;
 import Servicios.PedidoService;
@@ -13,7 +13,7 @@ import jakarta.ws.rs.core.SecurityContext;
 
 import java.util.List;
 
-@Path("/pedidos")
+@Path("/pedido")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class PedidoResource {

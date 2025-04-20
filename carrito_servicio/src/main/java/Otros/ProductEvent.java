@@ -20,7 +20,18 @@ public class ProductEvent {
     public ProductEvent() {
     }
 
-    // Getters y setters
+    public void setProductId(long productId) {
+        this.productId = productId;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
+    }
+
+    public void setProducto(ProductoDTO producto) {
+        this.producto = producto;
+    }
+    
     public long getProductId() {
         return productId;
     }

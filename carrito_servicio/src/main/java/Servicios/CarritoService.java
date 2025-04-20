@@ -5,15 +5,18 @@ import DTO.CarritoEventDTO;
 import DTO.ProductoDTO;
 import Entidades.CarritoItem;
 import Entidades.OrdenPago;
+import Entidades.OutboxEvent;
 import Otros.ProductEvent;
 import Repositorios.CarritoItemRepository;
 import Repositorios.OrdenPagoRepository;
+import Repositorios.OutboxEventRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.json.bind.JsonbBuilder;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -47,8 +50,7 @@ public class CarritoService {
     OrdenPagoRepository ordenPagoRepository;
 
     @Inject
-    @Channel("carrito-a-pedidos-out")
-    Emitter<CarritoEventDTO> carritoEventEmitter;
+    OutboxEventRepository outboxRepo;
 
     @Transactional
     public OrdenPago iniciarPago(String userId) {
@@ -67,9 +69,10 @@ public class CarritoService {
         orden.estado = "PENDIENTE";
         orden.fechaCreacion = LocalDateTime.now();
         ordenPagoRepository.persist(orden);
+
         if(orden.montoTotal.compareTo(BigDecimal.ZERO) == 0) {
             orden.estado = "PAGADO";
-            procesarCompra(userId,carrito);
+            procesarCompra(userId);
             return orden;
         } else {
             try {
@@ -87,16 +90,22 @@ public class CarritoService {
     }
 
     @Transactional
-    public void procesarCompra(String userId, List<CarritoItem> carrito) {
+    public void procesarCompra(String userId) {
+        List<CarritoItem> carrito = carritoItemRepository.findByUserId(userId);
 
         System.out.println("Enviando pedido...");//
+
         // Crear el evento
         CarritoEventDTO carritoEvent = new CarritoEventDTO();
         carritoEvent.setUserId(userId);
         carritoEvent.setItems(carrito);
-
-        // Enviar el evento a Kafka
-        carritoEventEmitter.send(carritoEvent);
+        String payloadJson = JsonbBuilder.create().toJson(carritoEvent);
+        OutboxEvent evt = new OutboxEvent();
+        evt.aggregateType = "Carrito";
+        evt.aggregateId = userId;
+        evt.eventType = "Carrito.CompraProcesada";
+        evt.payload = payloadJson;
+        outboxRepo.persist(evt);
 
         // Vaciar el carrito
         carritoItemRepository.delete("userId", userId);

@@ -21,6 +21,9 @@ public class PedidoService {
     @Inject
     PedidoRepository pedidoRepository;
 
+    @Inject
+    ObjectMapper objectMapper;
+
     @Transactional
     public Pedido crearPedido(Pedido pedido) {
         pedidoRepository.guardar(pedido);
@@ -37,7 +40,6 @@ public class PedidoService {
     public void procesarMensajeCarrito(String mensajeCarrito) {
         try {
             // Parsear el mensaje recibido
-            ObjectMapper objectMapper = new ObjectMapper();
             CarritoEventDTO carritoEvent = objectMapper.readValue(mensajeCarrito, CarritoEventDTO.class);
 
             // Crear un pedido por cada tipo de producto
@@ -48,6 +50,11 @@ public class PedidoService {
                 pedido.setCantidad(item.getCantidad());
                 pedido.setPrecioTotal(item.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())));
                 pedido.setFechaCreacion(LocalDateTime.now());
+
+                pedido.setTelefono("123456789"); // Ejemplo de valor predeterminado
+                pedido.setEstado("PENDIENTE");  // Estado inicial
+                pedido.setDireccion("Dirección predeterminada"); // Dirección predeterminada
+                pedido.setPedidoId((long) 12.00); // Generar un ID único
 
                 // Guardar el pedido
                 pedidoRepository.guardar(pedido);
