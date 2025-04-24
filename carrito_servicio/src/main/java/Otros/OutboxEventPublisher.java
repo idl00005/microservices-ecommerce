@@ -1,7 +1,7 @@
 package Otros;
 
 import DTO.CarritoEventDTO;
-import DTO.ReducirStockDTO;
+import DTO.StockEventDTO;
 import Entidades.OutboxEvent;
 import Repositorios.OutboxEventRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,8 +24,8 @@ public class OutboxEventPublisher {
     @Channel("carrito-a-pedidos-out")
     Emitter<CarritoEventDTO> emitter;
 
-    @Channel("catalogo-out")
-    Emitter<ReducirStockDTO> catalogoEmitter;
+    @Channel("eventos-stock")
+    Emitter<StockEventDTO> catalogoEmitter;
 
     @Inject
     ObjectMapper objectMapper;
@@ -33,8 +33,10 @@ public class OutboxEventPublisher {
     @Scheduled(every = "5s")
     public void publishPending() {
         List<OutboxEvent> pendientes = outboxRepo.findPending();
+        System.out.println("Enviando eventos... "+pendientes.size());
         for (OutboxEvent evt : pendientes) {
             if ("Carrito".equals(evt.aggregateType)) {
+                System.out.println("Enviando eventos...1");
                 CarritoEventDTO carritoEvent = mapToCarritoEvent(evt);
                 emitter.send(carritoEvent)
                         .whenComplete((r, ex) -> {
@@ -45,7 +47,8 @@ public class OutboxEventPublisher {
                             }
                         });
             } else if ("Catalogo".equals(evt.aggregateType)) {
-                ReducirStockDTO reducirStockEvent = mapToReducirStockEvent(evt);
+                System.out.println("Enviando eventos...2");
+                StockEventDTO reducirStockEvent = mapToReducirStockEvent(evt);
                 catalogoEmitter.send(reducirStockEvent)
                         .whenComplete((r, ex) -> {
                             if (ex == null) {
@@ -58,9 +61,9 @@ public class OutboxEventPublisher {
         }
     }
 
-    private ReducirStockDTO mapToReducirStockEvent(OutboxEvent evt) {
+    private StockEventDTO mapToReducirStockEvent(OutboxEvent evt) {
         try {
-            return objectMapper.readValue(evt.payload, ReducirStockDTO.class);
+            return objectMapper.readValue(evt.payload, StockEventDTO.class);
         } catch (Exception e) {
             throw new RuntimeException("Error al deserializar el payload: " + evt.payload, e);
         }

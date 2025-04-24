@@ -52,9 +52,15 @@ public class CarritoResource {
     @RolesAllowed({"user", "admin"})
     public Response agregarProducto(@Valid AgregarProductoRequest req, @Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
-
-        CarritoItem item = carritoService.agregarProducto(userId, req.productoId, req.cantidad);
-        return Response.ok(item).build();
+        try{
+            CarritoItem item = carritoService.agregarProducto(userId, req.productoId, req.cantidad);
+            return Response.ok(item).build();
+        } catch (WebApplicationException e) {
+            return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error al agregar el producto al carrito").build();
+        }
     }
 
     public static class AgregarProductoRequest {

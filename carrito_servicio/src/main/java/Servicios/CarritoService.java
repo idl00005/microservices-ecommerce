@@ -1,9 +1,10 @@
 package Servicios;
 
 import Cliente.ProductoClient;
+import Cliente.StockClient;
 import DTO.CarritoEventDTO;
 import DTO.ProductoDTO;
-import DTO.ReducirStockDTO;
+import DTO.StockEventDTO;
 import Entidades.CarritoItem;
 import Entidades.OrdenPago;
 import Entidades.OutboxEvent;
@@ -21,8 +22,6 @@ import jakarta.json.bind.JsonbBuilder;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,12 +54,28 @@ public class CarritoService {
     @Inject
     OutboxEventRepository outboxRepo;
 
+    @Inject
+    StockClient stockClient;
+
     @Transactional
     public OrdenPago iniciarPago(String userId, String direccion, String telefono) {
         List<CarritoItem> carrito = carritoItemRepository.findByUserId(userId);
         if (carrito.isEmpty()) {
             throw new WebApplicationException("El carrito está vacío", 400);
         }
+
+        Map<Long, Integer> productosAReservar = carrito.stream()
+                .collect(Collectors.toMap(
+                        item -> item.productoId,
+                        item -> item.cantidad
+                ));
+
+        // 1. Reservar stock de forma SÍNCRONA (esperando respuesta)
+        Response reservaExitosa = stockClient.reservarStock(productosAReservar, null);
+        if (reservaExitosa.getStatus() != 200) {
+            throw new WebApplicationException(reservaExitosa.toString(), reservaExitosa.getStatus());
+        }
+
 
         BigDecimal total = carrito.stream()
                 .map(item -> item.precio.multiply(BigDecimal.valueOf(item.cantidad)))
@@ -71,11 +86,18 @@ public class CarritoService {
         orden.montoTotal = total;
         orden.estado = "PENDIENTE";
         orden.fechaCreacion = LocalDateTime.now();
+        orden.direccion = direccion;
+        orden.telefono = telefono;
         ordenPagoRepository.persist(orden);
 
         if(orden.montoTotal.compareTo(BigDecimal.ZERO) == 0) {
             orden.estado = "PAGADO";
-            procesarCompra(userId,direccion,telefono);
+            try {
+                procesarPagoCompletado(orden.id);
+            } catch (WebApplicationException e) {
+                throw new WebApplicationException("Error al procesar el pago: " + e.getMessage(), 500);
+            }
+            procesarPagoCancelado(orden.id);
             return orden;
         } else {
             try {
@@ -112,29 +134,82 @@ public class CarritoService {
         evt.payload = payloadJson;
         outboxRepo.persist(evt);
 
-        // Crear el evento para el servicio de catálogo
-        ReducirStockDTO compraEvent = new ReducirStockDTO();
-        compraEvent.setUserId(userId);
-        Map<Long, Integer> productosComprados = carrito.stream()
-                .collect(Collectors.toMap(item -> item.productoId, item -> item.cantidad));
-        compraEvent.setProductosComprados(productosComprados);
-
-        // Enviar el evento al servicio de catálogo
-        String catalogoPayload = JsonbBuilder.create().toJson(compraEvent);
-        OutboxEvent catalogoEvent = new OutboxEvent();
-        catalogoEvent.aggregateType = "Catalogo";
-        catalogoEvent.aggregateId = userId;
-        catalogoEvent.eventType = "Catalogo.ActualizarStock";
-        catalogoEvent.payload = catalogoPayload;
-        outboxRepo.persist(catalogoEvent);
-
         // Vaciar el carrito
         carritoItemRepository.delete("userId", userId);
     }
 
     @Transactional
+    public void procesarPagoCompletado(Long ordenId) {
+        OrdenPago orden = ordenPagoRepository.findById(ordenId);
+        if (orden != null && "PAGADO".equals(orden.estado)) {
+            List<CarritoItem> carrito = carritoItemRepository.findByUserId(orden.userId);
+
+            // Preparar el evento (ajusta los campos según tu DTO)
+            StockEventDTO evento = StockEventDTO.confirmacionCompra(
+                    carrito.stream()
+                            .collect(Collectors.toMap(
+                                    item -> item.productoId,
+                                    item -> item.cantidad
+                            )),
+                    orden.id
+            );
+
+            try {
+                String payload = JsonbBuilder.create().toJson(evento);
+                OutboxEvent outboxEvent = new OutboxEvent();
+                outboxEvent.aggregateType = "Catalogo";
+                outboxEvent.aggregateId = String.valueOf(ordenId); // O userId si prefieres
+                outboxEvent.eventType = "PAGO_COMPLETADO";
+                outboxEvent.payload = payload;
+                outboxEvent.status = OutboxEvent.Status.PENDING;
+                outboxRepo.persist(outboxEvent);
+            } catch (Exception e) {
+                throw new RuntimeException("Error serializando evento de pago completado", e);
+            }
+            procesarCompra(orden.userId, orden.direccion, orden.telefono);
+        }
+    }
+
+
+
+    @Transactional
+    public void procesarPagoCancelado(Long ordenId) {
+        OrdenPago orden = ordenPagoRepository.findById(ordenId);
+        if (orden != null) {
+            List<CarritoItem> carrito = carritoItemRepository.findByUserId(orden.userId);
+
+            // Enviar evento asíncrono para liberar stock
+            StockEventDTO evento = StockEventDTO.liberacionStock(
+                    carrito.stream()
+                            .collect(Collectors.toMap(
+                                    item -> item.productoId,
+                                    item -> item.cantidad
+                            )),
+                    orden.id
+            );
+            try {
+                String payload = JsonbBuilder.create().toJson(evento);
+                OutboxEvent outboxEvent = new OutboxEvent();
+                outboxEvent.aggregateType = "Catalogo";
+                outboxEvent.aggregateId = String.valueOf(ordenId);
+                outboxEvent.eventType = "PAGO_CANCELADO";
+                outboxEvent.payload = payload;
+                outboxEvent.status = OutboxEvent.Status.PENDING;
+                outboxRepo.persist(outboxEvent);
+            } catch (Exception e) {
+                throw new RuntimeException("Error serializando evento de pago cancelado", e);
+            }
+        }
+    }
+
+
+    @Transactional
     public CarritoItem agregarProducto(String userId, Long productoId, int cantidad) {
         ProductoDTO producto = productoClient.obtenerProductoPorId(productoId);
+
+        if (producto == null) {
+            throw new WebApplicationException("El producto no existe", Response.Status.NOT_FOUND);
+        }
 
         // Validar stock disponible
         if (producto.stock() < cantidad) {

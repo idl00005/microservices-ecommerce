@@ -1,13 +1,18 @@
 package com.Servicios;
 
+import com.DTO.StockEventDTO;
 import com.Entidades.Producto;
 import com.Otros.ProductEvent;
 import com.Repositorios.RepositorioProducto;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,6 +23,9 @@ public class CatalogoService {
 
     @Inject
     public RepositorioProducto productoRepository;
+
+    @Inject
+    ObjectMapper objectMapper;
 
     @Inject
     @Channel("product-events")
@@ -67,6 +75,53 @@ public class CatalogoService {
             return true;
         }
         return false;
+    }
+
+    @Transactional
+    public boolean reservarStock(Long productoId, int cantidad) {
+        Producto producto = productoRepository.findById(productoId);
+        if (producto == null) {
+            throw new WebApplicationException("Producto no encontrado", 404);
+        }
+
+        if (producto.getStock() - producto.getStockReservado() >= cantidad) {
+            producto.setStockReservado(producto.getStockReservado() + cantidad);
+            productoRepository.persist(producto);
+            return true;
+        }
+        return false;
+    }
+
+    @Incoming("eventos-stock")
+    @Transactional
+    public void procesarEventoStock(String mensaje) throws JsonProcessingException {
+        StockEventDTO evento = objectMapper.readValue(mensaje, StockEventDTO.class);
+        switch (evento.tipo()) {
+            case "LIBERAR_STOCK":
+                evento.productos().forEach((productoId, cantidad) -> {
+                    Producto producto = productoRepository.findById(productoId);
+                    if (producto != null) {
+                        producto.setStockReservado(
+                                producto.getStockReservado() - cantidad
+                        );
+                        productoRepository.persist(producto);
+                    }
+                });
+                break;
+
+            case "CONFIRMAR_COMPRA":
+                evento.productos().forEach((productoId, cantidad) -> {
+                    Producto producto = productoRepository.findById(productoId);
+                    if (producto != null) {
+                        producto.setStock(producto.getStock() - cantidad);
+                        producto.setStockReservado(
+                                producto.getStockReservado() - cantidad
+                        );
+                        productoRepository.persist(producto);
+                    }
+                });
+                break;
+        }
     }
 
     public Producto obtenerProductoPorId(Long id) {

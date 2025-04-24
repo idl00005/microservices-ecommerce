@@ -91,4 +91,22 @@ public class CatalogoResource {
         }
         return Response.ok(producto).build();
     }
+
+    @POST
+    @RolesAllowed("admin")
+    @Path("/{id}/reservar")
+    public Response reservarStock(@PathParam("id") Long productoId,
+                                  @QueryParam("cantidad") int cantidad) {
+        try {
+            boolean reservado = catalogoService.reservarStock(productoId, cantidad);
+            if (reservado) {
+                return Response.ok().build();
+            }
+            return Response.status(Response.Status.CONFLICT)
+                    .entity("Stock insuficiente").build();
+        } catch (Exception e) {
+            return Response.serverError().build();
+        }
+    }
+
 }

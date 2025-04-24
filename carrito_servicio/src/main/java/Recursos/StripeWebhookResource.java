@@ -2,6 +2,7 @@ package Recursos;
 
 import Entidades.OrdenPago;
 import Repositorios.OrdenPagoRepository;
+import Servicios.CarritoService;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.stripe.model.Event;
@@ -22,6 +23,9 @@ public class StripeWebhookResource {
 
     @ConfigProperty(name = "stripe.webhook.secret")
     String stripeWebhookSecret;
+
+    @Inject
+    CarritoService carritoService;
 
     @POST
     @Transactional
@@ -54,10 +58,19 @@ public class StripeWebhookResource {
                     OrdenPago orden = ordenPagoRepository.findByReferenciaExterna(paymentIntentId);
                     if (orden != null) {
                         switch (event.getType()) {
-                            case "payment_intent.succeeded" -> orden.estado = "PAGADO";
-                            case "payment_intent.payment_failed" -> orden.estado = "FALLIDO";
-                            case "payment_intent.canceled" -> orden.estado = "CANCELADO";
+                            case "payment_intent.succeeded":
+                                orden.estado = "PAGADO";
+                                carritoService.procesarPagoCompletado(orden.id);
+                                break;
+                            case "payment_intent.payment_failed":
+                                orden.estado = "FALLIDO";
+                                break;
+                            case "payment_intent.canceled":
+                                orden.estado = "CANCELADO";
+                                carritoService.procesarPagoCancelado(orden.id);
+                                break;
                         }
+
                         ordenPagoRepository.persist(orden);
                     } else {
                         System.err.println("Orden no encontrada para PaymentIntent ID: " + paymentIntentId);

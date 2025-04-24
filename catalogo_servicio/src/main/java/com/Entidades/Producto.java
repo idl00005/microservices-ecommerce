@@ -36,6 +36,7 @@ public class Producto {
     @Min(value = 0, message = "El stock no puede ser menor que 0")
     private Integer stock;
 
+    private Integer stockReservado = 0;
 
     @Type(JsonBinaryType.class) // Esta anotación es crucial
     @Column(columnDefinition = "jsonb")
@@ -108,5 +109,13 @@ public class Producto {
 
     public void setDetalles(JsonNode detalles) {
         this.detalles = detalles;
+    }
+
+    public Integer getStockReservado() {
+        return stockReservado;
+    }
+
+    public void setStockReservado(Integer stockReservado) {
+        this.stockReservado = stockReservado;
     }
 }

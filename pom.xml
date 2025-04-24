@@ -4,6 +4,15 @@
     <groupId>uja</groupId>
     <artifactId>prototipo-api</artifactId>
     <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>autenticacion_servicio</module>
+        <module>carrito_servicio</module>
+        <module>catalogo_servicio</module>
+        <module>pedido_servicio</module>
+    </modules>
+
 
     <properties>
         <compiler-plugin.version>3.13.0</compiler-plugin.version>

@@ -26,5 +26,13 @@ public class OrdenPago extends PanacheEntity {
 
     @NotNull(message = "La fecha de creación no puede ser nula")
     public LocalDateTime fechaCreacion;
+
+    @NotBlank(message = "La dirección no puede estar vacía")
+    public String direccion;
+
+    @NotBlank(message = "El número de teléfono no puede estar vacío")
+    @Pattern(regexp = "\\+?[0-9]{9,15}", message = "El número de teléfono debe ser válido")
+    public String telefono;
+
 }
 
