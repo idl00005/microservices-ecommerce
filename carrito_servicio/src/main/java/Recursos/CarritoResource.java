@@ -36,8 +36,9 @@ public class CarritoResource {
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
         } catch (Exception e) {
+            e.printStackTrace();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al iniciar el pago").build();
+                    .entity("Error al iniciar el pago: " + e.getMessage()).build();
         }
     }
 

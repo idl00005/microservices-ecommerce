@@ -33,10 +33,8 @@ public class OutboxEventPublisher {
     @Scheduled(every = "5s")
     public void publishPending() {
         List<OutboxEvent> pendientes = outboxRepo.findPending();
-        System.out.println("Enviando eventos... "+pendientes.size());
         for (OutboxEvent evt : pendientes) {
             if ("Carrito".equals(evt.aggregateType)) {
-                System.out.println("Enviando eventos...1");
                 CarritoEventDTO carritoEvent = mapToCarritoEvent(evt);
                 emitter.send(carritoEvent)
                         .whenComplete((r, ex) -> {
@@ -47,7 +45,6 @@ public class OutboxEventPublisher {
                             }
                         });
             } else if ("Catalogo".equals(evt.aggregateType)) {
-                System.out.println("Enviando eventos...2");
                 StockEventDTO reducirStockEvent = mapToReducirStockEvent(evt);
                 catalogoEmitter.send(reducirStockEvent)
                         .whenComplete((r, ex) -> {

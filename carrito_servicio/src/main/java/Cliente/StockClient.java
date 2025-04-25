@@ -51,7 +51,10 @@ public class StockClient {
     }
 
     @PostConstruct
-    void obtenerJwtAlArrancar() {
+    public void obtenerJwtAlArrancar() {
+        if (System.getProperty("test.env") != null) {
+            return; // No hacer nada en el entorno de pruebas
+        }
         obtenerJwtParaCarrito();
     }
 

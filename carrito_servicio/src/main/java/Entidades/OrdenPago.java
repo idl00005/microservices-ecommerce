@@ -17,7 +17,7 @@ public class OrdenPago extends PanacheEntity {
     public BigDecimal montoTotal;
 
     @NotBlank(message = "El estado no puede estar vacío")
-    @Pattern(regexp = "PENDIENTE|CREADO|PAGADO|FALLIDO|CANCELADO",
+    @Pattern(regexp = "PENDIENTE|CREADO|PAGADO|FALLIDO|CANCELADO|COMPLETADO",
             message = "El estado debe ser PENDIENTE, CREADO, PAGADO, FALLIDO o CANCELADO")
     public String estado;
 

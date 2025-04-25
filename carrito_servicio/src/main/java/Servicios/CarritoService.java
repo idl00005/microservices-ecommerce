@@ -115,27 +115,27 @@ public class CarritoService {
     }
 
     @Transactional
-    public void procesarCompra(String userId, String direccion, String telefono) {
-        List<CarritoItem> carrito = carritoItemRepository.findByUserId(userId);
+    public void procesarCompra(OrdenPago orden) {
+        List<CarritoItem> carrito = carritoItemRepository.findByUserId(orden.userId);
 
         System.out.println("Enviando pedido...");//
 
         // Crear el evento para el servicio de pedidos
         CarritoEventDTO carritoEvent = new CarritoEventDTO();
-        carritoEvent.setUserId(userId);
+        carritoEvent.setUserId(orden.userId);
         carritoEvent.setItems(carrito);
-        carritoEvent.setDireccion(direccion);
-        carritoEvent.setTelefono(telefono);
+        carritoEvent.setDireccion(orden.direccion);
+        carritoEvent.setTelefono(orden.telefono);
         String payloadJson = JsonbBuilder.create().toJson(carritoEvent);
         OutboxEvent evt = new OutboxEvent();
         evt.aggregateType = "Carrito";
-        evt.aggregateId = userId;
+        evt.aggregateId = orden.userId.toString();
         evt.eventType = "Carrito.CompraProcesada";
         evt.payload = payloadJson;
         outboxRepo.persist(evt);
-
+        orden.estado = "COMPLETADO";
         // Vaciar el carrito
-        carritoItemRepository.delete("userId", userId);
+        carritoItemRepository.delete("userId", orden.userId);
     }
 
     @Transactional
@@ -166,7 +166,7 @@ public class CarritoService {
             } catch (Exception e) {
                 throw new RuntimeException("Error serializando evento de pago completado", e);
             }
-            procesarCompra(orden.userId, orden.direccion, orden.telefono);
+            procesarCompra(orden);
         }
     }
 

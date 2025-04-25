@@ -1,17 +1,20 @@
 package Unitario;
 
 import Cliente.ProductoClient;
+import Cliente.StockClient;
 import DTO.ProductoDTO;
 import Entidades.CarritoItem;
 import Entidades.OrdenPago;
 import Otros.ProductEvent;
 import Repositorios.CarritoItemRepository;
+import Repositorios.OrdenPagoRepository;
 import Servicios.CarritoService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.response.Response;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,8 +40,12 @@ public class CarritoResourceTest {
     @Inject
     CarritoService carritoService;
 
+    @InjectMock
+    OrdenPagoRepository ordenPagoRepository;
+
     @BeforeEach
     public void setup() {
+        System.setProperty("test.env", "true");
         MockitoAnnotations.openMocks(this);
     }
 
@@ -230,24 +237,47 @@ public class CarritoResourceTest {
 
     @Test
     @TestTransaction
-    public void testIniciarPagoMontoCero() {
-        // Mock del carrito con productos gratuitos
+    public void testProcesarPagoCompletado_CambiaEstadoCorrectamente() {
+        Long ordenId = 99L;
+        OrdenPago orden = new OrdenPago();
+        orden.id = ordenId;
+        orden.estado = "PAGADO";
+        orden.userId = "user1";
         CarritoItem item = new CarritoItem();
-        item.userId = "user1";
         item.productoId = 1L;
-        item.nombreProducto = "Producto Gratis";
-        item.precio = BigDecimal.ZERO;
-        item.cantidad = 1;
+        item.cantidad = 2;
+        List<CarritoItem> items = List.of(item);
 
-        when(carritoItemRepository.findByUserId("user1")).thenReturn(List.of(item));
+        // Mock del repositorio
+        when(ordenPagoRepository.findById(ordenId)).thenReturn(orden);
+        when(carritoItemRepository.findByUserId(orden.userId)).thenReturn(items);
 
         // Llamada al método
-        OrdenPago orden = carritoService.iniciarPago("user1","Calle de ejemplo","6778798984");
+        carritoService.procesarPagoCompletado(ordenId);
 
         // Verificaciones
-        assertNotNull(orden);
         assertEquals("COMPLETADO", orden.estado);
-        assertEquals(BigDecimal.ZERO, orden.montoTotal);
-        verify(carritoItemRepository, times(1)).findByUserId("user1");
+    }
+
+    @Test
+    @TestTransaction
+    public void testProcesarPagoCompletado_OrdenNoExiste() {
+        when(ordenPagoRepository.findById(100L)).thenReturn(null);
+
+        // No lanza excepción, simplemente ignora
+        carritoService.procesarPagoCompletado(100L);
+
+        verify(ordenPagoRepository, never()).persist((OrdenPago) any());
+    }
+
+    @Test
+    @TestTransaction
+    public void testProcesarPagoCancelado_OrdenNoExiste() {
+        when(ordenPagoRepository.findById(70L)).thenReturn(null);
+
+        // No lanza excepción, simplemente ignora
+        carritoService.procesarPagoCancelado(70L);
+
+        verify(ordenPagoRepository, never()).persist((OrdenPago) any());
     }
 }

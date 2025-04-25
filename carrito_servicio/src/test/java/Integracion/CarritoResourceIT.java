@@ -1,9 +1,11 @@
 package Integracion;
 
 import Cliente.ProductoClient;
+import Cliente.StockClient;
 import DTO.ProductoDTO;
 import Entidades.CarritoItem;
 import Recursos.CarritoResource;
+import Recursos.CarritoResource.IniciarPagoRequest;
 import Recursos.CarritoResource.AgregarProductoRequest;
 import Repositorios.CarritoItemRepository;
 import io.quarkus.test.InjectMock;
@@ -11,12 +13,14 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.doThrow;
@@ -30,6 +34,9 @@ public class CarritoResourceIT {
 
     @InjectMock
     CarritoItemRepository carritoItemRepository;
+
+    @InjectMock
+    StockClient stockClient;
 
     @Test
     @TestSecurity(user = "user", roles = {"user"})
@@ -161,9 +168,17 @@ public class CarritoResourceIT {
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
 
+        Map<Long, Integer> productosAReservar = new HashMap<>();
+        productosAReservar.put(item.productoId, item.cantidad);
+
+        IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
+
+        when(stockClient.reservarStock(productosAReservar,null)).thenReturn(Response.ok().build());
+
         // Realizar la solicitud
         given()
                 .contentType(ContentType.JSON)
+                .body(requestBody)
                 .when()
                 .post("/carrito/pago")
                 .then()
@@ -177,9 +192,11 @@ public class CarritoResourceIT {
     public void testIniciarPagoCarritoVacio() {
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of());
 
-        // Realizar la solicitud
+        IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
+
         given()
                 .contentType(ContentType.JSON)
+                .body(requestBody)
                 .when()
                 .post("/carrito/pago")
                 .then()
@@ -200,9 +217,16 @@ public class CarritoResourceIT {
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
 
+        Map<Long, Integer> productosAReservar = new HashMap<>();
+        productosAReservar.put(item.productoId, item.cantidad);
+
+        IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
+
+        when(stockClient.reservarStock(productosAReservar,null)).thenReturn(Response.ok().build());
         // Realizar la solicitud
         given()
                 .contentType(ContentType.JSON)
+                .body(requestBody)
                 .when()
                 .post("/carrito/pago")
                 .then()
@@ -235,7 +259,7 @@ public class CarritoResourceIT {
                 .post("/carrito/pago")
                 .then()
                 .statusCode(500)
-                .body(containsString("Error al procesar el pago"));
+                .body(containsString("Error al iniciar el pago"));
     }
 
 }
