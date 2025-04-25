@@ -40,4 +40,14 @@ public class PedidoRepository {
                 .setParameter("usuarioId", usuarioId)
                 .getResultList();
     }
+
+    public List<Pedido> buscarPorEstadoYUsuarioConPaginacion(String estado, String usuarioId, int offset, int limit) {
+        String query = "SELECT p FROM Pedido p WHERE (:estado IS NULL OR p.estado = :estado) AND (:usuarioId IS NULL OR p.usuarioId = :usuarioId)";
+        return entityManager.createQuery(query, Pedido.class)
+                .setParameter("estado", estado)
+                .setParameter("usuarioId", usuarioId)
+                .setFirstResult(offset)
+                .setMaxResults(limit)
+                .getResultList();
+    }
 }
