@@ -2,8 +2,10 @@ package com.Servicios;
 
 import com.DTO.StockEventDTO;
 import com.Entidades.Producto;
+import com.Entidades.Valoracion;
 import com.Otros.ProductEvent;
 import com.Repositorios.RepositorioProducto;
+import com.Repositorios.ValoracionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -23,6 +25,9 @@ public class CatalogoService {
 
     @Inject
     public RepositorioProducto productoRepository;
+
+    @Inject
+    public ValoracionRepository valoracionRepository;
 
     @Inject
     ObjectMapper objectMapper;
@@ -121,6 +126,22 @@ public class CatalogoService {
                     }
                 });
                 break;
+        }
+    }
+
+    @Incoming("valoraciones-in")
+    @Transactional
+    public void procesarEventoValoracion(String mensaje) {
+        try {
+            // Deserializar el mensaje recibido
+            Valoracion valoracion = objectMapper.readValue(mensaje, Valoracion.class);
+
+            // Guardar la valoración en la base de datos
+            valoracionRepository.persist(valoracion);
+
+            System.out.println("Valoración procesada y guardada: " + valoracion);
+        } catch (Exception e) {
+            System.err.println("Error al procesar el evento de valoración: " + e.getMessage());
         }
     }
 

@@ -1,6 +1,7 @@
 package Recursos;
 
 import DTO.PedidoDTO;
+import DTO.ValoracionDTO;
 import Entidades.Pedido;
 import Servicios.PedidoService;
 import jakarta.annotation.security.RolesAllowed;
@@ -106,6 +107,21 @@ public class PedidoResource {
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Error al cambiar el estado del pedido").build();
+        }
+    }
+
+    @POST
+    @Path("/{id}/valoracion")
+    @RolesAllowed({"user","admin"})
+    public Response crearValoracion(@PathParam("id") Long pedidoId, @Valid ValoracionDTO valoracionDTO, @Context SecurityContext securityContext) {
+        String usuarioId = securityContext.getUserPrincipal().getName();
+        try {
+            pedidoService.crearValoracion(pedidoId, usuarioId, valoracionDTO);
+            return Response.status(Response.Status.CREATED).entity("Valoración creada y enviada correctamente").build();
+        } catch (WebApplicationException e) {
+            return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al crear la valoración").build();
         }
     }
 

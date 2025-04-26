@@ -1,7 +1,10 @@
 package Servicios;
 
 import DTO.PedidoDTO;
+import DTO.ValoracionDTO;
+import Entidades.OutboxEvent;
 import Entidades.Pedido;
+import Repositorios.OutboxEventRepository;
 import Repositorios.PedidoRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -22,6 +25,9 @@ public class PedidoService {
 
     @Inject
     PedidoRepository pedidoRepository;
+
+    @Inject
+    OutboxEventRepository outboxEventRepository;
 
     @Inject
     ObjectMapper objectMapper;
@@ -116,5 +122,33 @@ public class PedidoService {
         }
         pedidoExistente.setEstado(estado);
         pedidoRepository.actualizar(pedidoExistente);
+    }
+
+    @Transactional
+    public void crearValoracion(Long pedidoId, String usuarioId, ValoracionDTO valoracionDTO) throws JsonProcessingException {
+        Pedido pedido = pedidoRepository.buscarPorId(pedidoId);
+
+        if (pedido == null) {
+            throw new WebApplicationException("Pedido no encontrado", 404);
+        }
+
+        if (!pedido.getUsuarioId().equals(usuarioId)) {
+            throw new WebApplicationException("No tienes permiso para valorar este pedido", 403);
+        }
+
+        if (!"COMPLETADO".equals(pedido.getEstado())) {
+            throw new WebApplicationException("Solo se pueden valorar pedidos completados", 400);
+        }
+
+        // Crear el evento de valoración
+        OutboxEvent outboxEvent = new OutboxEvent();
+        outboxEvent.aggregateId = pedidoId.toString();
+        outboxEvent.aggregateType = "Pedido";
+        outboxEvent.eventType =  "ValoracionCreada";
+        outboxEvent.payload =  objectMapper.writeValueAsString(valoracionDTO);
+        outboxEvent.status = OutboxEvent.Status.PENDING;
+
+        // Persistir el evento en la tabla outbox
+        outboxEventRepository.persist(outboxEvent);
     }
 }
