@@ -92,6 +92,23 @@ public class PedidoResource {
         }
     }
 
+    @PATCH
+    @Path("/{id}/estado")
+    @RolesAllowed("admin")
+    public Response cambiarEstadoPedido(@PathParam("id") Long id, @QueryParam("estado") String nuevoEstado) {
+        try {
+
+            pedidoService.actualizarPedido(id,nuevoEstado);
+
+            return Response.ok("Estado del pedido actualizado correctamente").build();
+        } catch (WebApplicationException e) {
+            return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error al cambiar el estado del pedido").build();
+        }
+    }
+
     public static class FiltroPedidoRequest {
         private String estado;
         private String usuarioId;

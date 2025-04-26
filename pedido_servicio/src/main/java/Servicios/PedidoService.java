@@ -107,4 +107,14 @@ public class PedidoService {
             throw new RuntimeException("Error al procesar el mensaje del carrito", e);
         }
     }
+
+    @Transactional
+    public void actualizarPedido(Long id, String estado) {
+        Pedido pedidoExistente = pedidoRepository.buscarPorId(id);
+        if (pedidoExistente == null) {
+            throw new WebApplicationException("Pedido no encontrado", 404);
+        }
+        pedidoExistente.setEstado(estado);
+        pedidoRepository.actualizar(pedidoExistente);
+    }
 }
