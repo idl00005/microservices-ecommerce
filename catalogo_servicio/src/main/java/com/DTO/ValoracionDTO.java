@@ -1,4 +1,4 @@
-package DTO;
+package com.DTO;
 
 public class ValoracionDTO {
     private String idUsuario;
@@ -12,5 +12,24 @@ public class ValoracionDTO {
         this.idProducto = idProducto;
         this.puntuacion = puntuacion;
         this.comentario = comentario;
+    }
+
+    public ValoracionDTO() {
+    }
+
+    public String getIdUsuario() {
+        return idUsuario;
+    }
+
+    public Long getIdProducto() {
+        return idProducto;
+    }
+
+    public int getPuntuacion() {
+        return puntuacion;
+    }
+
+    public String getComentario() {
+        return comentario;
     }
 }

@@ -125,7 +125,7 @@ public class PedidoService {
     }
 
     @Transactional
-    public void crearValoracion(Long pedidoId, String usuarioId, ValoracionDTO valoracionDTO) throws JsonProcessingException {
+    public void crearValoracion(Long pedidoId, String usuarioId, int puntuacion, String comentario) throws JsonProcessingException {
         Pedido pedido = pedidoRepository.buscarPorId(pedidoId);
 
         if (pedido == null) {
@@ -139,6 +139,9 @@ public class PedidoService {
         if (!"COMPLETADO".equals(pedido.getEstado())) {
             throw new WebApplicationException("Solo se pueden valorar pedidos completados", 400);
         }
+
+        // Crear la valoración
+        ValoracionDTO valoracionDTO = new ValoracionDTO(usuarioId, pedido.getProductoId(), puntuacion, comentario);
 
         // Crear el evento de valoración
         OutboxEvent outboxEvent = new OutboxEvent();

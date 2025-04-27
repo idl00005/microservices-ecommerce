@@ -1,6 +1,7 @@
 package com.Servicios;
 
 import com.DTO.StockEventDTO;
+import com.DTO.ValoracionDTO;
 import com.Entidades.Producto;
 import com.Entidades.Valoracion;
 import com.Otros.ProductEvent;
@@ -17,6 +18,7 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -134,10 +136,18 @@ public class CatalogoService {
     public void procesarEventoValoracion(String mensaje) {
         try {
             // Deserializar el mensaje recibido
-            Valoracion valoracion = objectMapper.readValue(mensaje, Valoracion.class);
+            ValoracionDTO valoracion = objectMapper.readValue(mensaje, ValoracionDTO.class);
+
+            Valoracion valoracionEntity = new Valoracion();
+            valoracionEntity.setIdUsuario(valoracion.getIdUsuario());
+            valoracionEntity.setIdProducto(valoracion.getIdProducto());
+            valoracionEntity.setPuntuacion(valoracion.getPuntuacion());
+            valoracionEntity.setComentario(valoracion.getComentario());
+            valoracionEntity.setFechaCreacion(LocalDateTime.now());
 
             // Guardar la valoración en la base de datos
-            valoracionRepository.persist(valoracion);
+            System.out.println(valoracion);
+            valoracionRepository.persist(valoracionEntity);
 
             System.out.println("Valoración procesada y guardada: " + valoracion);
         } catch (Exception e) {

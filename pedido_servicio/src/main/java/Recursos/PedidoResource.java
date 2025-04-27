@@ -7,6 +7,7 @@ import Servicios.PedidoService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -113,10 +114,10 @@ public class PedidoResource {
     @POST
     @Path("/{id}/valoracion")
     @RolesAllowed({"user","admin"})
-    public Response crearValoracion(@PathParam("id") Long pedidoId, @Valid ValoracionDTO valoracionDTO, @Context SecurityContext securityContext) {
+    public Response crearValoracion(@PathParam("id") Long pedidoId, @Valid ValoracionRequest valoracionRequest, @Context SecurityContext securityContext) {
         String usuarioId = securityContext.getUserPrincipal().getName();
         try {
-            pedidoService.crearValoracion(pedidoId, usuarioId, valoracionDTO);
+            pedidoService.crearValoracion(pedidoId, usuarioId, valoracionRequest.puntuacion, valoracionRequest.comentario);
             return Response.status(Response.Status.CREATED).entity("Valoración creada y enviada correctamente").build();
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
@@ -167,4 +168,12 @@ public class PedidoResource {
             this.tamanio = tamanio;
         }
     }
+
+    public record ValoracionRequest(
+            @Positive(message = "La puntuación debe ser mayor que 0")
+            @NotNull
+            int puntuacion,
+            @NotNull(message = "El comentario no puede ser nulo")
+            String comentario
+    ) {}
 }

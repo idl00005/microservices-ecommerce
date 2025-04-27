@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class Valoracion extends PanacheEntity {
 
     @NotNull(message = "El id del usuario no puede ser nulo")
-    private Long idUsuario;
+    private String idUsuario;
 
     @NotNull(message = "El id del producto no puede ser nulo")
     private Long idProducto;
@@ -24,12 +24,15 @@ public class Valoracion extends PanacheEntity {
     @NotNull(message = "La fecha de creación no puede ser nula")
     private LocalDateTime fechaCreacion;
 
+    public Valoracion() {
+    }
+
     // Getters y Setters
-    public Long getIdUsuario() {
+    public String getIdUsuario() {
         return idUsuario;
     }
 
-    public void setIdUsuario(Long idUsuario) {
+    public void setIdUsuario(String idUsuario) {
         this.idUsuario = idUsuario;
     }
 
