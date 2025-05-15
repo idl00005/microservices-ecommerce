@@ -1,8 +1,10 @@
 package com.Recursos;
 
 import com.Entidades.Producto;
+import com.Entidades.Valoracion;
 import com.Otros.ProductEvent;
 import com.Otros.ResponseMessage;
+import com.Otros.PaginacionResponse;
 import com.Servicios.CatalogoService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -20,7 +22,7 @@ import java.util.List;
 public class CatalogoResource {
 
     @Inject
-    CatalogoService catalogoService;
+    public CatalogoService catalogoService;
 
     private static final Logger LOG = Logger.getLogger(CatalogoResource.class);
 
@@ -106,6 +108,25 @@ public class CatalogoResource {
                     .entity("Stock insuficiente").build();
         } catch (Exception e) {
             return Response.serverError().build();
+        }
+    }
+
+    @GET
+    @Path("/{id}/valoraciones")
+    public Response obtenerValoracionesPorProducto(@PathParam("id") Long idProducto,
+                                                   @QueryParam("pagina") @DefaultValue("1") int pagina,
+                                                   @QueryParam("tamanio") @DefaultValue("10") int tamanio) {
+        try {
+            List<Valoracion> valoraciones = catalogoService.obtenerValoracionesPorProducto(idProducto, pagina, tamanio);
+            long total = catalogoService.contarValoracionesPorProducto(idProducto);
+
+            return Response.ok()
+                    .entity(new PaginacionResponse<>(valoraciones, pagina, tamanio, total))
+                    .build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error al obtener las valoraciones: " + e.getMessage())
+                    .build();
         }
     }
 

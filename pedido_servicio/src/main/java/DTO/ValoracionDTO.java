@@ -6,6 +6,21 @@ public class ValoracionDTO {
     private int puntuacion;
     private String comentario;
 
+    public String getIdUsuario() {
+        return idUsuario;
+    }
+
+    public Long getIdProducto() {
+        return idProducto;
+    }
+
+    public int getPuntuacion() {
+        return puntuacion;
+    }
+
+    public String getComentario() {
+        return comentario;
+    }
 
     public ValoracionDTO(String usuarioId, Long idProducto, int puntuacion, String comentario) {
         this.idUsuario = usuarioId;

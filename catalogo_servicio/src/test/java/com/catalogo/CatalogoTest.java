@@ -1,9 +1,12 @@
 package com.catalogo;
 
 import com.Entidades.Producto;
+import com.Entidades.Valoracion;
+import com.Otros.PaginacionResponse;
 import com.Otros.ProductEvent;
 import com.Recursos.CatalogoResource;
 import com.Repositorios.RepositorioProducto;
+import com.Repositorios.ValoracionRepository;
 import com.Servicios.CatalogoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,12 +37,17 @@ class CatalogoTest {
     @Mock
     CatalogoResource catalogoResource;
 
+    @Mock
+    ValoracionRepository valoracionRepository;
+
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
-        catalogoService = new CatalogoService(); // Usa la instancia real
+        catalogoService = new CatalogoService();
         catalogoService.productEventEmitter = productEventEmitter; // Inyecta el mock
         catalogoService.productoRepository = mockRepositorio; // Inyecta el mock
+        catalogoService.valoracionRepository = valoracionRepository; // Inyecta el mock
+        catalogoService.objectMapper = new ObjectMapper();
     }
 
     private Producto crearProductoEjemplo() {
@@ -130,44 +138,21 @@ class CatalogoTest {
     }
 
     @Test
-    void testGetProducts_InvalidParameters() {
-        // Simular respuestas para parámetros inválidos
-        when(catalogoResource.getProducts(0, 10, null, null, null, null))
-                .thenReturn(Response.status(Response.Status.BAD_REQUEST)
-                        .entity("Los parámetros 'page' y 'size' deben ser mayores o iguales a 1.").build());
-
-        when(catalogoResource.getProducts(1, 0, null, null, null, null))
-                .thenReturn(Response.status(Response.Status.BAD_REQUEST)
-                        .entity("Los parámetros 'page' y 'size' deben ser mayores o iguales a 1.").build());
-
-        // Test con página inválida
-        Response response = catalogoResource.getProducts(0, 10, null, null, null, null);
-        assertNotNull(response);
-        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
-        assertTrue(response.getEntity().toString().contains("Los parámetros 'page' y 'size' deben ser mayores o iguales a 1."));
-
-        // Test con tamaño inválido
-        response = catalogoResource.getProducts(1, 0, null, null, null, null);
-        assertNotNull(response);
-        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
-        assertTrue(response.getEntity().toString().contains("Los parámetros 'page' y 'size' deben ser mayores o iguales a 1."));
-    }
-
-    @Test
     void testAddProduct_Success() {
         Producto producto = crearProductoEjemplo();
 
-        // Configurar el mock para devolver una respuesta válida
-        when(catalogoResource.addProduct(producto))
-                .thenReturn(Response.status(Response.Status.CREATED).entity(producto).build());
+        // Configurar el mock para que el método void no haga nada
+        doNothing().when(mockRepositorio).add(any(Producto.class));
 
-        // Llamar al método
-        Response response = catalogoResource.addProduct(producto);
+        // Llamar al método del servicio
+        Producto resultado = catalogoService.agregarProducto(producto);
 
-        // Validar la respuesta
-        assertNotNull(response);
-        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
-        assertEquals(producto, response.getEntity());
+        // Validar el resultado
+        assertNotNull(resultado);
+        assertEquals("Camiseta", resultado.getNombre());
+
+        // Verificar que el método add fue llamado con el producto correcto
+        verify(mockRepositorio).add(producto);
     }
 
 
@@ -175,21 +160,19 @@ class CatalogoTest {
     void testAddProduct_Error() {
         Producto producto = crearProductoEjemplo();
 
-        // Configurar el mock del servicio para lanzar una excepción
-        doThrow(new RuntimeException("Falló")).when(mockRepositorio).add(producto);
+        // Configurar el mock del repositorio para lanzar una excepción
+        doThrow(new RuntimeException("Falló")).when(mockRepositorio).add(any(Producto.class));
 
-        // Configurar el mock del recurso para manejar la excepción
-        when(catalogoResource.addProduct(producto))
-                .thenReturn(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .entity("Error al agregar el producto").build());
+        // Llamar al método del servicio directamente
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            catalogoService.agregarProducto(producto);
+        });
 
-        // Llamar al método
-        Response response = catalogoResource.addProduct(producto);
+        // Validar que la excepción tenga el mensaje esperado
+        assertEquals("Falló", exception.getMessage());
 
-        // Validar la respuesta
-        assertNotNull(response);
-        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
-        assertTrue(response.getEntity().toString().contains("Error al agregar el producto"));
+        // Verificar que el método add fue llamado con el producto correcto
+        verify(mockRepositorio).add(producto);
     }
 
     @Test
@@ -226,36 +209,51 @@ class CatalogoTest {
     void testUpdateProduct_NotFound() {
         Producto producto = crearProductoEjemplo();
 
-        // Configurar el mock del recurso para devolver una respuesta NOT_FOUND
-        when(catalogoResource.updateProduct(eq(1L), eq(producto)))
-                .thenReturn(Response.status(Response.Status.NOT_FOUND)
-                        .entity("Producto no encontrado").build());
+        // Configurar el mock del servicio para devolver false (producto no encontrado)
+        when(mockRepositorio.updateProduct(eq(1L), anyString(), anyString(), any(), any(), any())).thenReturn(false);
 
-        // Llamar al método
-        Response response = catalogoResource.updateProduct(1L, producto);
+        // Llamar al método del servicio directamente
+        boolean resultado = catalogoService.actualizarProducto(1L, producto);
 
-        // Validar la respuesta
-        assertNotNull(response);
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
-        assertTrue(response.getEntity().toString().contains("Producto no encontrado"));
+        // Validar que el resultado sea false
+        assertFalse(resultado);
+
+        // Verificar que el método del repositorio fue llamado con los valores correctos
+        verify(mockRepositorio).updateProduct(
+                eq(1L),
+                eq(producto.getNombre()),
+                eq(producto.getDescripcion()),
+                eq(producto.getPrecio()),
+                eq(producto.getStock()),
+                eq(producto.getDetalles())
+        );
     }
 
     @Test
     void testUpdateProduct_Error() {
         Producto producto = crearProductoEjemplo();
 
-        // Configurar el mock del recurso para devolver una respuesta INTERNAL_SERVER_ERROR
-        when(catalogoResource.updateProduct(eq(1L), eq(producto)))
-                .thenReturn(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .entity("Error al actualizar el producto").build());
+        // Configurar el mock del repositorio para lanzar una excepción
+        doThrow(new RuntimeException("Error al actualizar el producto"))
+                .when(mockRepositorio).updateProduct(eq(1L), anyString(), anyString(), any(), any(), any());
 
-        // Llamar al método
-        Response response = catalogoResource.updateProduct(1L, producto);
+        // Llamar al método del servicio directamente
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            catalogoService.actualizarProducto(1L, producto);
+        });
 
-        // Validar la respuesta
-        assertNotNull(response);
-        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
-        assertTrue(response.getEntity().toString().contains("Error al actualizar el producto"));
+        // Validar que la excepción tenga el mensaje esperado
+        assertEquals("Error al actualizar el producto", exception.getMessage());
+
+        // Verificar que el método del repositorio fue llamado con los valores correctos
+        verify(mockRepositorio).updateProduct(
+                eq(1L),
+                eq(producto.getNombre()),
+                eq(producto.getDescripcion()),
+                eq(producto.getPrecio()),
+                eq(producto.getStock()),
+                eq(producto.getDetalles())
+        );
     }
 
     @Test
@@ -326,7 +324,12 @@ class CatalogoTest {
         // Validar la respuesta
         assertNotNull(response);
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        assertEquals(producto, response.getEntity());
+
+        // Extraer el producto del Response
+        Producto productoRespuesta = (Producto) response.getEntity();
+        assertNotNull(productoRespuesta);
+        assertEquals(producto.getId(), productoRespuesta.getId());
+        assertEquals(producto.getNombre(), productoRespuesta.getNombre());
     }
 
     @Test
@@ -345,6 +348,88 @@ class CatalogoTest {
 
         // Verificar que el mensaje de error sea el esperado
         assertTrue(response.getEntity().toString().contains("Producto con ID 1 no encontrado."));
+    }
+
+    @Test
+    void testObtenerValoracionesPorProducto() {
+        Valoracion valoracion1 = new Valoracion();
+        valoracion1.setIdUsuario("usuario1");
+        valoracion1.setIdProducto(1L);
+        valoracion1.setPuntuacion(5);
+        valoracion1.setComentario("Excelente producto");
+
+        Valoracion valoracion2 = new Valoracion();
+        valoracion2.setIdUsuario("usuario2");
+        valoracion2.setIdProducto(1L);
+        valoracion2.setPuntuacion(4);
+        valoracion2.setComentario("Muy bueno");
+
+        // Configurar los mocks para devolver datos válidos
+        when(valoracionRepository.obtenerValoracionesPorProducto(1L, 0, 5))
+                .thenReturn(List.of(valoracion1, valoracion2));
+        when(valoracionRepository.contarValoracionesPorProducto(1L)).thenReturn(2L);
+        PaginacionResponse<Valoracion> paginacionMock = new PaginacionResponse<>(
+                List.of(valoracion1, valoracion2), 1, 5, 2L
+        );
+
+        when(catalogoResource.obtenerValoracionesPorProducto(1L, 1, 5))
+                .thenReturn(Response.ok(paginacionMock).build());
+
+        Response response = catalogoResource.obtenerValoracionesPorProducto(1L,1,5);
+
+        // Validar que la respuesta no sea null
+        assertNotNull(response);
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+        // Validar que la entidad de la respuesta no sea null
+        PaginacionResponse<Valoracion> paginacionResponse = (PaginacionResponse<Valoracion>) response.getEntity();
+        assertNotNull(paginacionResponse);
+        assertEquals(2, paginacionResponse.getDatos().size());
+        assertEquals(2, paginacionResponse.getTotal());
+    }
+
+    @Test
+    void testObtenerValoracionesPorProducto_Error() {
+        // Configurar el mock para lanzar una excepción en el servicio
+        when(catalogoService.obtenerValoracionesPorProducto(1L, 1, 2))
+                .thenThrow(new RuntimeException("Error al obtener valoraciones"));
+
+        // Configurar el mock del repositorio para devolver un valor válido para contarValoracionesPorProducto
+        when(valoracionRepository.contarValoracionesPorProducto(1L)).thenReturn(0L);
+
+        // Llamar al método
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            catalogoService.obtenerValoracionesPorProducto(1L, 1, 2);
+        });
+
+        // Validar que la excepción tenga el mensaje esperado
+        assertEquals("Error al obtener valoraciones", exception.getMessage());
+    }
+
+    @Test
+    void testActualizarPuntuacionProducto() {
+        Producto producto = new Producto("Camiseta", "Camiseta de algodón", new BigDecimal("29.99"), 10, "Ropa", null);
+        producto.setId(1L);
+        producto.setPuntuacion(4.0);
+
+        Valoracion valoracion = new Valoracion();
+        valoracion.setIdUsuario("usuario1");
+        valoracion.setIdProducto(1L);
+        valoracion.setPuntuacion(5);
+        valoracion.setComentario("Excelente producto");
+
+        when(mockRepositorio.findById(1L)).thenReturn(producto);
+        when(valoracionRepository.contarValoracionesPorProducto(1L)).thenReturn(2L);
+
+        // JSON válido para el evento de valoración
+        String mensaje = "{\"idUsuario\":\"usuario1\",\"idProducto\":1,\"puntuacion\":5,\"comentario\":\"Excelente producto\"}";
+        catalogoService.procesarEventoValoracion(mensaje);
+
+        // Verificar que el método persist fue llamado
+        verify(mockRepositorio).persist(producto);
+
+        // Validar que la puntuación fue actualizada correctamente
+        assertEquals(4.5, producto.getPuntuacion());
     }
 
 }

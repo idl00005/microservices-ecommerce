@@ -1,6 +1,7 @@
 package com.catalogo;
 
 import com.Entidades.Producto;
+import com.DTO.ValoracionDTO;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
@@ -76,13 +77,13 @@ class CatalogoTestIntegracion {
                 .statusCode(200)
                 .body(containsString("actualizado"));
 
-        // Confirmar cambio
+        // Confirmar cambio buscando por ID
         when()
-                .get("/catalogo")
+                .get("/catalogo/" + id)
                 .then()
                 .statusCode(200)
-                .body("[0].nombre", equalTo("Zapatilla Pro"))
-                .body("[0].precio", equalTo(79.99f));
+                .body("nombre", equalTo("Zapatilla Pro"))
+                .body("precio", equalTo(79.99f));
     }
 
     @Test
@@ -241,6 +242,94 @@ class CatalogoTestIntegracion {
                 .then()
                 .statusCode(404)
                 .body(containsString("Producto con ID 9999 no encontrado."));
+    }
+
+    @Test
+    @TestSecurity(user = "admin", roles = {"admin"})
+    @TestTransaction
+    void testReservarStock() {
+        Producto producto = crearProductoTest();
+
+        // Añadir el producto
+        Integer id = given()
+                .contentType(ContentType.JSON)
+                .body(producto)
+                .when()
+                .post("/catalogo")
+                .then()
+                .statusCode(201)
+                .extract()
+                .path("producto.id");
+
+        // Reservar stock
+        given()
+                .contentType(ContentType.JSON) // Asegura que el encabezado Content-Type esté presente
+                .queryParam("cantidad", 5)
+                .when()
+                .post("/catalogo/" + id + "/reservar")
+                .then()
+                .statusCode(200);
+
+        // Verificar que el stock reservado se actualizó
+        when()
+                .get("/catalogo/" + id)
+                .then()
+                .statusCode(200)
+                .body("stockReservado", equalTo(5));
+    }
+
+    @Test
+    @TestSecurity(user = "admin", roles = {"admin"})
+    @TestTransaction
+    void testReservarStockInsuficiente() {
+        Producto producto = crearProductoTest();
+
+        // Añadir el producto
+        Integer id = given()
+                .contentType(ContentType.JSON)
+                .body(producto)
+                .when()
+                .post("/catalogo")
+                .then()
+                .statusCode(201)
+                .extract()
+                .path("producto.id");
+
+        // Intentar reservar más stock del disponible
+        given()
+                .contentType(ContentType.JSON) // Asegura que el encabezado Content-Type esté presente
+                .queryParam("cantidad", 20)
+                .when()
+                .post("/catalogo/" + id + "/reservar")
+                .then()
+                .statusCode(409) // Conflicto
+                .body(containsString("Stock insuficiente"));
+    }
+
+    @Test
+    @TestSecurity(user = "admin", roles = {"admin"})
+    @TestTransaction
+    void testObtenerValoracionesPorProducto() {
+        Producto producto = crearProductoTest();
+
+        // Añadir el producto
+        Integer id = given()
+                .contentType(ContentType.JSON)
+                .body(producto)
+                .when()
+                .post("/catalogo")
+                .then()
+                .statusCode(201)
+                .extract()
+                .path("producto.id");
+
+        // Obtener valoraciones (debería estar vacío inicialmente)
+        when()
+                .get("/catalogo/" + id + "/valoraciones")
+                .then()
+                .statusCode(200)
+                .body("datos.size()", equalTo(0))
+                .body("total", equalTo(0));
     }
 }
 

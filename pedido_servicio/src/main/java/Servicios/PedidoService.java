@@ -24,13 +24,13 @@ import java.util.List;
 public class PedidoService {
 
     @Inject
-    PedidoRepository pedidoRepository;
+    public PedidoRepository pedidoRepository;
 
     @Inject
     OutboxEventRepository outboxEventRepository;
 
     @Inject
-    ObjectMapper objectMapper;
+    public ObjectMapper objectMapper;
 
     @Transactional
     public Pedido crearPedido(Pedido pedido) {

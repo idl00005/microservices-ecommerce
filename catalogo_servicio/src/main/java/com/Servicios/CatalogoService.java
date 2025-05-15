@@ -32,7 +32,7 @@ public class CatalogoService {
     public ValoracionRepository valoracionRepository;
 
     @Inject
-    ObjectMapper objectMapper;
+    public ObjectMapper objectMapper;
 
     @Inject
     @Channel("product-events")
@@ -135,7 +135,10 @@ public class CatalogoService {
     @Transactional
     public void procesarEventoValoracion(String mensaje) {
         try {
-            // Deserializar el mensaje recibido
+            // Primero parsea como String
+            //String jsonReal = objectMapper.readValue(mensaje, String.class);
+
+            // Luego parsea el String como tu DTO
             ValoracionDTO valoracion = objectMapper.readValue(mensaje, ValoracionDTO.class);
 
             Valoracion valoracionEntity = new Valoracion();
@@ -145,14 +148,30 @@ public class CatalogoService {
             valoracionEntity.setComentario(valoracion.getComentario());
             valoracionEntity.setFechaCreacion(LocalDateTime.now());
 
-            // Guardar la valoración en la base de datos
-            System.out.println(valoracion);
             valoracionRepository.persist(valoracionEntity);
+
+            Producto producto = productoRepository.findById(valoracion.getIdProducto());
+            if (producto != null) {
+                long totalValoraciones = valoracionRepository.contarValoracionesPorProducto(valoracion.getIdProducto());
+                producto.actualizarPuntuacion(valoracion.getPuntuacion(), totalValoraciones);
+                productoRepository.persist(producto);
+            }
 
             System.out.println("Valoración procesada y guardada: " + valoracion);
         } catch (Exception e) {
             System.err.println("Error al procesar el evento de valoración: " + e.getMessage());
         }
+    }
+
+    @Transactional
+    public List<Valoracion> obtenerValoracionesPorProducto(Long idProducto, int pagina, int tamanio) {
+        int offset = (pagina - 1) * tamanio;
+        return valoracionRepository.obtenerValoracionesPorProducto(idProducto, offset, tamanio);
+    }
+
+    @Transactional
+    public long contarValoracionesPorProducto(Long idProducto) {
+        return valoracionRepository.contarValoracionesPorProducto(idProducto);
     }
 
     public Producto obtenerProductoPorId(Long id) {

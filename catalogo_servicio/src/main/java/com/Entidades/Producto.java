@@ -38,7 +38,11 @@ public class Producto {
 
     private Integer stockReservado = 0;
 
-    @Type(JsonBinaryType.class) // Esta anotación es crucial
+    @NotNull
+    @Min(value = 0, message = "La puntuación no puede ser menor que 0")
+    private double puntuacion = 0.0;
+
+    @Type(JsonBinaryType.class)
     @Column(columnDefinition = "jsonb")
     private JsonNode detalles;
 
@@ -117,5 +121,17 @@ public class Producto {
 
     public void setStockReservado(Integer stockReservado) {
         this.stockReservado = stockReservado;
+    }
+
+    public double getPuntuacion() {
+        return puntuacion;
+    }
+
+    public void setPuntuacion(double puntuacion) {
+        this.puntuacion = puntuacion;
+    }
+
+    public void actualizarPuntuacion(int nuevaPuntuacion, long totalValoraciones) {
+        this.puntuacion = ((this.puntuacion * (totalValoraciones - 1)) + nuevaPuntuacion) / totalValoraciones;
     }
 }

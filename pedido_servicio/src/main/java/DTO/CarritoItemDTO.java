@@ -10,6 +10,14 @@ public class CarritoItemDTO{
     private BigDecimal precio;
     private Integer cantidad;
 
+    public CarritoItemDTO(String userId, Long productoId, String nombreProducto, BigDecimal precio, Integer cantidad) {
+        this.userId = userId;
+        this.productoId = productoId;
+        this.nombreProducto = nombreProducto;
+        this.precio = precio;
+        this.cantidad = cantidad;
+    }
+
     public String getUserId() {
         return userId;
     }

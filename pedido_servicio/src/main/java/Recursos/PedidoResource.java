@@ -122,7 +122,7 @@ public class PedidoResource {
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al crear la valoración").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al crear la valoración: "+e.getMessage()).build();
         }
     }
 
