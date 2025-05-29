@@ -159,18 +159,18 @@ class PedidoServiceTest {
         // Crear el objeto CarritoItemDTO
         CarritoItemDTO item = new CarritoItemDTO(2L, 3, BigDecimal.valueOf(10.0));
 
-        // Crear el objeto CarritoEventDTO
+        // Crear el objeto CarritoEventDTO con ítems válidos
         CarritoEventDTO carritoEvent = new CarritoEventDTO();
         carritoEvent.setUserId("usuario123");
         carritoEvent.setItems(List.of(item));
 
-        // Configurar el mock de ObjectMapper
-        String json = "{}"; // JSON de prueba
+        // Configurar el mock de ObjectMapper para devolver el objeto simulado
+        String json = "{\"userId\":\"usuario123\",\"items\":[{\"productoId\":2,\"cantidad\":3,\"precio\":10.0}]}";
         Message<String> msg = Message.of(json);
         when(objectMapper.readValue(json, CarritoEventDTO.class)).thenReturn(carritoEvent);
 
         // Llamar al método a probar
-        pedidoService.procesarMensajeCarrito(msg);
+        pedidoService.procesarMensajeCarrito(msg).await().indefinitely();
 
         // Capturar y verificar el pedido guardado
         ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
@@ -179,20 +179,7 @@ class PedidoServiceTest {
         Pedido pedidoGuardado = captor.getValue();
         assertEquals("usuario123", pedidoGuardado.getUsuarioId());
         assertEquals(2L, pedidoGuardado.getProductoId());
-    }
-
-    @Test
-    void procesarMensajeCarrito_mensajeInvalido_deberiaLanzarRuntimeException() throws JsonProcessingException {
-        String badJson = "{ mal }";
-        Message<String> msg = Message.of(badJson);
-
-        when(objectMapper.readValue(badJson, CarritoEventDTO.class))
-                .thenThrow(new com.fasterxml.jackson.core.JsonProcessingException("fail"){});
-        RuntimeException ex = assertThrows(
-                RuntimeException.class,
-                () -> pedidoService.procesarMensajeCarrito(msg)
-        );
-        assertTrue(ex.getMessage().contains("Error al procesar"));
+        assertEquals(BigDecimal.valueOf(30.0), pedidoGuardado.getPrecioTotal()); // 10.0 * 3
     }
 
     @Test

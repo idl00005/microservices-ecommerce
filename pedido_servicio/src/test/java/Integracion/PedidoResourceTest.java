@@ -35,6 +35,7 @@ public class PedidoResourceTest {
         pedido.setPrecioTotal(BigDecimal.valueOf(200));
         pedido.setEstado("PENDIENTE");
         pedido.setFechaCreacion(LocalDateTime.now());
+        pedido.setOrdenId(1L);
 
         given()
                 .contentType(ContentType.JSON)
