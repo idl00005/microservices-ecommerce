@@ -32,8 +32,6 @@ public class PedidoResourceTest {
         pedido.setUsuarioId("user1");
         pedido.setProductoId(1L);
         pedido.setCantidad(2);
-        pedido.setDireccion("Calle Ejemplo 123");
-        pedido.setTelefono("+123456789");
         pedido.setPrecioTotal(BigDecimal.valueOf(200));
         pedido.setEstado("PENDIENTE");
         pedido.setFechaCreacion(LocalDateTime.now());
@@ -59,8 +57,6 @@ public class PedidoResourceTest {
         pedido.setUsuarioId("user1");
         pedido.setProductoId(1L);
         pedido.setCantidad(2);
-        pedido.setDireccion("Calle Ejemplo 123");
-        pedido.setTelefono("+123456789");
         pedido.setPrecioTotal(BigDecimal.valueOf(200));
         pedido.setEstado("PENDIENTE");
         pedido.setFechaCreacion(LocalDateTime.now());
@@ -89,8 +85,6 @@ public class PedidoResourceTest {
         pedido.setUsuarioId("user1");
         pedido.setProductoId(1L);
         pedido.setCantidad(2);
-        pedido.setDireccion("Calle Ejemplo 123");
-        pedido.setTelefono("+123456789");
         pedido.setPrecioTotal(BigDecimal.valueOf(200));
         pedido.setEstado("PENDIENTE");
         pedido.setFechaCreacion(LocalDateTime.now());
@@ -128,8 +122,6 @@ public class PedidoResourceTest {
         pedido.setUsuarioId("user1");
         pedido.setProductoId(1L);
         pedido.setCantidad(2);
-        pedido.setDireccion("Calle Ejemplo 123");
-        pedido.setTelefono("+123456789");
         pedido.setPrecioTotal(BigDecimal.valueOf(200));
         pedido.setEstado("PENDIENTE");
         pedido.setFechaCreacion(LocalDateTime.now());

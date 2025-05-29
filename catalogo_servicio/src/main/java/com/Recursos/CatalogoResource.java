@@ -61,8 +61,6 @@ public class CatalogoResource {
         try {
             boolean updated = catalogoService.actualizarProducto(id, producto);
             if (updated) {
-                ProductEvent event = new ProductEvent(id, "UPDATED", producto);
-                catalogoService.emitirEventoProducto(event);
                 return Response.ok("Producto actualizado con éxito.").build();
             }
             return Response.status(Response.Status.NOT_FOUND).entity("Producto con ID " + id + " no encontrado.").build();

@@ -2,9 +2,7 @@ package Servicios;
 
 import Cliente.ProductoClient;
 import Cliente.StockClient;
-import DTO.CarritoEventDTO;
-import DTO.ProductoDTO;
-import DTO.StockEventDTO;
+import DTO.*;
 import Entidades.CarritoItem;
 import Entidades.OrdenPago;
 import Entidades.OutboxEvent;
@@ -16,8 +14,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import com.stripe.param.PaymentIntentCreateParams;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
@@ -28,9 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -55,7 +53,7 @@ public class CarritoService {
     OutboxEventRepository outboxRepo;
 
     @Inject
-    StockClient stockClient;
+    public StockClient stockClient;
 
     @Transactional
     public OrdenPago iniciarPago(String userId, String direccion, String telefono) {
@@ -64,22 +62,44 @@ public class CarritoService {
             throw new WebApplicationException("El carrito está vacío", 400);
         }
 
+        // Obtener precios actualizados de los productos
+        Map<Long, BigDecimal> precios = carrito.stream()
+                .collect(Collectors.toMap(
+                        item -> item.productoId,
+                        item -> {
+                            ProductoDTO producto = productoClient.obtenerProductoPorId(item.productoId);
+                            if (producto == null) {
+                                throw new WebApplicationException("Producto no encontrado: " + item.productoId, 404);
+                            }
+                            return producto.precio();
+                        }
+                ));
+
+        // 2) Construir lista de DTOs con precio
+        List<CarritoItemDTO> itemsConPrecio = carrito.stream()
+                .map(item -> new CarritoItemDTO(
+                        item.productoId,
+                        item.cantidad,
+                        precios.get(item.productoId)
+                ))
+                .toList();
+
         Map<Long, Integer> productosAReservar = carrito.stream()
                 .collect(Collectors.toMap(
                         item -> item.productoId,
                         item -> item.cantidad
                 ));
 
+        // Calcular el total
+        BigDecimal total = carrito.stream()
+                .map(item -> precios.get(item.productoId).multiply(BigDecimal.valueOf(item.cantidad)))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         // 1. Reservar stock de forma SÍNCRONA (esperando respuesta)
         Response reservaExitosa = stockClient.reservarStock(productosAReservar, null);
         if (reservaExitosa.getStatus() != 200) {
             throw new WebApplicationException(reservaExitosa.toString(), reservaExitosa.getStatus());
         }
-
-
-        BigDecimal total = carrito.stream()
-                .map(item -> item.precio.multiply(BigDecimal.valueOf(item.cantidad)))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         OrdenPago orden = new OrdenPago();
         orden.userId = userId;
@@ -97,15 +117,13 @@ public class CarritoService {
             } catch (WebApplicationException e) {
                 throw new WebApplicationException("Error al procesar el pago: " + e.getMessage(), 500);
             }
-            procesarPagoCancelado(orden.id);
             return orden;
         } else {
             try {
-                // Crear el pago en Stripe
-                PaymentIntent paymentIntent = stripeService.crearPago(orden);
-                orden.referenciaExterna = paymentIntent.getId();
-                orden.proveedor = "Stripe";
-                orden.estado = "CREADO";
+                PaymentIntent pi = stripeService.crearPago(orden,itemsConPrecio);
+                orden.referenciaExterna = pi.getId();
+                orden.proveedor         = "Stripe";
+                orden.estado            = "CREADO";
             } catch (StripeException e) {
                 throw new WebApplicationException("Error al procesar el pago: " + e.getMessage(), 500);
             }
@@ -116,25 +134,62 @@ public class CarritoService {
 
     @Transactional
     public void procesarCompra(OrdenPago orden) {
-        List<CarritoItem> carrito = carritoItemRepository.findByUserId(orden.userId);
+        List<CarritoItemDTO> itemsConPrecio;
 
         System.out.println("Enviando pedido...");//
 
-        // Crear el evento para el servicio de pedidos
+        if(orden.referenciaExterna != null && !orden.referenciaExterna.isBlank()) {
+            // 1) Recuperar el PaymentIntent de Stripe
+            PaymentIntent pi;
+            try {
+                pi = PaymentIntent.retrieve(orden.referenciaExterna);
+            } catch (StripeException e) {
+                throw new WebApplicationException("No pude recuperar el pago: " + e.getMessage(), 500);
+            }
+
+            // 2) Leer la metadata y deserializar la lista de CarritoItemDTO
+            Jsonb jsonb = JsonbBuilder.create();
+
+            // 1) Obtenemos el JSON de Stripe
+            String itemsJson = pi.getMetadata().get("items");
+
+            // 2) Deserializamos a array
+            CarritoItemDTO[] array = jsonb.fromJson(itemsJson, CarritoItemDTO[].class);
+
+            // 3) Convertimos a List
+            itemsConPrecio = Arrays.asList(array);
+
+            System.out.println("itemsJson: " + itemsJson);
+            System.out.println("itemsConPrecio: " + itemsConPrecio.get(0).getProductoId() + ", " + itemsConPrecio.get(0).getCantidad() + ", " + itemsConPrecio.get(0).getPrecio());
+
+        } else {
+            // Si no hay referencia externa significa que el precio es 0 (pago sin Stripe)
+            List<CarritoItem> carrito = carritoItemRepository.findByUserId(orden.userId);
+            itemsConPrecio = carrito.stream()
+                    .map(item -> new CarritoItemDTO(
+                            item.productoId,
+                            item.cantidad,
+                            BigDecimal.ZERO
+                    ))
+                    .toList();
+        }
+
+        // 3) Armar y enviar el evento al servicio de pedidos
         CarritoEventDTO carritoEvent = new CarritoEventDTO();
         carritoEvent.setUserId(orden.userId);
-        carritoEvent.setItems(carrito);
-        carritoEvent.setDireccion(orden.direccion);
-        carritoEvent.setTelefono(orden.telefono);
+        carritoEvent.setOrdenId(orden.id);
+        carritoEvent.setItems(itemsConPrecio);
+
         String payloadJson = JsonbBuilder.create().toJson(carritoEvent);
         OutboxEvent evt = new OutboxEvent();
         evt.aggregateType = "Carrito";
-        evt.aggregateId = orden.userId.toString();
-        evt.eventType = "Carrito.CompraProcesada";
-        evt.payload = payloadJson;
+        evt.aggregateId   = orden.userId.toString();
+        evt.eventType     = "Carrito.CompraProcesada";
+        evt.payload       = payloadJson;
         outboxRepo.persist(evt);
+
+        // 4) Finalizar estado y vaciar carrito
         orden.estado = "COMPLETADO";
-        // Vaciar el carrito
         carritoItemRepository.delete("userId", orden.userId);
     }
 
@@ -144,7 +199,7 @@ public class CarritoService {
         if (orden != null && "PAGADO".equals(orden.estado)) {
             List<CarritoItem> carrito = carritoItemRepository.findByUserId(orden.userId);
 
-            // Preparar el evento (ajusta los campos según tu DTO)
+            // Preparar el evento
             StockEventDTO evento = StockEventDTO.confirmacionCompra(
                     carrito.stream()
                             .collect(Collectors.toMap(
@@ -204,7 +259,7 @@ public class CarritoService {
 
 
     @Transactional
-    public CarritoItem agregarProducto(String userId, Long productoId, int cantidad) {
+    public CarritoItemDetalleDTO agregarProducto(String userId, Long productoId, int cantidad) {
         ProductoDTO producto = productoClient.obtenerProductoPorId(productoId);
 
         if (producto == null) {
@@ -219,31 +274,49 @@ public class CarritoService {
         // Verificar si el producto ya está en el carrito del usuario
         Optional<CarritoItem> itemExistente = carritoItemRepository.findByUserAndProducto(userId, productoId);
 
+        CarritoItem item;
         if (itemExistente.isPresent()) {
-            CarritoItem item = itemExistente.get();
+            item = itemExistente.get();
             item.cantidad += cantidad; // Incrementar la cantidad
             if (item.cantidad > producto.stock()) {
                 throw new WebApplicationException("Stock insuficiente para el producto: " + producto.nombre(), 400);
             }
             carritoItemRepository.persist(item);
-            return item;
+        } else {
+            item = new CarritoItem();
+            item.userId = userId;
+            item.productoId = producto.id();
+            item.cantidad = cantidad;
+            carritoItemRepository.persist(item);
         }
 
-        // Si no existe, crear un nuevo registro
-        CarritoItem nuevoItem = new CarritoItem();
-        nuevoItem.userId = userId;
-        nuevoItem.productoId = producto.id();
-        nuevoItem.nombreProducto = producto.nombre();
-        nuevoItem.precio = producto.precio();
-        nuevoItem.cantidad = cantidad;
-        carritoItemRepository.persist(nuevoItem);
-
-        return nuevoItem;
+        return new CarritoItemDetalleDTO(
+                item.productoId,
+                producto.nombre(),
+                item.cantidad,
+                producto.precio()
+        );
     }
 
     @Transactional
-    public List<CarritoItem> obtenerCarrito(String userId) {
-        return carritoItemRepository.findByUserId(userId);
+    public List<CarritoItemDetalleDTO> obtenerCarrito(String userId) {
+        List<CarritoItem> carrito =  carritoItemRepository.findByUserId(userId);
+        List<CarritoItemDetalleDTO> carritoDetalles = new ArrayList<>();
+        for (CarritoItem item : carrito) {
+            ProductoDTO producto = productoClient.obtenerProductoPorId(item.productoId);
+            if (producto == null) {
+                throw new WebApplicationException("Producto no encontrado: " + item.productoId, Response.Status.NOT_FOUND);
+            }
+            item.cantidad = Math.min(item.cantidad, producto.stock()); // Ajustar cantidad al stock disponible
+            CarritoItemDetalleDTO detalle = new CarritoItemDetalleDTO(
+                    item.productoId,
+                    producto.nombre(),
+                    item.cantidad,
+                    producto.precio()
+            );
+            carritoDetalles.add(detalle);
+        }
+        return carritoDetalles;
     }
 
 
@@ -269,8 +342,6 @@ public class CarritoService {
     public void actualizarProductoEnCarritos(long productId, ProductoDTO producto) {
         List<CarritoItem> items = carritoItemRepository.findByProductoId(productId);
         for (CarritoItem item : items) {
-            item.nombreProducto = producto.nombre();
-            item.precio = producto.precio();
             if(item.cantidad > producto.stock()) {
                 item.cantidad = producto.stock();
             }

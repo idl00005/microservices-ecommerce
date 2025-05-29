@@ -1,14 +1,11 @@
 package DTO;
 
-import Entidades.CarritoItem;
-
 import java.util.List;
 
 public class CarritoEventDTO {
     private String userId;
-    private List<CarritoItem> items;
-    private String direccion;
-    private String telefono;
+    private Long ordenId;
+    private List<CarritoItemDTO> items;
 
     // Getters y setters
     public String getUserId() {
@@ -19,27 +16,19 @@ public class CarritoEventDTO {
         this.userId = userId;
     }
 
-    public List<CarritoItem> getItems() {
+    public List<CarritoItemDTO> getItems() {
         return items;
     }
 
-    public void setItems(List<CarritoItem> items) {
+    public void setItems(List<CarritoItemDTO> items) {
         this.items = items;
     }
 
-    public String getDireccion() {
-        return direccion;
+    public Long getOrdenId() {
+        return ordenId;
     }
 
-    public void setDireccion(String direccion) {
-        this.direccion = direccion;
-    }
-
-    public String getTelefono() {
-        return telefono;
-    }
-
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
+    public void setOrdenId(Long ordenId) {
+        this.ordenId = ordenId;
     }
 }

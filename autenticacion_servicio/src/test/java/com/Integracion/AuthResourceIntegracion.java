@@ -7,7 +7,9 @@ import com.Repositorios.RepositorioUsuario;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -22,6 +24,12 @@ public class AuthResourceIntegracion {
 
     @Inject
     BCryptPasswordEncoder passwordEncoder;
+
+    @BeforeEach
+    @Transactional
+    public void cleanDb() {
+        userRepository.deleteAll();
+    }
 
     @Test
     @TestTransaction

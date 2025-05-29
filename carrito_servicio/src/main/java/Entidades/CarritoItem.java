@@ -6,20 +6,16 @@ import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 @Entity
-public class CarritoItem extends PanacheEntity {
+public class CarritoItem {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
 
     @NotBlank(message = "El userId no puede estar vacío")
     public String userId;
 
     @NotNull(message = "El productoId no puede ser nulo")
     public Long productoId;
-
-    @NotBlank(message = "El nombre del producto no puede estar vacío")
-    public String nombreProducto;
-
-    @NotNull(message = "El precio no puede ser nulo")
-    @DecimalMin(value = "0.0", message = "El precio debe ser mayor que 0")
-    public BigDecimal precio;
 
     @NotNull(message = "La cantidad no puede ser nula")
     @Min(value = 0, message = "La cantidad no puede ser menor que 0")

@@ -6,7 +6,10 @@ import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 
 @Entity
-public class Valoracion extends PanacheEntity {
+public class Valoracion {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @NotNull(message = "El id del usuario no puede ser nulo")
     private String idUsuario;
@@ -28,6 +31,9 @@ public class Valoracion extends PanacheEntity {
     }
 
     // Getters y Setters
+    public Long getId() {
+        return id;
+    }
     public String getIdUsuario() {
         return idUsuario;
     }

@@ -1,5 +1,6 @@
 package Recursos;
 
+import DTO.CarritoItemDetalleDTO;
 import Entidades.CarritoItem;
 import Entidades.OrdenPago;
 import Servicios.CarritoService;
@@ -53,8 +54,8 @@ public class CarritoResource {
     @RolesAllowed({"user", "admin"})
     public Response agregarProducto(@Valid AgregarProductoRequest req, @Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
-        try{
-            CarritoItem item = carritoService.agregarProducto(userId, req.productoId, req.cantidad);
+        try {
+            CarritoItemDetalleDTO item = carritoService.agregarProducto(userId, req.productoId, req.cantidad);
             return Response.ok(item).build();
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
@@ -78,7 +79,7 @@ public class CarritoResource {
     public Response obtenerCarrito(@Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
 
-        List<CarritoItem> carrito = carritoService.obtenerCarrito(userId);
+        List<CarritoItemDetalleDTO> carrito = carritoService.obtenerCarrito(userId);
         return Response.ok(carrito).build();
     }
 

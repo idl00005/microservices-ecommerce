@@ -7,6 +7,7 @@ import Entidades.Pedido;
 import Repositorios.OutboxEventRepository;
 import Repositorios.PedidoRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -15,6 +16,10 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import DTO.CarritoEventDTO;
 import DTO.CarritoItemDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.microprofile.reactive.messaging.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,6 +36,8 @@ public class PedidoService {
 
     @Inject
     public ObjectMapper objectMapper;
+
+    private static final Logger log = LoggerFactory.getLogger(PedidoService.class);
 
     @Transactional
     public Pedido crearPedido(Pedido pedido) {
@@ -88,31 +95,55 @@ public class PedidoService {
 
     @Incoming("productos-in")
     @Transactional
-    public void procesarMensajeCarrito(String mensajeCarrito) {
+    public Uni<Void> procesarMensajeCarrito(Message<String> msg) {
+        String mensaje = msg.getPayload();
+        log.info("Mensaje recibido: {}", mensaje);
+
+        CarritoEventDTO carritoEvent;
         try {
-            // Parsear el mensaje recibido
-            CarritoEventDTO carritoEvent = objectMapper.readValue(mensajeCarrito, CarritoEventDTO.class);
-
-            // Crear un pedido por cada tipo de producto
-            for (CarritoItemDTO item : carritoEvent.getItems()) {
-                Pedido pedido = new Pedido();
-                pedido.setUsuarioId(carritoEvent.getUserId());
-                pedido.setProductoId(item.getProductoId());
-                pedido.setCantidad(item.getCantidad());
-                pedido.setPrecioTotal(item.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())));
-                pedido.setFechaCreacion(LocalDateTime.now());
-
-                pedido.setTelefono(carritoEvent.getTelefono());
-                pedido.setEstado("PENDIENTE");  // Estado inicial
-                pedido.setDireccion(carritoEvent.getDireccion());
-
-                // Guardar el pedido
-                pedidoRepository.guardar(pedido);
-            }
+            carritoEvent = objectMapper.readValue(mensaje, CarritoEventDTO.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error al procesar el mensaje del carrito", e);
+            log.error("❌ JSON inválido, descartando mensaje", e);
+            return Uni.createFrom().completionStage(msg.ack());
         }
+
+        // Validaciones de evento
+        if (carritoEvent.getItems() == null || carritoEvent.getItems().isEmpty()) {
+            log.warn("⚠️ Carrito vacío. Orden descartada. ordenId={}", carritoEvent.getOrdenId());
+            return Uni.createFrom().completionStage(msg.ack());
+        }
+        for (CarritoItemDTO item : carritoEvent.getItems()) {
+            if (item.getProductoId() == null || item.getCantidad() == null || item.getPrecio() == null) {
+                log.error("❌ Ítem inválido en ordenId={}, item={}", carritoEvent.getOrdenId(), item);
+                return Uni.createFrom().completionStage(msg.ack());
+            }
+        }
+
+        // Procesamiento normal
+        return Uni.createFrom().item(carritoEvent)
+                .onItem().invoke(event -> {
+                    for (CarritoItemDTO item : event.getItems()) {
+                        Pedido pedido = new Pedido();
+                        pedido.setUsuarioId(event.getUserId());
+                        pedido.setProductoId(item.getProductoId());
+                        pedido.setCantidad(item.getCantidad());
+                        pedido.setPrecioTotal(item.getPrecio().multiply(
+                                BigDecimal.valueOf(item.getCantidad())));
+                        pedido.setFechaCreacion(LocalDateTime.now());
+                        pedido.setOrdenId(event.getOrdenId());
+                        pedido.setEstado("PENDIENTE");
+                        pedidoRepository.guardar(pedido);
+                    }
+                })
+                // Siempre ack al final, tanto si todo fue bien como si Mutiny captura una excepción
+                .onItem().transformToUni(x -> Uni.createFrom().completionStage(msg.ack()))
+                .onFailure().recoverWithUni(err -> {
+                    // Loguea el error, pero como failure-strategy=ignore, lo descartas
+                    log.error("❌ Error procesando mensaje, lo descarto", err);
+                    return Uni.createFrom().completionStage(msg.ack());
+                });
     }
+
 
     @Transactional
     public void actualizarPedido(Long id, String estado) {

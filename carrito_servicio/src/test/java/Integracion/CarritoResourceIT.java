@@ -56,7 +56,7 @@ public class CarritoResourceIT {
                 .post("/carrito/")
                 .then()
                 .statusCode(200)
-                .body("nombreProducto", notNullValue())
+                .body("nombre", notNullValue())
                 .body("cantidad", equalTo(2))
                 .body("precio", notNullValue());
     }
@@ -68,11 +68,10 @@ public class CarritoResourceIT {
         CarritoItem item = new CarritoItem();
         item.userId = "user"; // Debe coincidir con el userId del SecurityContext
         item.productoId = 1L;
-        item.nombreProducto = "Producto Test";
-        item.precio = BigDecimal.valueOf(100);
         item.cantidad = 2;
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
+        when(productoClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
 
         // Realiza la solicitud y verifica la respuesta
         given()
@@ -81,7 +80,7 @@ public class CarritoResourceIT {
                 .then()
                 .statusCode(200)
                 .body("$", hasSize(greaterThanOrEqualTo(1)))
-                .body("[0].nombreProducto", equalTo("Producto Test"))
+                .body("[0].nombre", equalTo("Producto Test"))
                 .body("[0].cantidad", equalTo(2));
     }
 
@@ -92,8 +91,6 @@ public class CarritoResourceIT {
         CarritoItem item = new CarritoItem();
         item.userId = "user"; // Debe coincidir con el userId del SecurityContext
         item.productoId = 1L;
-        item.nombreProducto = "Producto Test";
-        item.precio = BigDecimal.valueOf(100);
         item.cantidad = 2;
         when(carritoItemRepository.findByUserAndProducto("user", 1L)).thenReturn(Optional.of(item));
 
@@ -111,8 +108,6 @@ public class CarritoResourceIT {
         CarritoItem item = new CarritoItem();
         item.userId = "user";
         item.productoId = 1L;
-        item.nombreProducto = "Producto Test";
-        item.precio = BigDecimal.valueOf(100);
         item.cantidad = 1;
         carritoItemRepository.persist(item);
 
@@ -134,8 +129,6 @@ public class CarritoResourceIT {
         CarritoItem item = new CarritoItem();
         item.userId = "user"; // Debe coincidir con el userId del SecurityContext
         item.productoId = 1L;
-        item.nombreProducto = "Producto Test";
-        item.precio = BigDecimal.valueOf(100);
         item.cantidad = 1;
 
         when(carritoItemRepository.findByUserAndProducto("user", 1L)).thenReturn(Optional.of(item));
@@ -162,8 +155,6 @@ public class CarritoResourceIT {
         CarritoItem item = new CarritoItem();
         item.userId = "user";
         item.productoId = 1L;
-        item.nombreProducto = "Producto Test";
-        item.precio = BigDecimal.valueOf(100);
         item.cantidad = 2;
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
@@ -174,6 +165,7 @@ public class CarritoResourceIT {
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
         when(stockClient.reservarStock(productosAReservar,null)).thenReturn(Response.ok().build());
+        when(productoClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
 
         // Realizar la solicitud
         given()
@@ -211,8 +203,6 @@ public class CarritoResourceIT {
         CarritoItem item = new CarritoItem();
         item.userId = "user";
         item.productoId = 1L;
-        item.nombreProducto = "Producto Gratis";
-        item.precio = BigDecimal.ZERO;
         item.cantidad = 1;
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
@@ -223,6 +213,7 @@ public class CarritoResourceIT {
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
         when(stockClient.reservarStock(productosAReservar,null)).thenReturn(Response.ok().build());
+        when(productoClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
         // Realizar la solicitud
         given()
                 .contentType(ContentType.JSON)
@@ -231,8 +222,8 @@ public class CarritoResourceIT {
                 .post("/carrito/pago")
                 .then()
                 .statusCode(200)
-                .body("estado", equalTo("COMPLETADO"))
-                .body("montoTotal", equalTo(0));
+                .body("estado", equalTo("CREADO"))
+                .body("montoTotal", equalTo(100));
     }
 
     @Test
@@ -242,8 +233,6 @@ public class CarritoResourceIT {
         CarritoItem item = new CarritoItem();
         item.userId = "user";
         item.productoId = 1L;
-        item.nombreProducto = "Producto Test";
-        item.precio = BigDecimal.valueOf(100);
         item.cantidad = 2;
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));

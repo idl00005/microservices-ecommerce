@@ -15,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.eclipse.microprofile.reactive.messaging.Message;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -156,21 +157,20 @@ class PedidoServiceTest {
     @Test
     void procesarMensajeCarrito_deberiaCrearPedidos() throws JsonProcessingException {
         // Crear el objeto CarritoItemDTO
-        CarritoItemDTO item = new CarritoItemDTO("usuario123", 2L, "Producto Test", BigDecimal.TEN, 3);
+        CarritoItemDTO item = new CarritoItemDTO(2L, 3, BigDecimal.valueOf(10.0));
 
         // Crear el objeto CarritoEventDTO
         CarritoEventDTO carritoEvent = new CarritoEventDTO();
         carritoEvent.setUserId("usuario123");
-        carritoEvent.setDireccion("Calle Falsa 123");
-        carritoEvent.setTelefono("123456789");
         carritoEvent.setItems(List.of(item));
 
         // Configurar el mock de ObjectMapper
         String json = "{}"; // JSON de prueba
+        Message<String> msg = Message.of(json);
         when(objectMapper.readValue(json, CarritoEventDTO.class)).thenReturn(carritoEvent);
 
         // Llamar al método a probar
-        pedidoService.procesarMensajeCarrito(json);
+        pedidoService.procesarMensajeCarrito(msg);
 
         // Capturar y verificar el pedido guardado
         ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
@@ -184,11 +184,13 @@ class PedidoServiceTest {
     @Test
     void procesarMensajeCarrito_mensajeInvalido_deberiaLanzarRuntimeException() throws JsonProcessingException {
         String badJson = "{ mal }";
+        Message<String> msg = Message.of(badJson);
+
         when(objectMapper.readValue(badJson, CarritoEventDTO.class))
                 .thenThrow(new com.fasterxml.jackson.core.JsonProcessingException("fail"){});
         RuntimeException ex = assertThrows(
                 RuntimeException.class,
-                () -> pedidoService.procesarMensajeCarrito(badJson)
+                () -> pedidoService.procesarMensajeCarrito(msg)
         );
         assertTrue(ex.getMessage().contains("Error al procesar"));
     }

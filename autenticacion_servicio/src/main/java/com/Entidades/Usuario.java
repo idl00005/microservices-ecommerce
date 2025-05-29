@@ -8,10 +8,10 @@ import jakarta.validation.constraints.*;
 
 @Entity
 public class Usuario {
-
+    @NotBlank(message = "El correo no puede estar vacío.")
+    @Email(message = "El correo debe tener un formato válido.") // Validación del formato de correo electrónico
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String correo;
 
     @NotBlank(message = "El nombre no puede estar vacío.") // No permite nulo ni cadenas vacías
     @Size(max = 50, message = "El nombre no puede superar los 50 caracteres.") // Longitud máxima de 50 caracteres
@@ -20,10 +20,6 @@ public class Usuario {
     @NotBlank(message = "El apellido no puede estar vacío.")
     @Size(max = 50, message = "El apellido no puede superar los 50 caracteres.")
     private String apellidos;
-
-    @NotBlank(message = "El correo no puede estar vacío.")
-    @Email(message = "El correo debe tener un formato válido.") // Validación del formato de correo electrónico
-    private String correo;
 
     @Pattern(regexp = "\\d{9,15}", message = "El teléfono debe tener entre 10 y 15 dígitos.")
     // Solo dígitos y una longitud específica
@@ -98,7 +94,6 @@ public class Usuario {
         this.rol = rol;
     }
 
-    // Método toString (opcional, dependiendo de necesidades de depuración)
     @Override
     public String toString() {
         return "Usuario{" +
@@ -108,13 +103,5 @@ public class Usuario {
                 ", telefono='" + telefono + '\'' +
                 ", rol='" + rol + '\'' +
                 '}';
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
     }
 }

@@ -19,16 +19,12 @@ public class Pedido {
     @NotNull(message = "El ID del producto no puede ser nulo")
     private Long productoId;
 
+    @NotNull(message = "El ID del producto no puede ser nulo")
+    private Long ordenId;
+
     @NotNull(message = "La cantidad no puede ser nula")
     @Min(value = 1, message = "La cantidad debe ser al menos 1")
     private Integer cantidad;
-
-    @NotBlank(message = "La dirección no puede estar vacía")
-    private String direccion;
-
-    @NotBlank(message = "El número de teléfono no puede estar vacío")
-    @Pattern(regexp = "\\+?[0-9]{9,15}", message = "El número de teléfono debe ser válido")
-    private String telefono;
 
     @NotNull(message = "El precio total no puede ser nulo")
     @DecimalMin(value = "0.0", message = "El precio total no puede ser negativo")
@@ -75,22 +71,6 @@ public class Pedido {
         this.cantidad = cantidad;
     }
 
-    public String getDireccion() {
-        return direccion;
-    }
-
-    public void setDireccion(String direccion) {
-        this.direccion = direccion;
-    }
-
-    public String getTelefono() {
-        return telefono;
-    }
-
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
-    }
-
     public BigDecimal getPrecioTotal() {
         return precioTotal;
     }
@@ -113,5 +93,13 @@ public class Pedido {
 
     public void setFechaCreacion(LocalDateTime fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
+    }
+
+    public Long getOrdenId() {
+        return ordenId;
+    }
+
+    public void setOrdenId(Long ordenId) {
+        this.ordenId = ordenId;
     }
 }

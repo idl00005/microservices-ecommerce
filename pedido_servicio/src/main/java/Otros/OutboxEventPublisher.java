@@ -27,10 +27,10 @@ public class OutboxEventPublisher {
 
     @Scheduled(every = "5s")
     public void procesarEventos() {
-        System.out.println("Publicando eventos pendientes...");
-        LOG.info("Iniciando la acción...");
+        //System.out.println("Publicando eventos pendientes...");
+        //LOG.info("Iniciando la acción...");
         List<OutboxEvent> eventos = outboxRepo.findPending();
-        System.out.println("Eventos pendientes: " + eventos.size());
+        //System.out.println("Eventos pendientes: " + eventos.size());
         for (OutboxEvent evento : eventos) {
             emitter.send(evento.payload);
             markPublished(evento);

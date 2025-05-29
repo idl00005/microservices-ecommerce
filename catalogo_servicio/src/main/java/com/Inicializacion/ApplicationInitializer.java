@@ -11,7 +11,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 
-//@Startup
+@Startup
 @ApplicationScoped
 public class ApplicationInitializer {
 

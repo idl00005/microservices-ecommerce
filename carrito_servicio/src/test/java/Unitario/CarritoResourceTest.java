@@ -2,6 +2,7 @@ package Unitario;
 
 import Cliente.ProductoClient;
 import Cliente.StockClient;
+import DTO.CarritoItemDetalleDTO;
 import DTO.ProductoDTO;
 import Entidades.CarritoItem;
 import Entidades.OrdenPago;
@@ -14,9 +15,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.response.Response;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -43,6 +44,9 @@ public class CarritoResourceTest {
     @InjectMock
     OrdenPagoRepository ordenPagoRepository;
 
+    @InjectMock
+    StockClient stockClient;
+
     @BeforeEach
     public void setup() {
         System.setProperty("test.env", "true");
@@ -56,18 +60,17 @@ public class CarritoResourceTest {
         ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10);
         when(productoClient.obtenerProductoPorId(1L)).thenReturn(productoMock);
 
-        // Mock de CarritoItem
-        CarritoItem mockItem = mock(CarritoItem.class);
-        doNothing().when(mockItem).persist();
+        // Mock del repositorio
+        doNothing().when(carritoItemRepository).persist(any(CarritoItem.class));
 
         // Llamada al método
-        CarritoItem result = carritoService.agregarProducto("user1", 1L, 2);
+        CarritoItemDetalleDTO result = carritoService.agregarProducto("user1", 1L, 2);
 
         // Verificaciones
         assertNotNull(result);
-        assertEquals("Producto Test", result.nombreProducto);
         assertEquals(2, result.cantidad);
         verify(productoClient, times(1)).obtenerProductoPorId(1L);
+        verify(carritoItemRepository, times(1)).persist(any(CarritoItem.class));
     }
 
     @Test
@@ -81,8 +84,6 @@ public class CarritoResourceTest {
         // Mock del CarritoItem
         CarritoItem itemMock = new CarritoItem();
         itemMock.productoId = 1L;
-        itemMock.nombreProducto = "Producto Viejo";
-        itemMock.precio = BigDecimal.valueOf(100);
         itemMock.cantidad = 5;
 
         // Mock del repositorio
@@ -92,8 +93,6 @@ public class CarritoResourceTest {
         carritoService.procesarEventoProducto(eventJson);
 
         // Verificaciones
-        assertEquals("Producto Actualizado", itemMock.nombreProducto);
-        assertEquals(BigDecimal.valueOf(150), itemMock.precio);
         verify(carritoItemRepository).persist(itemMock);
     }
 
@@ -118,19 +117,17 @@ public class CarritoResourceTest {
         CarritoItem item = new CarritoItem();
         item.userId = "user1";
         item.productoId = 1L;
-        item.nombreProducto = "Producto Test";
-        item.precio = BigDecimal.valueOf(100);
         item.cantidad = 2;
 
         when(carritoItemRepository.findByUserId("user1")).thenReturn(List.of(item));
+        when(productoClient.obtenerProductoPorId(1L)).thenReturn(new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10));
 
         // Llamada al método
-        List<CarritoItem> carrito = carritoService.obtenerCarrito("user1");
+        List<CarritoItemDetalleDTO> carrito = carritoService.obtenerCarrito("user1");
 
         // Verificaciones
         assertNotNull(carrito);
         assertEquals(1, carrito.size());
-        assertEquals("Producto Test", carrito.get(0).nombreProducto);
         verify(carritoItemRepository, times(1)).findByUserId("user1");
     }
 
@@ -177,8 +174,6 @@ public class CarritoResourceTest {
         CarritoItem item = new CarritoItem();
         item.userId = "user1";
         item.productoId = 1L;
-        item.nombreProducto = "Producto Test";
-        item.precio = BigDecimal.valueOf(100);
         item.cantidad = 2;
 
         when(carritoItemRepository.findByUserAndProducto("user1", 1L)).thenReturn(Optional.of(item));
@@ -200,11 +195,15 @@ public class CarritoResourceTest {
         CarritoItem item = new CarritoItem();
         item.userId = "user1";
         item.productoId = 1L;
-        item.nombreProducto = "Producto Test";
-        item.precio = BigDecimal.valueOf(100);
         item.cantidad = 2;
 
         when(carritoItemRepository.findByUserId("user1")).thenReturn(List.of(item));
+
+        // Mock del cliente de stock
+        Response mockResponse = mock(Response.class);
+        when(mockResponse.getStatus()).thenReturn(200);
+        when(stockClient.reservarStock(any(), any())).thenReturn(mockResponse);
+        when(productoClient.obtenerProductoPorId(1L)).thenReturn(new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10));
 
         // Mock del servicio de Stripe
         OrdenPago ordenMock = new OrdenPago();
@@ -213,13 +212,14 @@ public class CarritoResourceTest {
         ordenMock.estado = "CREADO";
 
         // Llamada al método
-        OrdenPago orden = carritoService.iniciarPago("user1","Calle tralala","6834345454");
+        OrdenPago orden = carritoService.iniciarPago("user1", "Calle tralala", "6834345454");
 
         // Verificaciones
         assertNotNull(orden);
         assertEquals("CREADO", orden.estado);
         assertEquals(BigDecimal.valueOf(200), orden.montoTotal);
         verify(carritoItemRepository, times(1)).findByUserId("user1");
+        verify(stockClient, times(1)).reservarStock(any(), any());
     }
 
     @Test

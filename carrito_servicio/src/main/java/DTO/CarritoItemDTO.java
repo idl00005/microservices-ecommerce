@@ -27,5 +27,15 @@ public class CarritoItemDTO{
 
     public BigDecimal getPrecio() { return precio; }
 
-}
+    public void setProductoId(Long productoId) {
+        this.productoId = productoId;
+    }
 
+    public void setCantidad(Integer cantidad) {
+        this.cantidad = cantidad;
+    }
+
+    public void setPrecio(BigDecimal precio) {
+        this.precio = precio;
+    }
+}

@@ -4,7 +4,7 @@ import com.Entidades.Producto;
 
 public class ProductEvent {
     private Long productId;
-    private String action; // "UPDATED" o "DELETED"
+    private String action; // únicamente "DELETED" de momento
     private Producto producto;
 
     public ProductEvent(Long productId, String action, Producto producto) {
