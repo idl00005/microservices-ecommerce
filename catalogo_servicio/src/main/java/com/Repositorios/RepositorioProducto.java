@@ -1,6 +1,7 @@
 package com.Repositorios;
 
 import com.Entidades.Producto;
+import com.Entidades.Valoracion;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -12,6 +13,7 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @ApplicationScoped
 public class RepositorioProducto implements PanacheRepository<Producto> {
@@ -47,5 +49,19 @@ public class RepositorioProducto implements PanacheRepository<Producto> {
         return true;
     }
 
+    public long contarValoraciones(Long productoId) {
+        return count("SELECT SIZE(p.valoraciones) FROM Producto p WHERE p.id = ?1", productoId);
+    }
 
+    public List<Valoracion> findValoracionesPaginadas(Long idProducto, int page, int size) {
+        return getEntityManager()
+                .createQuery(
+                        "SELECT v FROM Producto p JOIN p.valoraciones v WHERE p.id = :idProducto ORDER BY v.fechaCreacion DESC",
+                        Valoracion.class
+                )
+                .setParameter("idProducto", idProducto)
+                .setFirstResult((page - 1) * size)  // Cálculo del offset
+                .setMaxResults(size)
+                .getResultList();
+    }
 }

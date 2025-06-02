@@ -130,6 +130,7 @@ public class PedidoResourceTest {
         // Configurar el mock para devolver el pedido
         Mockito.when(pedidoRepository.buscarPorId(1L)).thenReturn(pedido);
 
+
         // Ejecutar el test
         given()
                 .auth().basic("admin", "adminpassword")

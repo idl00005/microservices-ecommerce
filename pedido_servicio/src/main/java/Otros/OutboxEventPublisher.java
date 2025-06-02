@@ -1,15 +1,15 @@
 package Otros;
 
+import DTO.ValoracionDTO;
 import Entidades.OutboxEvent;
 import Repositorios.OutboxEventRepository;
-import Repositorios.PedidoRepository;
-import Servicios.PedidoService;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -23,17 +23,26 @@ public class OutboxEventPublisher {
 
     @Inject
     @Channel("valoraciones-out")
-    Emitter<String> emitter;
+    Emitter<ValoracionDTO> emitter;
+
+    @Inject
+    ObjectMapper objectMapper;
 
     @Scheduled(every = "5s")
     public void procesarEventos() {
         //System.out.println("Publicando eventos pendientes...");
         //LOG.info("Iniciando la acción...");
         List<OutboxEvent> eventos = outboxRepo.findPending();
-        //System.out.println("Eventos pendientes: " + eventos.size());
+        System.out.println("Eventos pendientes: " + eventos.size());
         for (OutboxEvent evento : eventos) {
-            emitter.send(evento.payload);
-            markPublished(evento);
+            try {
+                ValoracionDTO dto = objectMapper.readValue(evento.payload, ValoracionDTO.class);
+                emitter.send(dto);
+                markPublished(evento);
+            } catch (Exception e) {
+                LOG.warning("Error al deserializar o enviar evento: " + e.getMessage());
+                // Aquí puedes decidir si marcar como fallido o dejarlo para reintento
+            }
         }
     }
 

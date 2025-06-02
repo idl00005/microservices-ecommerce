@@ -7,6 +7,8 @@ import jakarta.validation.constraints.*;
 import org.hibernate.annotations.Type;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Producto {
@@ -41,6 +43,11 @@ public class Producto {
     @NotNull
     @Min(value = 0, message = "La puntuación no puede ser menor que 0")
     private double puntuacion = 0.0;
+
+    @OneToMany(cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    @JoinColumn(name = "id_producto", nullable = false)
+    private List<Valoracion> valoraciones = new ArrayList<>();
 
     @Type(JsonBinaryType.class)
     @Column(columnDefinition = "jsonb")
@@ -133,5 +140,13 @@ public class Producto {
 
     public void actualizarPuntuacion(int nuevaPuntuacion, long totalValoraciones) {
         this.puntuacion = ((this.puntuacion * (totalValoraciones - 1)) + nuevaPuntuacion) / totalValoraciones;
+    }
+
+    public void agregarValoracion(Valoracion valoracion) {
+        this.valoraciones.add(valoracion);
+    }
+
+    public List<Valoracion> getValoraciones() {
+        return valoraciones;
     }
 }

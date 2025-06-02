@@ -135,43 +135,50 @@ public class CatalogoService {
     @Transactional
     public void procesarEventoValoracion(String mensaje) {
         try {
-            // Primero parsea como String
-            //String jsonReal = objectMapper.readValue(mensaje, String.class);
+            // 1. Deserializar el mensaje
+            ValoracionDTO valoracionDTO = objectMapper.readValue(mensaje, ValoracionDTO.class);
 
-            // Luego parsea el String como tu DTO
-            ValoracionDTO valoracion = objectMapper.readValue(mensaje, ValoracionDTO.class);
-
-            Valoracion valoracionEntity = new Valoracion();
-            valoracionEntity.setIdUsuario(valoracion.getIdUsuario());
-            valoracionEntity.setIdProducto(valoracion.getIdProducto());
-            valoracionEntity.setPuntuacion(valoracion.getPuntuacion());
-            valoracionEntity.setComentario(valoracion.getComentario());
-            valoracionEntity.setFechaCreacion(LocalDateTime.now());
-
-            valoracionRepository.persist(valoracionEntity);
-
-            Producto producto = productoRepository.findById(valoracion.getIdProducto());
-            if (producto != null) {
-                long totalValoraciones = valoracionRepository.contarValoracionesPorProducto(valoracion.getIdProducto());
-                producto.actualizarPuntuacion(valoracion.getPuntuacion(), totalValoraciones);
-                productoRepository.persist(producto);
+            // 2. Buscar el producto asociado
+            Producto producto = productoRepository.findById(valoracionDTO.getIdProducto());
+            if (producto == null) {
+                throw new IllegalArgumentException("Producto no encontrado con ID: " + valoracionDTO.getIdProducto());
             }
 
-            System.out.println("Valoración procesada y guardada: " + valoracion);
+            // 3. Crear y guardar la valoración (asociada al producto)
+            Valoracion valoracionEntity = new Valoracion();
+            valoracionEntity.setIdUsuario(valoracionDTO.getIdUsuario());
+            valoracionEntity.setPuntuacion(valoracionDTO.getPuntuacion());
+            valoracionEntity.setComentario(valoracionDTO.getComentario());
+            valoracionEntity.setFechaCreacion(LocalDateTime.now());
+
+            // 4. Agregar la valoración al producto (manejo de la relación unidireccional)
+            producto.agregarValoracion(valoracionEntity);
+
+            // 5. Actualizar la puntuación promedio del producto
+            actualizarValoracionProducto(producto, valoracionDTO.getPuntuacion());
+
+            System.out.println("Valoración procesada y guardada: " + valoracionDTO);
         } catch (Exception e) {
             System.err.println("Error al procesar el evento de valoración: " + e.getMessage());
+            // Opcional: Implementar retry o dead-letter queue
         }
     }
 
     @Transactional
     public List<Valoracion> obtenerValoracionesPorProducto(Long idProducto, int pagina, int tamanio) {
-        int offset = (pagina - 1) * tamanio;
-        return valoracionRepository.obtenerValoracionesPorProducto(idProducto, offset, tamanio);
+        return productoRepository.findValoracionesPaginadas(idProducto, pagina, tamanio);
+    }
+
+    @Transactional
+    public void actualizarValoracionProducto(Producto producto, int puntuacion) {
+        long totalValoraciones = productoRepository.contarValoraciones(producto.getId());
+        producto.actualizarPuntuacion(puntuacion, totalValoraciones);
+        productoRepository.persist(producto);
     }
 
     @Transactional
     public long contarValoracionesPorProducto(Long idProducto) {
-        return valoracionRepository.contarValoracionesPorProducto(idProducto);
+        return productoRepository.contarValoraciones(idProducto);
     }
 
     public Producto obtenerProductoPorId(Long id) {

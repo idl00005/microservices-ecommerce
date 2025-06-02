@@ -8,5 +8,6 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
 COPY --from=build /usr/src/app/target/quarkus-app/ /app/
-CMD ["java", "-jar", "quarkus-run.jar"]
+CMD ["java","-Dquarkus.http.host=0.0.0.0","-jar","quarkus-run.jar"]
+
 

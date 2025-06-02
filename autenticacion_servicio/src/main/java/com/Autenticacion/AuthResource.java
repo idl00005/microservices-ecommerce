@@ -3,6 +3,7 @@ package com.Autenticacion;
 import com.Entidades.Usuario;
 import com.Repositorios.RepositorioUsuario;
 import io.smallrye.jwt.build.Jwt;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.*;
 import jakarta.ws.rs.*;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.Set;
 
 @Path("/auth")
+@ApplicationScoped
 public class AuthResource {
 
     @Inject

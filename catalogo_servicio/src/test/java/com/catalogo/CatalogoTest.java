@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +30,7 @@ class CatalogoTest {
     CatalogoService catalogoService;
 
     @Mock
-    RepositorioProducto mockRepositorio;
+    RepositorioProducto productoRepository;
 
     @Mock
     Emitter<ProductEvent> productEventEmitter;
@@ -45,7 +46,7 @@ class CatalogoTest {
         MockitoAnnotations.openMocks(this);
         catalogoService = new CatalogoService();
         catalogoService.productEventEmitter = productEventEmitter; // Inyecta el mock
-        catalogoService.productoRepository = mockRepositorio; // Inyecta el mock
+        catalogoService.productoRepository = productoRepository; // Inyecta el mock
         catalogoService.valoracionRepository = valoracionRepository; // Inyecta el mock
         catalogoService.objectMapper = new ObjectMapper();
     }
@@ -69,7 +70,7 @@ class CatalogoTest {
     void testObtenerProductos() {
         Producto producto = new Producto("Camiseta", "Camiseta de algodón", new BigDecimal("29.99"), 10, "Ropa", null);
 
-        when(mockRepositorio.listAll()).thenReturn(List.of(producto));
+        when(productoRepository.listAll()).thenReturn(List.of(producto));
 
         List<Producto> productos = catalogoService.obtenerProductos(1, 10, null, null, null, null);
 
@@ -82,13 +83,13 @@ class CatalogoTest {
     void testAgregarProducto() {
         Producto producto = crearProductoEjemplo();
 
-        doNothing().when(mockRepositorio).add(any(Producto.class));
+        doNothing().when(productoRepository).add(any(Producto.class));
 
         Producto resultado = catalogoService.agregarProducto(producto);
 
         assertNotNull(resultado);
         assertEquals("Camiseta", resultado.getNombre());
-        verify(mockRepositorio).add(producto);
+        verify(productoRepository).add(producto);
     }
 
     @Test
@@ -109,7 +110,7 @@ class CatalogoTest {
         Producto producto2 = new Producto("Pantalón", "Pantalón de mezclilla", new BigDecimal("49.99"), 20, "Ropa", null);
 
         // Configurar el mock para devolver una lista de productos
-        when(mockRepositorio.listAll()).thenReturn(List.of(producto1, producto2));
+        when(productoRepository.listAll()).thenReturn(List.of(producto1, producto2));
 
         // Llamar al método del servicio
         List<Producto> productos = catalogoService.obtenerProductos(1, 2, null, "Ropa", null, null);
@@ -121,13 +122,13 @@ class CatalogoTest {
         assertEquals("Pantalón", productos.get(1).getNombre());
 
         // Verificar que el repositorio fue llamado
-        verify(mockRepositorio).listAll();
+        verify(productoRepository).listAll();
     }
 
     @Test
     void testGetProducts_Empty() {
         // Simular que el servicio devuelve una lista vacía
-        when(mockRepositorio.listAll()).thenReturn(new ArrayList<>());
+        when(productoRepository.listAll()).thenReturn(new ArrayList<>());
 
         // Llamar al método del servicio
         List<Producto> productos = catalogoService.obtenerProductos(1, 10, null, null, null, null);
@@ -142,7 +143,7 @@ class CatalogoTest {
         Producto producto = crearProductoEjemplo();
 
         // Configurar el mock para que el método void no haga nada
-        doNothing().when(mockRepositorio).add(any(Producto.class));
+        doNothing().when(productoRepository).add(any(Producto.class));
 
         // Llamar al método del servicio
         Producto resultado = catalogoService.agregarProducto(producto);
@@ -152,7 +153,7 @@ class CatalogoTest {
         assertEquals("Camiseta", resultado.getNombre());
 
         // Verificar que el método add fue llamado con el producto correcto
-        verify(mockRepositorio).add(producto);
+        verify(productoRepository).add(producto);
     }
 
 
@@ -161,7 +162,7 @@ class CatalogoTest {
         Producto producto = crearProductoEjemplo();
 
         // Configurar el mock del repositorio para lanzar una excepción
-        doThrow(new RuntimeException("Falló")).when(mockRepositorio).add(any(Producto.class));
+        doThrow(new RuntimeException("Falló")).when(productoRepository).add(any(Producto.class));
 
         // Llamar al método del servicio directamente
         Exception exception = assertThrows(RuntimeException.class, () -> {
@@ -172,7 +173,7 @@ class CatalogoTest {
         assertEquals("Falló", exception.getMessage());
 
         // Verificar que el método add fue llamado con el producto correcto
-        verify(mockRepositorio).add(producto);
+        verify(productoRepository).add(producto);
     }
 
     @Test
@@ -182,8 +183,8 @@ class CatalogoTest {
         original.setId(1L);
 
         // Configurar el comportamiento del repositorio
-        when(mockRepositorio.findById(1L)).thenReturn(original);
-        when(mockRepositorio.updateProduct(eq(1L), anyString(), anyString(), any(), any(), any())).thenReturn(true);
+        when(productoRepository.findById(1L)).thenReturn(original);
+        when(productoRepository.updateProduct(eq(1L), anyString(), anyString(), any(), any(), any())).thenReturn(true);
 
         // Crear el producto actualizado
         Producto actualizado = new Producto("Actualizado", "Nueva descripción", new BigDecimal("20.00"), 10, "Nueva Categoría", null);
@@ -195,7 +196,7 @@ class CatalogoTest {
         assertTrue(resultado);
 
         // Verificar que el repositorio fue llamado con los valores correctos
-        verify(mockRepositorio).updateProduct(
+        verify(productoRepository).updateProduct(
                 eq(1L),
                 eq("Actualizado"),
                 eq("Nueva descripción"),
@@ -210,7 +211,7 @@ class CatalogoTest {
         Producto producto = crearProductoEjemplo();
 
         // Configurar el mock del servicio para devolver false (producto no encontrado)
-        when(mockRepositorio.updateProduct(eq(1L), anyString(), anyString(), any(), any(), any())).thenReturn(false);
+        when(productoRepository.updateProduct(eq(1L), anyString(), anyString(), any(), any(), any())).thenReturn(false);
 
         // Llamar al método del servicio directamente
         boolean resultado = catalogoService.actualizarProducto(1L, producto);
@@ -219,7 +220,7 @@ class CatalogoTest {
         assertFalse(resultado);
 
         // Verificar que el método del repositorio fue llamado con los valores correctos
-        verify(mockRepositorio).updateProduct(
+        verify(productoRepository).updateProduct(
                 eq(1L),
                 eq(producto.getNombre()),
                 eq(producto.getDescripcion()),
@@ -235,7 +236,7 @@ class CatalogoTest {
 
         // Configurar el mock del repositorio para lanzar una excepción
         doThrow(new RuntimeException("Error al actualizar el producto"))
-                .when(mockRepositorio).updateProduct(eq(1L), anyString(), anyString(), any(), any(), any());
+                .when(productoRepository).updateProduct(eq(1L), anyString(), anyString(), any(), any(), any());
 
         // Llamar al método del servicio directamente
         Exception exception = assertThrows(RuntimeException.class, () -> {
@@ -246,7 +247,7 @@ class CatalogoTest {
         assertEquals("Error al actualizar el producto", exception.getMessage());
 
         // Verificar que el método del repositorio fue llamado con los valores correctos
-        verify(mockRepositorio).updateProduct(
+        verify(productoRepository).updateProduct(
                 eq(1L),
                 eq(producto.getNombre()),
                 eq(producto.getDescripcion()),
@@ -263,8 +264,8 @@ class CatalogoTest {
         producto.setId(1L);
 
         // Configurar el comportamiento del repositorio
-        when(mockRepositorio.findById(1L)).thenReturn(producto);
-        doNothing().when(mockRepositorio).delete(producto);
+        when(productoRepository.findById(1L)).thenReturn(producto);
+        doNothing().when(productoRepository).delete(producto);
 
         // Llamar al método del servicio directamente
         boolean resultado = catalogoService.eliminarProducto(1L);
@@ -273,7 +274,7 @@ class CatalogoTest {
         assertTrue(resultado);
 
         // Verificar que el método delete fue llamado
-        verify(mockRepositorio).delete(producto);
+        verify(productoRepository).delete(producto);
     }
 
     @Test
@@ -352,22 +353,31 @@ class CatalogoTest {
 
     @Test
     void testObtenerValoracionesPorProducto() {
+        // Crear el producto asociado
+        Producto producto = new Producto("Camiseta", "Camiseta de algodón", new BigDecimal("29.99"), 10, "Ropa", null);
+        producto.setId(1L);
+
+        // Crear valoraciones asociadas al producto
         Valoracion valoracion1 = new Valoracion();
         valoracion1.setIdUsuario("usuario1");
-        valoracion1.setIdProducto(1L);
         valoracion1.setPuntuacion(5);
         valoracion1.setComentario("Excelente producto");
+        valoracion1.setFechaCreacion(LocalDateTime.now());
 
         Valoracion valoracion2 = new Valoracion();
         valoracion2.setIdUsuario("usuario2");
-        valoracion2.setIdProducto(1L);
         valoracion2.setPuntuacion(4);
         valoracion2.setComentario("Muy bueno");
+        valoracion2.setFechaCreacion(LocalDateTime.now());
+
+        producto.agregarValoracion(valoracion1);
+        producto.agregarValoracion(valoracion2);
 
         // Configurar los mocks para devolver datos válidos
-        when(valoracionRepository.obtenerValoracionesPorProducto(1L, 0, 5))
+        when(productoRepository.findValoracionesPaginadas(1L, 0, 5))
                 .thenReturn(List.of(valoracion1, valoracion2));
-        when(valoracionRepository.contarValoracionesPorProducto(1L)).thenReturn(2L);
+        when(productoRepository.contarValoraciones(1L)).thenReturn(2L);
+
         PaginacionResponse<Valoracion> paginacionMock = new PaginacionResponse<>(
                 List.of(valoracion1, valoracion2), 1, 5, 2L
         );
@@ -375,7 +385,7 @@ class CatalogoTest {
         when(catalogoResource.obtenerValoracionesPorProducto(1L, 1, 5))
                 .thenReturn(Response.ok(paginacionMock).build());
 
-        Response response = catalogoResource.obtenerValoracionesPorProducto(1L,1,5);
+        Response response = catalogoResource.obtenerValoracionesPorProducto(1L, 1, 5);
 
         // Validar que la respuesta no sea null
         assertNotNull(response);
@@ -395,7 +405,7 @@ class CatalogoTest {
                 .thenThrow(new RuntimeException("Error al obtener valoraciones"));
 
         // Configurar el mock del repositorio para devolver un valor válido para contarValoracionesPorProducto
-        when(valoracionRepository.contarValoracionesPorProducto(1L)).thenReturn(0L);
+        when(productoRepository.contarValoraciones(1L)).thenReturn(0L);
 
         // Llamar al método
         Exception exception = assertThrows(RuntimeException.class, () -> {
@@ -408,27 +418,34 @@ class CatalogoTest {
 
     @Test
     void testActualizarPuntuacionProducto() {
+        // Crear el producto
         Producto producto = new Producto("Camiseta", "Camiseta de algodón", new BigDecimal("29.99"), 10, "Ropa", null);
         producto.setId(1L);
         producto.setPuntuacion(4.0);
 
+        // Crear la valoración
         Valoracion valoracion = new Valoracion();
         valoracion.setIdUsuario("usuario1");
-        valoracion.setIdProducto(1L);
         valoracion.setPuntuacion(5);
         valoracion.setComentario("Excelente producto");
+        valoracion.setFechaCreacion(LocalDateTime.now());
 
-        when(mockRepositorio.findById(1L)).thenReturn(producto);
-        when(valoracionRepository.contarValoracionesPorProducto(1L)).thenReturn(2L);
+        // Configurar los mocks
+        when(productoRepository.findById(1L)).thenReturn(producto);
+        when(productoRepository.contarValoraciones(1L)).thenReturn(2L);
 
         // JSON válido para el evento de valoración
         String mensaje = "{\"idUsuario\":\"usuario1\",\"idProducto\":1,\"puntuacion\":5,\"comentario\":\"Excelente producto\"}";
         catalogoService.procesarEventoValoracion(mensaje);
 
-        // Verificar que el método persist fue llamado
-        verify(mockRepositorio).persist(producto);
+        // Verificar que la valoración fue agregada al producto
+        assertEquals(1, producto.getValoraciones().size());
+        assertEquals(valoracion.getPuntuacion(), producto.getValoraciones().get(0).getPuntuacion());
 
-        // Validar que la puntuación fue actualizada correctamente
+        // Verificar que el método persist fue llamado
+        verify(productoRepository).persist(producto);
+
+        // Validar que la puntuación promedio fue actualizada correctamente
         assertEquals(4.5, producto.getPuntuacion());
     }
 
