@@ -1,0 +1,4 @@
+CREATE DATABASE "autenticacionBD";
+CREATE DATABASE "carritoBD";
+CREATE DATABASE "catalogoBD";
+CREATE DATABASE "pedidoBD";

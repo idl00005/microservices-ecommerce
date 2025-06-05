@@ -104,6 +104,11 @@
             <groupId>org.eclipse</groupId>
             <artifactId>yasson</artifactId>
         </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.2</version>
+        </dependency>
         <!-- Solo para tests -->
         <dependency>
             <groupId>io.quarkus</groupId>

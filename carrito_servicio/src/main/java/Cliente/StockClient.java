@@ -8,14 +8,16 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.Map;
 
 @ApplicationScoped
 public class StockClient {
 
-    // Cambia el puerto si tu servicio de catálogo corre en otro lado
-    private final String baseUrl = "http://localhost:8081/catalogo";
+    @ConfigProperty(name = "catalogo-service.url")
+    String baseUrl;
+
     private String JwtToken = "";
 
     /**
@@ -60,7 +62,7 @@ public class StockClient {
 
     @Scheduled(every = "50m")
     public void obtenerJwtParaCarrito() {
-        String url = "http://localhost:8080/auth/login";
+        String url = "http://nginx/auth/login";
         String usuario = "idl00005@red.ujaen.es";
         String pass = "1234";
         String json = String.format("{\"username\": \"%s\", \"password\": \"%s\"}", usuario, pass);
