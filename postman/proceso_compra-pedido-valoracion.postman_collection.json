@@ -1,0 +1,741 @@
+{
+	"info": {
+		"_postman_id": "f82cd8ae-ffe9-4699-88bb-3b9109fb45cd",
+		"name": "Proceso compra-pedido-valoracion",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42715512"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"El código de respuesta es 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"La respuesta es un JWT valido\", function() {",
+							"    var token = pm.response.text();",
+							"    pm.expect(token).to.be.a('string');",
+							"    pm.environment.set(\"jwt\", token);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"{{userAdmin}}\",\n  \"password\": \"{{userAdminPass}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Agregar producto al carrito",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Respuesta con campos y tipos correctos\", function () {",
+							"    const carrito = pm.response.json();",
+							"",
+							"    pm.expect(carrito).to.be.an('object');",
+							"    pm.expect(carrito).to.have.property(\"productoId\").that.is.a('number');",
+							"    pm.expect(carrito).to.have.property(\"nombre\").that.is.a('string');",
+							"    pm.expect(carrito).to.have.property(\"cantidad\").that.is.a('number');",
+							"    pm.expect(carrito).to.have.property(\"precio\").that.is.a('number');",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"productoId\": 1,\n  \"cantidad\": 2\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/carrito/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"carrito",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener carrito",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Respuesta es un array y cada item tiene campos y tipos correctos\", function () {",
+							"    const carrito = pm.response.json();",
+							"    pm.expect(carrito).to.be.an('array');",
+							"",
+							"    carrito.forEach(item => {",
+							"        pm.expect(item).to.have.property(\"productoId\").that.is.a('number');",
+							"        pm.expect(item).to.have.property(\"nombre\").that.is.a('string');",
+							"        pm.expect(item).to.have.property(\"cantidad\").that.is.a('number');",
+							"        pm.expect(item).to.have.property(\"precio\").that.is.a('number');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/carrito/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"carrito",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar cantidad producto",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Respuesta con carrito actualizado y campos correctos\", function () {",
+							"    const carrito = pm.response.json();",
+							"    pm.expect(carrito).to.be.an('object');",
+							"",
+							"    pm.expect(carrito).to.have.property(\"id\").that.is.a('number');",
+							"    pm.expect(carrito).to.have.property(\"userId\").that.is.a('string');",
+							"    pm.expect(carrito).to.have.property(\"productoId\").that.is.a('number');",
+							"    pm.expect(carrito).to.have.property(\"cantidad\",3).that.is.a('number');",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"cantidad\": 3\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/carrito/1",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"carrito",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Eliminar producto",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 204 No Content\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/carrito/1",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"carrito",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Vaciar carrito",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 204 No Content\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/carrito/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"carrito",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Agregar producto al carrito",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Respuesta con campos y tipos correctos\", function () {",
+							"    const carrito = pm.response.json();",
+							"",
+							"    pm.expect(carrito).to.be.an('object');",
+							"    pm.expect(carrito).to.have.property(\"productoId\").that.is.a('number');",
+							"    pm.expect(carrito).to.have.property(\"nombre\").that.is.a('string');",
+							"    pm.expect(carrito).to.have.property(\"cantidad\").that.is.a('number');",
+							"    pm.expect(carrito).to.have.property(\"precio\").that.is.a('number');",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"productoId\": 1,\n  \"cantidad\": 2\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/carrito/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"carrito",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Modificar precio producto",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Mensaje de éxito correcto\", function () {",
+							"    const mensaje = pm.response.text();",
+							"    pm.expect(mensaje).to.eql(\"Producto actualizado con éxito.\");",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": 1,\n    \"nombre\": \"Smartphone Samsung Galaxy S21\",\n    \"descripcion\": \"Teléfono móvil de última generación con cámara de alta resolución.\",\n    \"precio\": 0,\n    \"categoria\": \"Teléfono\",\n    \"stock\": 100,\n    \"stockReservado\": 8,\n    \"puntuacion\": 0.0,\n    \"detalles\": {\n        \"color\": \"Negro\",\n        \"procesador\": \"Exynos 2100\",\n        \"almacenamiento\": \"128GB\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/catalogo/1",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"catalogo",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Iniciar pago",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Respuesta tiene los campos correctos y tipos válidos\", function () {",
+							"    const pago = pm.response.json();",
+							"",
+							"    pm.expect(pago).to.have.property(\"id\").that.is.a(\"number\");",
+							"    pm.expect(pago).to.have.property(\"userId\").that.is.a(\"string\");",
+							"    pm.expect(pago).to.have.property(\"montoTotal\").that.is.a(\"number\");",
+							"    pm.expect(pago).to.have.property(\"estado\").that.is.a(\"string\");",
+							"    pm.expect(pago).to.have.property(\"proveedor\");",
+							"    pm.expect(pago).to.have.property(\"referenciaExterna\");",
+							"    pm.expect(pago).to.have.property(\"fechaCreacion\").that.is.a(\"string\");",
+							"    pm.expect(pago).to.have.property(\"direccion\").that.is.a(\"string\");",
+							"    pm.expect(pago).to.have.property(\"telefono\").that.is.a(\"string\");",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"telefono\": \"+59170000000\",\n  \"direccion\": \"Calle Ejemplo 123\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/carrito/pago",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"carrito",
+						"pago"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener pedidos del usuario",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Respuesta exitosa y formato correcto\", function () {",
+							"    const pedidos = pm.response.json();",
+							"    pm.expect(pedidos).to.be.an('array');",
+							"",
+							"    // Comprobar que cada pedido tiene los campos requeridos",
+							"    pedidos.forEach(pedido => {",
+							"        pm.expect(pedido).to.have.property(\"id\").that.is.a('number');",
+							"        pm.expect(pedido).to.have.property(\"productoId\").that.is.a('number');",
+							"        pm.expect(pedido).to.have.property(\"cantidad\").that.is.a('number');",
+							"        pm.expect(pedido).to.have.property(\"estado\").that.is.a('string');",
+							"        pm.expect(pedido).to.have.property(\"precioTotal\").that.is.a('number');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/pedido",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pedido"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar estado del pedido",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/pedido/1/estado?id=1&estado=COMPLETADO",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pedido",
+						"1",
+						"estado"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "1"
+						},
+						{
+							"key": "estado",
+							"value": "COMPLETADO"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Escribir valoración",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"puntuacion\" : 5,\n    \"comentario\" : \"Muy buen producto\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pedido/1/valoracion",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pedido",
+						"1",
+						"valoracion"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener valoracion",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Respuesta tiene la estructura correcta\", function () {",
+							"    const response = pm.response.json();",
+							"",
+							"    pm.expect(response).to.have.property(\"datos\").that.is.an(\"array\");",
+							"    pm.expect(response).to.have.property(\"pagina\").that.is.a(\"number\");",
+							"    pm.expect(response).to.have.property(\"tamanio\").that.is.a(\"number\");",
+							"    pm.expect(response).to.have.property(\"total\").that.is.a(\"number\");",
+							"",
+							"    response.datos.forEach(valoracion => {",
+							"        pm.expect(valoracion).to.have.property(\"id\").that.is.a(\"number\");",
+							"        pm.expect(valoracion).to.have.property(\"idUsuario\").that.is.a(\"string\");",
+							"        pm.expect(valoracion).to.have.property(\"puntuacion\").that.is.a(\"number\");",
+							"        pm.expect(valoracion).to.have.property(\"comentario\").that.is.a(\"string\");",
+							"        pm.expect(valoracion).to.have.property(\"fechaCreacion\").that.is.a(\"string\");",
+							"    });",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"puntuacion\" : 5,\n    \"comentario\" : \"Muy buen producto\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/catalogo/1/valoraciones",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"catalogo",
+						"1",
+						"valoraciones"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "jwt",
+			"value": "",
+			"disabled": true
+		}
+	]
+}

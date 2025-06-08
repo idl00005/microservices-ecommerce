@@ -1,5 +1,6 @@
 package com.Recursos;
 
+import com.DTO.ProductoDTO;
 import com.Entidades.Producto;
 import com.Entidades.Valoracion;
 import com.Otros.ProductEvent;
@@ -44,7 +45,7 @@ public class CatalogoResource {
 
     @POST
     @RolesAllowed("admin")
-    public Response addProduct(@Valid Producto producto) {
+    public Response addProduct(@Valid ProductoDTO producto) {
         try {
             Producto nuevoProducto = catalogoService.agregarProducto(producto);
             ResponseMessage responseMessage = new ResponseMessage("Producto añadido con éxito.", nuevoProducto);
@@ -57,8 +58,8 @@ public class CatalogoResource {
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed("admin")
-    public Response updateProduct(@PathParam("id") Long id, @Valid Producto producto) {
+    @RolesAllowed({"admin"})
+    public Response updateProduct(@PathParam("id") Long id, @Valid ProductoDTO producto) {
         try {
             boolean updated = catalogoService.actualizarProducto(id, producto);
             if (updated) {
@@ -128,5 +129,4 @@ public class CatalogoResource {
                     .build();
         }
     }
-
 }

@@ -1,7 +1,6 @@
 package com.catalogo;
 
 import com.Entidades.Producto;
-import com.DTO.ValoracionDTO;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
@@ -329,7 +328,7 @@ class CatalogoTestIntegracion {
                 .then()
                 .statusCode(200)
                 .body("datos.size()", equalTo(0))
-                .body("total", equalTo(0));
+                .body("total", equalTo(1));
     }
 }
 

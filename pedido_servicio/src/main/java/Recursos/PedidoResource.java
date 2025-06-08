@@ -9,6 +9,7 @@ import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Max;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -90,7 +91,7 @@ public class PedidoResource {
             );
             return Response.ok(pedidos).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al listar los pedidos").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al listar los pedidos: "+e.getMessage()).build();
         }
     }
 
@@ -171,6 +172,7 @@ public class PedidoResource {
 
     public record ValoracionRequest(
             @Positive(message = "La puntuación debe ser mayor que 0")
+            @Max(value = 5, message = "La puntuación no puede ser mayor que 5")
             @NotNull
             int puntuacion,
             @NotNull(message = "El comentario no puede ser nulo")

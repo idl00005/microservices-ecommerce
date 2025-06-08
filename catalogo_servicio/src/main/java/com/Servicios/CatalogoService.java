@@ -1,5 +1,6 @@
 package com.Servicios;
 
+import com.DTO.ProductoDTO;
 import com.DTO.StockEventDTO;
 import com.DTO.ValoracionDTO;
 import com.Entidades.Producto;
@@ -61,13 +62,18 @@ public class CatalogoService {
     }
 
     @Transactional
-    public Producto agregarProducto(Producto producto) {
-        productoRepository.add(producto);
-        return producto;
+    public Producto agregarProducto(ProductoDTO producto) {
+        Producto nuevoProducto = new Producto(
+                producto.getNombre(), producto.getDescripcion(),
+                producto.getPrecio(), producto.getStock(),
+                producto.getCategoria(), producto.getDetalles()
+        );
+        productoRepository.add(nuevoProducto);
+        return nuevoProducto;
     }
 
     @Transactional
-    public boolean actualizarProducto(Long id, Producto producto) {
+    public boolean actualizarProducto(Long id, ProductoDTO producto) {
         return productoRepository.updateProduct(
                 id, producto.getNombre(), producto.getDescripcion(),
                 producto.getPrecio(), producto.getStock(), producto.getDetalles()

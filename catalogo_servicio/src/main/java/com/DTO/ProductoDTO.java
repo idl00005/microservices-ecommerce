@@ -1,20 +1,14 @@
-package com.Entidades;
+package com.DTO;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.hibernate.annotations.Type;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
-@Entity
-public class Producto {
+public class ProductoDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "El nombre del producto no puede estar vacío")
@@ -40,24 +34,14 @@ public class Producto {
 
     private Integer stockReservado = 0;
 
-    @NotNull
-    @Min(value = 0, message = "La puntuación no puede ser menor que 0")
     private double puntuacion = 0.0;
 
-    @OneToMany(cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_producto", nullable = false)
-    private List<Valoracion> valoraciones = new ArrayList<>();
-
     @Type(JsonBinaryType.class)
-    @Column(columnDefinition = "jsonb")
     private JsonNode detalles;
 
-    public Producto() {
+    public ProductoDTO() {
     }
-
-    public Producto(String nombre, String descripcion, BigDecimal precio, int stock, String categoria, JsonNode detalles) {
+    public ProductoDTO(String nombre, String descripcion, BigDecimal precio, int stock, String categoria, JsonNode detalles) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
@@ -66,7 +50,6 @@ public class Producto {
         this.detalles = detalles;
     }
 
-    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -99,14 +82,6 @@ public class Producto {
         this.precio = precio;
     }
 
-    public Integer getStock() {
-        return stock;
-    }
-
-    public void setStock(Integer stock) {
-        this.stock = stock;
-    }
-
     public String getCategoria() {
         return categoria;
     }
@@ -115,12 +90,12 @@ public class Producto {
         this.categoria = categoria;
     }
 
-    public JsonNode getDetalles() {
-        return detalles;
+    public Integer getStock() {
+        return stock;
     }
 
-    public void setDetalles(JsonNode detalles) {
-        this.detalles = detalles;
+    public void setStock(Integer stock) {
+        this.stock = stock;
     }
 
     public Integer getStockReservado() {
@@ -139,15 +114,11 @@ public class Producto {
         this.puntuacion = puntuacion;
     }
 
-    public void actualizarPuntuacion(int nuevaPuntuacion, long totalValoraciones) {
-        this.puntuacion = ((this.puntuacion * (totalValoraciones - 1)) + nuevaPuntuacion) / totalValoraciones;
+    public JsonNode getDetalles() {
+        return detalles;
     }
 
-    public void agregarValoracion(Valoracion valoracion) {
-        this.valoraciones.add(valoracion);
-    }
-
-    public List<Valoracion> getValoraciones() {
-        return valoraciones;
+    public void setDetalles(JsonNode detalles) {
+        this.detalles = detalles;
     }
 }

@@ -33,7 +33,6 @@ public class OutboxEventPublisher {
         //System.out.println("Publicando eventos pendientes...");
         //LOG.info("Iniciando la acción...");
         List<OutboxEvent> eventos = outboxRepo.findPending();
-        System.out.println("Eventos pendientes: " + eventos.size());
         for (OutboxEvent evento : eventos) {
             try {
                 ValoracionDTO dto = objectMapper.readValue(evento.payload, ValoracionDTO.class);

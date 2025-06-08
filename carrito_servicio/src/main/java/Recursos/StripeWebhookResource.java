@@ -85,26 +85,4 @@ public class StripeWebhookResource {
             return Response.status(400).entity("Webhook error: " + e.getMessage()).build();
         }
     }
-
-    private void procesarPaymentIntent(PaymentIntent paymentIntent, String eventType) {
-        String paymentIntentId = paymentIntent.getId();
-        OrdenPago orden = ordenPagoRepository.findByReferenciaExterna(paymentIntentId);
-        if (orden != null) {
-            switch (eventType) {
-                case "payment_intent.succeeded":
-                    orden.estado = "PAGADO";
-                    break;
-                case "payment_intent.payment_failed":
-                    orden.estado = "FALLIDO";
-                    break;
-                case "payment_intent.canceled":
-                    orden.estado = "CANCELADO";
-                    break;
-            }
-            ordenPagoRepository.persist(orden);
-        } else {
-            System.err.println("Orden no encontrada para PaymentIntent ID: " + paymentIntentId);
-        }
-    }
-
 }
