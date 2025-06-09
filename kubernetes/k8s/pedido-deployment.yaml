@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pedido-servicio
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pedido-servicio
+  template:
+    metadata:
+      labels:
+        app: pedido-servicio
+    spec:
+      containers:
+        - name: pedido-servicio
+          image: pedido_servicio_quarkus:v1.2
+          ports:
+            - containerPort: 8080
+          env:
+            - name: QUARKUS_DATASOURCE_USERNAME
+              value: "ignacio_ad"
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              value: "1234"
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: "jdbc:postgresql://postgres-pedido:5432/pedidoBD"
+            - name: KAFKA_URL
+              value: "kafka-service:9092"
+            - name: QUARKUS_PROFILE
+              value: "docker"

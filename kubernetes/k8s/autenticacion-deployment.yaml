@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth
+          image: autenticacion_servicio_quarkus:v1.2 # Tu imagen local o de un registry privado
+          ports:
+            - containerPort: 8080
+          env:
+            - name: QUARKUS_DATASOURCE_USERNAME
+              value: "ignacio_ad"
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              value: "1234"
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: "jdbc:postgresql://postgres-auth:5432/autenticacionBD"

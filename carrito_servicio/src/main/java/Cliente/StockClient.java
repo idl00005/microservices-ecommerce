@@ -16,7 +16,10 @@ import java.util.Map;
 public class StockClient {
 
     @ConfigProperty(name = "catalogo-service.url")
-    String baseUrl;
+    String urlCatalogoService;
+
+    @ConfigProperty(name = "auth-service.url")
+    String urlAuthService;
 
     private String JwtToken = "";
 
@@ -32,7 +35,7 @@ public class StockClient {
                 Long productoId = entrada.getKey();
                 Integer cantidad = entrada.getValue();
 
-                Response respuesta = client.target(baseUrl)
+                Response respuesta = client.target(urlCatalogoService)
                         .path("/{id}/reservar")
                         .resolveTemplate("id", productoId)
                         .queryParam("cantidad", cantidad)
@@ -62,14 +65,13 @@ public class StockClient {
 
     @Scheduled(every = "50m")
     public void obtenerJwtParaCarrito() {
-        String url = "http://nginx/auth/login";
         String usuario = "idl00005@red.ujaen.es";
         String pass = "1234";
         String json = String.format("{\"username\": \"%s\", \"password\": \"%s\"}", usuario, pass);
 
         Client client = ClientBuilder.newBuilder().build();
         try {
-            Response resp = client.target(url)
+            Response resp = client.target(urlAuthService)
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(json));
             if (resp.getStatus() == 200) {

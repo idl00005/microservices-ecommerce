@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalogo-servicio
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: catalogo-servicio
+  template:
+    metadata:
+      labels:
+        app: catalogo-servicio
+    spec:
+      containers:
+        - name: catalogo-servicio
+          image: catalogo_servicio_quarkus:v1.2
+          ports:
+            - containerPort: 8080
+          env:
+            - name: QUARKUS_DATASOURCE_USERNAME
+              value: "ignacio_ad"
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              value: "1234"
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: "jdbc:postgresql://postgres-catalogo:5432/catalogoBD"
+            - name: KAFKA_URL
+              value: "kafka-service:9092"
+            - name: QUARKUS_PROFILE
+              value: "docker"
+  
