@@ -1,4 +1,4 @@
-package com.Autenticacion;
+package com.Recursos;
 
 import com.Entidades.Usuario;
 import com.Repositorios.RepositorioUsuario;
@@ -38,7 +38,7 @@ public class AuthResource {
 
         // Verificar que el usuario exista
         if (user == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
         // Verificar que las contraseñas coincidan
@@ -61,7 +61,7 @@ public class AuthResource {
     @Path("/register")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response register(@Valid RegisterRequest newUser) {
+    public Response register(RegisterRequest newUser) {
         try {
             // Validar si el correo ya está registrado
             if (userRepository.findByUsername(newUser.email()) != null) {
@@ -95,14 +95,14 @@ public class AuthResource {
                     .expiresIn(Duration.ofHours(1))
                     .sign();
             return Response.status(Response.Status.CREATED)
-                    .entity(Collections.singletonMap("token", token)) // Retornar el token como JSON
+                    .entity(Collections.singletonMap("token", token)) // Retornar el JWT
                     .build();
         } catch (ConstraintViolationException e) {
             // Si hay problemas de validación, devolver error 400
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(e.getConstraintViolations()
                             .stream()
-                            .map(violation -> violation.getMessage()) // Obtenemos solo los mensajes de error
+                            .map(ConstraintViolation::getMessage) // Obtenemos solo los mensajes de error
                             .reduce((a, b) -> a + ", " + b) // Combinar todos los errores en un string
                             .orElse("Validación de usuario fallida."))
                     .build();

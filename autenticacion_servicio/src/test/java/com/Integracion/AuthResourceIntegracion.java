@@ -1,8 +1,7 @@
 package com.Integracion;
 
-import com.Autenticacion.AuthResource.RegisterRequest;
-import com.Autenticacion.AuthResource.UserCredentials;
-import com.Entidades.Usuario;
+import com.Recursos.AuthResource.RegisterRequest;
+import com.Recursos.AuthResource.UserCredentials;
 import com.Repositorios.RepositorioUsuario;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
@@ -130,6 +129,6 @@ public class AuthResourceIntegracion {
                 .when()
                 .post("/auth/login")
                 .then()
-                .statusCode(401);
+                .statusCode(404);
     }
 }

@@ -1,8 +1,6 @@
 package com.Entidades;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.*;
 
@@ -22,7 +20,6 @@ public class Usuario {
     private String apellidos;
 
     @Pattern(regexp = "\\d{9,15}", message = "El teléfono debe tener entre 10 y 15 dígitos.")
-    // Solo dígitos y una longitud específica
     private String telefono;
 
     @NotBlank(message = "La contraseña no puede estar vacía.")

@@ -1,6 +1,6 @@
 package com.Unitarios;
 
-import com.Autenticacion.AuthResource;
+import com.Recursos.AuthResource;
 import com.Entidades.Usuario;
 import com.Repositorios.RepositorioUsuario;
 import jakarta.ws.rs.core.Response;
@@ -106,6 +106,6 @@ public class AuthResourceTest {
         // Assert
         assertEquals(Response.Status.CONFLICT.getStatusCode(), response.getStatus());
         verify(userRepository, times(1)).findByUsername(email);
-        verify(userRepository, never()).save(any(Usuario.class));
+        verify(userRepository, never()).persist(any(Usuario.class));
     }
 }
