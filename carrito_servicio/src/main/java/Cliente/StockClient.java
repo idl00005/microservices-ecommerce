@@ -1,5 +1,6 @@
 package Cliente;
 
+import DTO.ProductoDTO;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -79,6 +80,19 @@ public class StockClient {
             } else {
                 throw new RuntimeException("No se obtuvo token: status " + resp.getStatus());
             }
+        } finally {
+            client.close();
+        }
+    }
+
+    public ProductoDTO obtenerProductoPorId(Long id) {
+        Client client = ClientBuilder.newBuilder().build();
+        try {
+            return client.target(urlCatalogoService)
+                    .path("/{id}")
+                    .resolveTemplate("id", id)
+                    .request(MediaType.APPLICATION_JSON)
+                    .get(ProductoDTO.class);
         } finally {
             client.close();
         }

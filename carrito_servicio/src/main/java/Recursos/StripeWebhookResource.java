@@ -45,7 +45,6 @@ public class StripeWebhookResource {
                 var deserializer = event.getDataObjectDeserializer();
                 if (deserializer.getObject().isPresent()) {
                     PaymentIntent paymentIntent = (PaymentIntent) deserializer.getObject().get();
-                    String paymentIntentId = paymentIntent.getId();
                 } else {
                     System.err.println("El objeto del evento no está presente. Se intenta deserializar manualmente.");
                     JsonObject json = JsonParser.parseString(payload).getAsJsonObject();

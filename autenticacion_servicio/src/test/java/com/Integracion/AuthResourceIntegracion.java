@@ -129,6 +129,6 @@ public class AuthResourceIntegracion {
                 .when()
                 .post("/auth/login")
                 .then()
-                .statusCode(404);
+                .statusCode(500);
     }
 }

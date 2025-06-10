@@ -1,6 +1,5 @@
 package Servicios;
 
-import Cliente.ProductoClient;
 import Cliente.StockClient;
 import DTO.*;
 import Entidades.CarritoItem;
@@ -14,7 +13,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
-import com.stripe.param.PaymentIntentCreateParams;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
@@ -33,9 +31,6 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class CarritoService {
-
-    @Inject
-    ProductoClient productoClient;
 
     @Inject
     CarritoItemRepository carritoItemRepository;
@@ -67,7 +62,7 @@ public class CarritoService {
                 .collect(Collectors.toMap(
                         item -> item.productoId,
                         item -> {
-                            ProductoDTO producto = productoClient.obtenerProductoPorId(item.productoId);
+                            ProductoDTO producto = stockClient.obtenerProductoPorId(item.productoId);
                             if (producto == null) {
                                 throw new WebApplicationException("Producto no encontrado: " + item.productoId, 404);
                             }
@@ -75,7 +70,7 @@ public class CarritoService {
                         }
                 ));
 
-        // 2) Construir lista de DTOs con precio
+        // 2) Construir lista de DTO con precio
         List<CarritoItemDTO> itemsConPrecio = carrito.stream()
                 .map(item -> new CarritoItemDTO(
                         item.productoId,
@@ -183,7 +178,7 @@ public class CarritoService {
         String payloadJson = JsonbBuilder.create().toJson(carritoEvent);
         OutboxEvent evt = new OutboxEvent();
         evt.aggregateType = "Carrito";
-        evt.aggregateId   = orden.userId.toString();
+        evt.aggregateId   = orden.userId;
         evt.eventType     = "Carrito.CompraProcesada";
         evt.payload       = payloadJson;
         outboxRepo.persist(evt);
@@ -260,7 +255,7 @@ public class CarritoService {
 
     @Transactional
     public CarritoItemDetalleDTO agregarProducto(String userId, Long productoId, int cantidad) {
-        ProductoDTO producto = productoClient.obtenerProductoPorId(productoId);
+        ProductoDTO producto = stockClient.obtenerProductoPorId(productoId);
 
         if (producto == null) {
             throw new WebApplicationException("El producto no existe", Response.Status.NOT_FOUND);
@@ -303,7 +298,7 @@ public class CarritoService {
         List<CarritoItem> carrito =  carritoItemRepository.findByUserId(userId);
         List<CarritoItemDetalleDTO> carritoDetalles = new ArrayList<>();
         for (CarritoItem item : carrito) {
-            ProductoDTO producto = productoClient.obtenerProductoPorId(item.productoId);
+            ProductoDTO producto = stockClient.obtenerProductoPorId(item.productoId);
             if (producto == null) {
                 throw new WebApplicationException("Producto no encontrado: " + item.productoId, Response.Status.NOT_FOUND);
             }
@@ -383,7 +378,7 @@ public class CarritoService {
         }
 
         // Validar stock disponible
-        ProductoDTO producto = productoClient.obtenerProductoPorId(productoId);
+        ProductoDTO producto = stockClient.obtenerProductoPorId(productoId);
         if (producto.stock() < nuevaCantidad) {
             throw new WebApplicationException("Stock insuficiente para el producto: " + producto.nombre(), Response.Status.BAD_REQUEST);
         }

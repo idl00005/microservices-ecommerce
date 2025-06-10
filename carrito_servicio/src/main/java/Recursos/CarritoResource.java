@@ -103,10 +103,10 @@ public class CarritoResource {
         String userId = ctx.getUserPrincipal().getName();
         try {
             carritoService.vaciarCarrito(userId);
-            return Response.noContent().build(); // Retorna 204 si es exitoso
+            return Response.noContent().build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al vaciar el carrito").build(); // Maneja errores genéricos
+                    .entity("Error al vaciar el carrito").build();
         }
     }
 

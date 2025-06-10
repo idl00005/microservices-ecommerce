@@ -1,9 +1,10 @@
 package com.Unitarios;
 
-import com.Recursos.AuthResource;
 import com.Entidades.Usuario;
+import com.Recursos.AuthResource;
 import com.Repositorios.RepositorioUsuario;
-import jakarta.ws.rs.core.Response;
+import com.Servicios.AuthService;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -14,10 +15,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class AuthResourceTest {
+public class AuthServiceTest {
 
     @InjectMocks
-    private AuthResource authResource;
+    private AuthService authService;
 
     @Mock
     private RepositorioUsuario userRepository;
@@ -32,29 +33,23 @@ public class AuthResourceTest {
 
     @Test
     public void testLoginSuccess() {
-        // Arrange
         String username = "test@example.com";
         String password = "password123";
-        String encodedPassword = "$2a$10$4fgTal3TLY.CJHMYS.BHJueVlnrkMSJoVl.WNm/AS2SCpmd.g/R0e"; // Mocked hash
+        String encodedPassword = "$2a$10$4fgTal3TLY.CJHMYS.BHJueVlnrkMSJoVl.WNm/AS2SCpmd.g/R0e"; // Hash simulado
         Usuario mockUser = new Usuario("Test", "User", username, "1234567890", encodedPassword, "user");
 
-        // Configurar el mock para devolver el usuario
         when(userRepository.findByUsername(username)).thenReturn(mockUser);
         when(passwordEncoder.matches(password, encodedPassword)).thenReturn(true);
 
-        // Act
-        Response response = authResource.login(new AuthResource.UserCredentials(username, password));
+        String token = authService.login(new AuthResource.UserCredentials(username, password));
 
-        // Assert
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        assertNotNull(response.getEntity());
+        assertNotNull(token);
         verify(userRepository, times(1)).findByUsername(username);
         verify(passwordEncoder, times(1)).matches(password, encodedPassword);
     }
 
     @Test
     public void testLoginFailureInvalidPassword() {
-        // Arrange
         String username = "test@example.com";
         String password = "wrongPassword";
         Usuario mockUser = new Usuario("Test", "User", username, "1234567890", "$2a$10$encodedPassword", "user");
@@ -62,18 +57,29 @@ public class AuthResourceTest {
         when(userRepository.findByUsername(username)).thenReturn(mockUser);
         when(passwordEncoder.matches(password, mockUser.getPassword())).thenReturn(false);
 
-        // Act
-        Response response = authResource.login(new AuthResource.UserCredentials(username, password));
-
-        // Assert
-        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        assertThrows(AuthService.UnauthorizedException.class, () -> {
+            authService.login(new AuthResource.UserCredentials(username, password));
+        });
         verify(userRepository, times(1)).findByUsername(username);
         verify(passwordEncoder, times(1)).matches(password, mockUser.getPassword());
     }
 
     @Test
+    public void testLoginFailureUserNotFound() {
+        String username = "nonexistent@example.com";
+        String password = "password123";
+
+        when(userRepository.findByUsername(username)).thenReturn(null);
+
+        assertThrows(AuthService.NotFoundException.class, () -> {
+            authService.login(new AuthResource.UserCredentials(username, password));
+        });
+        verify(userRepository, times(1)).findByUsername(username);
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+    }
+
+    @Test
     public void testRegisterSuccess() {
-        // Arrange
         String email = "newuser@example.com";
         String password = "password123";
         AuthResource.RegisterRequest newUser = new AuthResource.RegisterRequest("New", "User", email, "1234567890", password);
@@ -81,12 +87,9 @@ public class AuthResourceTest {
         when(userRepository.findByUsername(email)).thenReturn(null);
         when(passwordEncoder.encode(password)).thenReturn("$2a$10$encodedPassword");
 
-        // Act
-        Response response = authResource.register(newUser);
+        String token = authService.register(newUser);
 
-        // Assert
-        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
-        assertNotNull(response.getEntity());
+        assertNotNull(token);
         verify(userRepository, times(1)).findByUsername(email);
         verify(passwordEncoder, times(1)).encode(password);
         verify(userRepository, times(1)).save(any(Usuario.class));
@@ -94,18 +97,30 @@ public class AuthResourceTest {
 
     @Test
     public void testRegisterConflict() {
-        // Arrange
         String email = "existinguser@example.com";
         AuthResource.RegisterRequest newUser = new AuthResource.RegisterRequest("Existing", "User", email, "1234567890", "password123");
 
         when(userRepository.findByUsername(email)).thenReturn(new Usuario());
 
-        // Act
-        Response response = authResource.register(newUser);
-
-        // Assert
-        assertEquals(Response.Status.CONFLICT.getStatusCode(), response.getStatus());
+        assertThrows(AuthService.ConflictException.class, () -> {
+            authService.register(newUser);
+        });
         verify(userRepository, times(1)).findByUsername(email);
-        verify(userRepository, never()).persist(any(Usuario.class));
+        verify(userRepository, never()).save(any(Usuario.class));
+    }
+
+    @Test
+    public void testRegisterValidationFailure() {
+        String email = "invalidemail";
+        String password = "password123";
+        AuthResource.RegisterRequest newUser = new AuthResource.RegisterRequest("", "User", email, "1234567890", password); // Nombre vacío
+
+        when(userRepository.findByUsername(email)).thenReturn(null);
+
+        assertThrows(ConstraintViolationException.class, () -> {
+            authService.register(newUser);
+        });
+        verify(userRepository, times(1)).findByUsername(email);
+        verify(userRepository, never()).save(any(Usuario.class));
     }
 }
