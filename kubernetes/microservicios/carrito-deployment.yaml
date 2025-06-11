@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: carrito-servicio
-          image: carrito_servicio_quarkus:latest
+          image: carrito_servicio_quarkus:v1
           ports:
             - containerPort: 8080
           env:

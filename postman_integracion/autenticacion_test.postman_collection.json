@@ -42,9 +42,9 @@
 					"raw": "{\n    \"firstName\": \"Test\",\n    \"lastName\": \"User\",\n    \"email\": \"test@example.com\",\n    \"phone\": \"123456789\",\n    \"password\": \"MiPassword123\"\n}"
 				},
 				"url": {
-					"raw": "{{baseUrl}}/auth/register",
+					"raw": "{{auth_url}}/auth/register",
 					"host": [
-						"{{baseUrl}}"
+						"{{auth_url}}"
 					],
 					"path": [
 						"auth",
@@ -89,9 +89,9 @@
 					"raw": "{\n    \"username\": \"test@example.com\",\n    \"password\": \"MiPassword123\"\n}"
 				},
 				"url": {
-					"raw": "{{baseUrl}}/auth/login",
+					"raw": "{{auth_url}}/auth/login",
 					"host": [
-						"{{baseUrl}}"
+						"{{auth_url}}"
 					],
 					"path": [
 						"auth",

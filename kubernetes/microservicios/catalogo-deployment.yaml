@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: catalogo-servicio
-          image: catalogo_servicio_quarkus:v1.2
+          image: catalogo_servicio_quarkus:v1
           ports:
             - containerPort: 8080
           env:

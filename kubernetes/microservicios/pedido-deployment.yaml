@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth
+  name: pedido-servicio
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: auth
+      app: pedido-servicio
   template:
     metadata:
       labels:
-        app: auth
+        app: pedido-servicio
     spec:
       containers:
-        - name: auth
-          image: autenticacion_servicio_quarkus:v1.2 # Tu imagen local o de un registry privado
+        - name: pedido-servicio
+          image: pedido_servicio_quarkus:v1
           ports:
             - containerPort: 8080
           env:
@@ -23,4 +23,8 @@ spec:
             - name: QUARKUS_DATASOURCE_PASSWORD
               value: "1234"
             - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://postgres-auth:5432/autenticacionBD"
+              value: "jdbc:postgresql://postgres-pedido:5432/pedidoBD"
+            - name: KAFKA_URL
+              value: "kafka-service:9092"
+            - name: QUARKUS_PROFILE
+              value: "docker"

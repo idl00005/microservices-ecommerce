@@ -1,0 +1,387 @@
+{
+	"info": {
+		"_postman_id": "43c1f06b-0cb8-4c4b-b9d2-8a869d60c688",
+		"name": "Funcionalidad Pedido",
+		"description": "Colección para probar el recurso PedidoResource",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42715512"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"El código de respuesta es 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"La respuesta es un JWT valido\", function() {",
+							"    var token = pm.response.text();",
+							"    pm.expect(token).to.be.a('string');",
+							"    pm.environment.set(\"jwt\", token);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"{{userAdmin}}\",\n  \"password\": \"{{userAdminPass}}\"\n}"
+				},
+				"url": {
+					"raw": "{{auth_url}}/auth/login",
+					"host": [
+						"{{auth_url}}"
+					],
+					"path": [
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear Pedido",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Respuesta exitosa y formato correcto\", function () {",
+							"    const pedido = pm.response.json();",
+							"    ",
+							"    // Comprobar que el objeto tiene las propiedades necesarias",
+							"    pm.expect(pedido).to.have.property(\"id\");",
+							"    pm.expect(pedido).to.have.property(\"usuarioId\");",
+							"    pm.expect(pedido).to.have.property(\"productoId\");",
+							"    pm.expect(pedido).to.have.property(\"ordenId\");",
+							"    pm.expect(pedido).to.have.property(\"cantidad\");",
+							"    pm.expect(pedido).to.have.property(\"precioTotal\");",
+							"    pm.expect(pedido).to.have.property(\"estado\");",
+							"    pm.expect(pedido).to.have.property(\"fechaCreacion\");",
+							"    ",
+							"    // Guardar el id del pedido en variable de entorno",
+							"    pm.environment.set(\"pedidoId\", pedido.id);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"usuarioId\": \"{{userAdmin}}\",\n  \"productoId\": 10,\n  \"ordenId\": 2001,\n  \"cantidad\": 3,\n  \"precioTotal\": 149.97,\n  \"estado\": \"PENDIENTE\",\n  \"fechaCreacion\": \"2025-06-04T10:30:00\"\n}\n"
+				},
+				"url": {
+					"raw": "{{pedido_url}}/pedido/",
+					"host": [
+						"{{pedido_url}}"
+					],
+					"path": [
+						"pedido",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener pedidos por usuario",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Respuesta exitosa y formato correcto\", function () {",
+							"    const pedidos = pm.response.json();",
+							"    pm.expect(pedidos).to.be.an('array');",
+							"",
+							"    // Comprobar que cada pedido tiene los campos requeridos",
+							"    pedidos.forEach(pedido => {",
+							"        pm.expect(pedido).to.have.property(\"id\").that.is.a('number');",
+							"        pm.expect(pedido).to.have.property(\"productoId\").that.is.a('number');",
+							"        pm.expect(pedido).to.have.property(\"cantidad\").that.is.a('number');",
+							"        pm.expect(pedido).to.have.property(\"estado\").that.is.a('string');",
+							"        pm.expect(pedido).to.have.property(\"precioTotal\").that.is.a('number');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{pedido_url}}/pedido",
+					"host": [
+						"{{pedido_url}}"
+					],
+					"path": [
+						"pedido"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener pedido por ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Respuesta con campos y tipos correctos\", function () {",
+							"    const pedido = pm.response.json();",
+							"",
+							"    pm.expect(pedido).to.be.an('object');",
+							"    pm.expect(pedido).to.have.property(\"id\").that.is.a('number');",
+							"    pm.expect(pedido).to.have.property(\"usuarioId\").that.is.a('string');",
+							"    pm.expect(pedido).to.have.property(\"productoId\").that.is.a('number');",
+							"    pm.expect(pedido).to.have.property(\"ordenId\").that.is.a('number');",
+							"    pm.expect(pedido).to.have.property(\"cantidad\").that.is.a('number');",
+							"    pm.expect(pedido).to.have.property(\"precioTotal\").that.is.a('number');",
+							"    pm.expect(pedido).to.have.property(\"estado\").that.is.a('string');",
+							"    pm.expect(pedido).to.have.property(\"fechaCreacion\").that.is.a('string');",
+							"",
+							"    // Validar que fechaCreacion tenga formato ISO 8601 (YYYY-MM-DDTHH:mm:ss)",
+							"    const iso8601Regex = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$/;",
+							"    pm.expect(pedido.fechaCreacion).to.match(iso8601Regex);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{pedido_url}}/pedido/{{pedidoId}}",
+					"host": [
+						"{{pedido_url}}"
+					],
+					"path": [
+						"pedido",
+						"{{pedidoId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar pedidos con filtro",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Respuesta exitosa y formato correcto\", function () {",
+							"    const pedidos = pm.response.json();",
+							"    pm.expect(pedidos).to.be.an('array');",
+							"",
+							"    // Comprobar que cada pedido tiene los campos requeridos",
+							"    pedidos.forEach(pedido => {",
+							"        pm.expect(pedido).to.have.property(\"id\").that.is.a('number');",
+							"        pm.expect(pedido).to.have.property(\"productoId\").that.is.a('number');",
+							"        pm.expect(pedido).to.have.property(\"cantidad\").that.is.a('number');",
+							"        pm.expect(pedido).to.have.property(\"estado\").that.is.a('string');",
+							"        pm.expect(pedido).to.have.property(\"precioTotal\").that.is.a('number');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"estado\" : \"PENDIENTE\",\n    \"usuarioId\" : \"idl00005@red.ujaen.es\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{pedido_url}}/pedido/filtro",
+					"host": [
+						"{{pedido_url}}"
+					],
+					"path": [
+						"pedido",
+						"filtro"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cambiar estado del pedido",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{pedido_url}}/pedido/{{pedidoId}}/estado?estado=ENVIADO",
+					"host": [
+						"{{pedido_url}}"
+					],
+					"path": [
+						"pedido",
+						"{{pedidoId}}",
+						"estado"
+					],
+					"query": [
+						{
+							"key": "estado",
+							"value": "ENVIADO"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "pedidoId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

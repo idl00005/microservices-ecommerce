@@ -1,78 +1,122 @@
-# prototipo-api
+# Microservicios con Quarkus
+## Ejecutar la aplicación en local
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
-
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
-
-## Running the application in dev mode
-
-You can run your application in dev mode that enables live coding using:
-
+Para ejecutar la aplicación en local, sigue los siguientes pasos:
+1. Actualiza la lista de paquetes:
 ```shell script
-./mvnw quarkus:dev
+  sudo apt update
+```
+2. Instala PostgreSQL y activa el servicio:
+```shell script
+  apt-get install -y postgresql postgresql-contrib
+  systemctl enable postgresql
+  systemctl start postgresql
+```
+3. Crea el usuario y las bases de datos necesarias:
+```shell script
+  sudo -u postgres psql -c "CREATE USER ignacio_ad WITH PASSWORD '1234';"
+  sudo -u postgres psql -c "CREATE DATABASE "autenticacionBD" OWNER ignacio_ad;"
+  sudo -u postgres psql -c "CREATE DATABASE "catalogoBD" OWNER ignacio_ad;"
+  sudo -u postgres psql -c "CREATE DATABASE "carritoBD" OWNER ignacio_ad;"
+  sudo -u postgres psql -c "CREATE DATABASE "catalogoBD" OWNER ignacio_ad;"
+```
+4. Instala java 17:
+```shell script
+  sudo apt install openjdk-17-jdk
+```
+5. Instala Maven:
+```shell script
+  sudo apt install maven
+```
+6. Iniciamos el servicio de kafka. Para este paso suponemos que docker y docker-compose ya están instalados,
+en caso contrario será necesaria su instalación.
+```shell script
+  cd docker-compose_solo_kafka
+  docker-compose up -d
+```
+> **_NOTA:_**  En ocasiones el contenedor de kafka se cierra al arrancar por primera vez debido a
+que zookeeper no ha completado su arranque. En ese caso, volvemos a ejecutar "docker-compose up -d".
+6. Arrancamos los distintos servicios de la aplicación:
+```shell script
+  cd ejemplo_servicio
+  ./mvnw compile quarkus:dev
+```
+## Ejecutar la aplicación empleando Docker-Compose
+En este apartado se da por hecho que ya se dispone de Docker y Docker-Compose instalados en el sistema. 
+Para ejecutar la aplicación empleando Docker-Compose, sigue los siguientes pasos:
+1. Empaquetamos los distintos servicios:
+```shell script
+  cd ejemplo_servicio
+  ./mvnw clean package -DskipTests
+```
+2. En caso de que se disponga de postgresql instalado en el sistema, es necesario detener el servicio de postgresql:
+```shell script
+  sudo systemctl stop postgresql
+```
+3. Ejecutamos el comando de docker-compose para levantar los distintos servicios:
+```shell script
+  cd docker-compose
+  docker-compose up -d
+```
+## Ejecutar la aplicación empleando kubernetes
+Para ejecutar la aplicación empleando kubernetes, sigue los siguientes pasos:
+1. Instala kubectl:
+```shell script
+  curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+```
+2. Instala minikube:
+```shell script
+  curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+  sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+```
+3. Inicia minikube:
+```shell script
+  minikube start
+```
+> **_NOTA:_**  Para esto será necesario docker, aunque hay otras formas de virtualizar minikube como VBox.
+4. Creamos las imágenes de los distintos servicios de la aplicación:
+```shell script
+  eval $(minikube docker-env)
+  # Para cada servicio:
+  cd ejemplo_servicio
+  ./mvnw clean package -DskipTests
+  cd ..
+  # Creamos la imagen de docker para cada undo de los servicios (desde la raíz del proyecto):
+  docker build -t autenticacion_servicio_quarkus:v1 -f ./autenticacion_servicio/src/main/docker/Dockerfile.jvm ./autenticacion_servicio
+  docker build -t catalogo_servicio_quarkus:v1 -f ./catalogo_servicio/src/main/docker/Dockerfile.jvm ./catalogo_servicio
+  docker build -t carrito_servicio_quarkus:v1 -f ./carrito_servicio/src/main/docker/Dockerfile.jvm ./carrito_servicio
+  docker build -t pedido_servicio_quarkus:v1 -f ./pedido_servicio/src/main/docker/Dockerfile.native ./pedido_servicio
+```
+5. Activamos el plugin de ingress de minikube:
+```shell script
+  minikube addons enable ingress
+```
+6. Necesitaremos que resuelva el nombre de dominio `microservicios.local` a la IP de minikube. Para ello, añadimos la siguiente línea al archivo `/etc/hosts`:
+```shell script
+  echo "$(minikube ip) microservicios.local" | sudo tee -a /etc/hosts
+```
+7. Desplegamos los distintos servicios de la aplicación:
+```shell script
+    kubectl apply -f kubernetes/postgres
+    kubectl apply -f kubernetes/kafka
+    kubectl apply -f kubernetes/microservicios
+    kubectl apply -f kubernetes/ingress
+    kubectl apply -f kubernetes/prometheus
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
-
-## Packaging and running the application
-
-The application can be packaged using:
-
+## Ejecutar los test de integración mediante Postman
+Éxisten dos métodos diferentes para ejecutar los test de integración mediante Postman,
+se podrían importar las colecciones y los entornos de Postman a la aplicación y ejecutarlos
+manualmente, o bien, se pueden ejecutar de forma automática mediante Newman. A continuación,
+se va a explicar cómo ejecutar los test de integración empleando Newman:
+1. Instala Newman:
 ```shell script
-./mvnw package
+  sudo npm install -g newman
 ```
-
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
-
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-
+2. Ejecuta la colección deseada. De forma de que se ejecutan un conjunto de test que prueban una o varias funcionalidades
+del sistema. En el caso de la colección `proceso_compra-pedido-valoracion`, se recomienda configurarla con un delay alto
+ya que el proceso de propagación de los eventos de Kafka puede tardar un tiempo en completarse.
 ```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+  newman run postman_integracion/proceso_compra-pedido-valoracion.postman_collection.json -e postman_integracion/KUBERNETES_ENV.postman_environment.jso
 ```
-
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
-
-## Creating a native executable
-
-You can create a native executable using:
-
-```shell script
-./mvnw package -Dnative
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
-
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./target/prototipo-api-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
-
-## Related Guides
-
-- REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation utilizing build time processing and Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
-- Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): Simplify your persistence code for Hibernate ORM via the active record or the repository pattern
-- JDBC Driver - PostgreSQL ([guide](https://quarkus.io/guides/datasource)): Connect to the PostgreSQL database via JDBC
-
-## Provided Code
-
-### Hibernate ORM
-
-Create your first JPA entity
-
-[Related guide section...](https://quarkus.io/guides/hibernate-orm)
-
-[Related Hibernate with Panache section...](https://quarkus.io/guides/hibernate-orm-panache)
-
-
-### REST
-
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
