@@ -1,6 +1,5 @@
 package Integracion;
 
-import Cliente.ProductoClient;
 import Cliente.StockClient;
 import DTO.ProductoDTO;
 import Entidades.CarritoItem;
@@ -30,9 +29,6 @@ import static org.mockito.Mockito.when;
 public class CarritoResourceIT {
 
     @InjectMock
-    ProductoClient productoClient;
-
-    @InjectMock
     CarritoItemRepository carritoItemRepository;
 
     @InjectMock
@@ -43,7 +39,7 @@ public class CarritoResourceIT {
     public void testAgregarEliminarProducto() {
         // Mock del cliente de producto
         ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10);
-        when(productoClient.obtenerProductoPorId(1L)).thenReturn(productoMock);
+        when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoMock);
         // Agregar producto
         AgregarProductoRequest request = new AgregarProductoRequest();
         request.productoId = 1L;
@@ -71,7 +67,7 @@ public class CarritoResourceIT {
         item.cantidad = 2;
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
-        when(productoClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
+        when(stockClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
 
         // Realiza la solicitud y verifica la respuesta
         given()
@@ -123,7 +119,7 @@ public class CarritoResourceIT {
     public void testActualizarCantidad() {
         // Mock del cliente de producto
         ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10);
-        when(productoClient.obtenerProductoPorId(1L)).thenReturn(productoMock);
+        when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoMock);
 
         // Mock del repositorio para la búsqueda
         CarritoItem item = new CarritoItem();
@@ -165,7 +161,7 @@ public class CarritoResourceIT {
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
         when(stockClient.reservarStock(productosAReservar,null)).thenReturn(Response.ok().build());
-        when(productoClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
+        when(stockClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
 
         // Realizar la solicitud
         given()
@@ -213,7 +209,7 @@ public class CarritoResourceIT {
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
         when(stockClient.reservarStock(productosAReservar,null)).thenReturn(Response.ok().build());
-        when(productoClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
+        when(stockClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
         // Realizar la solicitud
         given()
                 .contentType(ContentType.JSON)

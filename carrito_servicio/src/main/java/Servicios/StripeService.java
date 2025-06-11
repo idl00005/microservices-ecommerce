@@ -24,7 +24,6 @@ public class StripeService {
 
     @PostConstruct
     public void init() {
-        // Configura la clave secreta de Stripe después de la inyección
         Stripe.apiKey = stripeSecretKey;
     }
 

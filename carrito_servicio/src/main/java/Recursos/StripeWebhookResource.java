@@ -41,41 +41,33 @@ public class StripeWebhookResource {
             if ("payment_intent.succeeded".equals(event.getType()) ||
                     "payment_intent.payment_failed".equals(event.getType()) ||
                     "payment_intent.canceled".equals(event.getType())) {
+                JsonObject json = JsonParser.parseString(payload).getAsJsonObject();
+                JsonObject paymentIntentObj = json
+                        .getAsJsonObject("data")
+                        .getAsJsonObject("object");
 
-                var deserializer = event.getDataObjectDeserializer();
-                if (deserializer.getObject().isPresent()) {
-                    PaymentIntent paymentIntent = (PaymentIntent) deserializer.getObject().get();
-                } else {
-                    System.err.println("El objeto del evento no está presente. Se intenta deserializar manualmente.");
-                    JsonObject json = JsonParser.parseString(payload).getAsJsonObject();
-                    JsonObject paymentIntentObj = json
-                            .getAsJsonObject("data")
-                            .getAsJsonObject("object");
+                String paymentIntentId = paymentIntentObj.get("id").getAsString();
 
-                    String paymentIntentId = paymentIntentObj.get("id").getAsString();
-
-                    OrdenPago orden = ordenPagoRepository.findByReferenciaExterna(paymentIntentId);
-                    if (orden != null) {
-                        switch (event.getType()) {
-                            case "payment_intent.succeeded":
-                                orden.estado = "PAGADO";
-                                carritoService.procesarPagoCompletado(orden.id);
-                                break;
-                            case "payment_intent.payment_failed":
-                                orden.estado = "FALLIDO";
-                                break;
-                            case "payment_intent.canceled":
-                                orden.estado = "CANCELADO";
-                                carritoService.procesarPagoCancelado(orden.id);
-                                break;
-                        }
-
-                        ordenPagoRepository.persist(orden);
-                    } else {
-                        System.err.println("Orden no encontrada para PaymentIntent ID: " + paymentIntentId);
+                OrdenPago orden = ordenPagoRepository.findByReferenciaExterna(paymentIntentId);
+                if (orden != null) {
+                    switch (event.getType()) {
+                        case "payment_intent.succeeded":
+                            orden.estado = "PAGADO";
+                            carritoService.procesarPagoCompletado(orden.id);
+                            break;
+                        case "payment_intent.payment_failed":
+                            orden.estado = "FALLIDO";
+                            break;
+                        case "payment_intent.canceled":
+                            orden.estado = "CANCELADO";
+                            carritoService.procesarPagoCancelado(orden.id);
+                            break;
                     }
-                }
 
+                    ordenPagoRepository.persist(orden);
+                } else {
+                    System.err.println("Orden no encontrada para PaymentIntent ID: " + paymentIntentId);
+                }
             }
 
             return Response.ok().build();
