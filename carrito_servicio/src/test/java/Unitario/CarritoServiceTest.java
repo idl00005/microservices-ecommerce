@@ -64,7 +64,7 @@ public class CarritoServiceTest {
 
         // Verificaciones
         assertNotNull(result);
-        assertEquals(2, result.cantidad);
+        assertEquals(2, result.cantidad());
         verify(stockClient, times(1)).obtenerProductoPorId(1L);
         verify(carritoItemRepository, times(1)).persist(any(CarritoItem.class));
     }
