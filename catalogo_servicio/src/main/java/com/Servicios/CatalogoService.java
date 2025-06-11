@@ -141,32 +141,31 @@ public class CatalogoService {
     @Transactional
     public void procesarEventoValoracion(String mensaje) {
         try {
-            // 1. Deserializar el mensaje
+            // Deserializar el mensaje
             ValoracionDTO valoracionDTO = objectMapper.readValue(mensaje, ValoracionDTO.class);
 
-            // 2. Buscar el producto asociado
-            Producto producto = productoRepository.findById(valoracionDTO.getIdProducto());
+            // Buscar el producto asociado
+            Producto producto = productoRepository.findById(valoracionDTO.idProducto());
             if (producto == null) {
-                throw new IllegalArgumentException("Producto no encontrado con ID: " + valoracionDTO.getIdProducto());
+                throw new IllegalArgumentException("Producto no encontrado con ID: " + valoracionDTO.idProducto());
             }
 
-            // 3. Crear y guardar la valoración (asociada al producto)
+            // Crear y guardar la valoración (asociada al producto)
             Valoracion valoracionEntity = new Valoracion();
-            valoracionEntity.setIdUsuario(valoracionDTO.getIdUsuario());
-            valoracionEntity.setPuntuacion(valoracionDTO.getPuntuacion());
-            valoracionEntity.setComentario(valoracionDTO.getComentario());
+            valoracionEntity.setIdUsuario(valoracionDTO.idUsuario());
+            valoracionEntity.setPuntuacion(valoracionDTO.puntuacion());
+            valoracionEntity.setComentario(valoracionDTO.comentario());
             valoracionEntity.setFechaCreacion(LocalDateTime.now());
 
-            // 4. Agregar la valoración al producto (manejo de la relación unidireccional)
+            // Agregar la valoración al producto (manejo de la relación unidireccional)
             producto.agregarValoracion(valoracionEntity);
 
-            // 5. Actualizar la puntuación promedio del producto
-            actualizarValoracionProducto(producto, valoracionDTO.getPuntuacion());
+            // Actualizar la puntuación promedio del producto
+            actualizarValoracionProducto(producto, valoracionDTO.puntuacion());
 
             System.out.println("Valoración procesada y guardada: " + valoracionDTO);
         } catch (Exception e) {
             System.err.println("Error al procesar el evento de valoración: " + e.getMessage());
-            // Opcional: Implementar retry o dead-letter queue
         }
     }
 

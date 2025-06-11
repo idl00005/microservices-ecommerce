@@ -12,7 +12,6 @@ public record StockEventDTO(
         LocalDateTime timestamp,                // Momento del evento
         String correlationId                   // ID para rastrear el flujo de eventos
 ) {
-    // Métodos de fábrica
     public static StockEventDTO liberacionStock(Map<Long, Integer> productos, Long ordenId) {
         return new StockEventDTO(
                 "LIBERAR_STOCK",

@@ -103,18 +103,18 @@ public class PedidoService {
         try {
             carritoEvent = objectMapper.readValue(mensaje, CarritoEventDTO.class);
         } catch (JsonProcessingException e) {
-            log.error("❌ JSON inválido, descartando mensaje", e);
+            log.error("JSON inválido, descartando mensaje", e);
             return Uni.createFrom().completionStage(msg.ack());
         }
 
         // Validaciones de evento
         if (carritoEvent.getItems() == null || carritoEvent.getItems().isEmpty()) {
-            log.warn("⚠️ Carrito vacío. Orden descartada. ordenId={}", carritoEvent.getOrdenId());
+            log.warn("Carrito vacío. Orden descartada. ordenId={}", carritoEvent.getOrdenId());
             return Uni.createFrom().completionStage(msg.ack());
         }
         for (CarritoItemDTO item : carritoEvent.getItems()) {
-            if (item.getProductoId() == null || item.getCantidad() == null || item.getPrecio() == null) {
-                log.error("❌ Ítem inválido en ordenId={}, item={}", carritoEvent.getOrdenId(), item);
+            if (item.productoId() == null || item.cantidad() == null || item.precio() == null) {
+                log.error("Ítem inválido en ordenId={}, item={}", carritoEvent.getOrdenId(), item);
                 return Uni.createFrom().completionStage(msg.ack());
             }
         }
@@ -125,10 +125,10 @@ public class PedidoService {
                     for (CarritoItemDTO item : event.getItems()) {
                         Pedido pedido = new Pedido();
                         pedido.setUsuarioId(event.getUserId());
-                        pedido.setProductoId(item.getProductoId());
-                        pedido.setCantidad(item.getCantidad());
-                        pedido.setPrecioTotal(item.getPrecio().multiply(
-                                BigDecimal.valueOf(item.getCantidad())));
+                        pedido.setProductoId(item.productoId());
+                        pedido.setCantidad(item.cantidad());
+                        pedido.setPrecioTotal(item.precio().multiply(
+                                BigDecimal.valueOf(item.cantidad())));
                         pedido.setFechaCreacion(LocalDateTime.now());
                         pedido.setOrdenId(event.getOrdenId());
                         pedido.setEstado("PENDIENTE");
@@ -139,7 +139,7 @@ public class PedidoService {
                 .onItem().transformToUni(x -> Uni.createFrom().completionStage(msg.ack()))
                 .onFailure().recoverWithUni(err -> {
                     // Loguea el error, pero como failure-strategy=ignore, lo descartas
-                    log.error("❌ Error procesando mensaje, lo descarto", err);
+                    log.error("Error procesando mensaje, lo descarto", err);
                     return Uni.createFrom().completionStage(msg.ack());
                 });
     }

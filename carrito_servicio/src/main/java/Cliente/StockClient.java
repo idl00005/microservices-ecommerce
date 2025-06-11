@@ -7,6 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -21,6 +22,12 @@ public class StockClient {
 
     @ConfigProperty(name = "auth-service.url")
     String urlAuthService;
+
+    @ConfigProperty(name = "auth.admin.user")
+    String adminUser;
+
+    @ConfigProperty(name = "auth.admin.password")
+    String adminPassword;
 
     private String JwtToken = "";
 
@@ -37,7 +44,7 @@ public class StockClient {
                 Integer cantidad = entrada.getValue();
 
                 Response respuesta = client.target(urlCatalogoService)
-                        .path("/{id}/reservar")
+                        .path("/{id}/reserva")
                         .resolveTemplate("id", productoId)
                         .queryParam("cantidad", cantidad)
                         .request(MediaType.APPLICATION_JSON)
@@ -66,9 +73,7 @@ public class StockClient {
 
     @Scheduled(every = "50m")
     public void obtenerJwtParaCarrito() {
-        String usuario = "idl00005@red.ujaen.es";
-        String pass = "1234";
-        String json = String.format("{\"username\": \"%s\", \"password\": \"%s\"}", usuario, pass);
+        String json = String.format("{\"username\": \"%s\", \"password\": \"%s\"}", adminUser, adminPassword);
 
         Client client = ClientBuilder.newBuilder().build();
         try {

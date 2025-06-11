@@ -96,7 +96,7 @@ public class CatalogoResource {
 
     @POST
     @RolesAllowed("admin")
-    @Path("/{id}/reservar")
+    @Path("/{id}/reserva")
     public Response reservarStock(@PathParam("id") Long productoId,
                                   @QueryParam("cantidad") int cantidad) {
         try {

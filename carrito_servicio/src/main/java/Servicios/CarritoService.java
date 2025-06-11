@@ -155,7 +155,7 @@ public class CarritoService {
             itemsConPrecio = Arrays.asList(array);
 
             System.out.println("itemsJson: " + itemsJson);
-            System.out.println("itemsConPrecio: " + itemsConPrecio.get(0).getProductoId() + ", " + itemsConPrecio.get(0).getCantidad() + ", " + itemsConPrecio.get(0).getPrecio());
+            System.out.println("itemsConPrecio: " + itemsConPrecio.get(0).productoId() + ", " + itemsConPrecio.get(0).cantidad() + ", " + itemsConPrecio.get(0).precio());
 
         } else {
             // Si no hay referencia externa significa que el precio es 0 (pago sin Stripe)

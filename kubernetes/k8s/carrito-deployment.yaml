@@ -36,3 +36,7 @@ spec:
               value: "sk_test_51RTK0006qtBCiEnjgcPndANKSxzyw1fCdIhzhQBNxiBWlAdjsWjoD4wmPbHcqmFDD5vTTDxvnvrNAtgQidkVuE6i00C0QR7j9h"
             - name: STRIPE_WEBHOOK_SECRET
               value: "whsec_a7f7416e7ce0902e5f3cbd891a948860c3444d25670202f365128c2577002fed"
+            - name: AUTH_ADMIN_USER
+              value: "idl00005@red.ujaen.es"
+            - name: AUTH_ADMIN_PASSWORD
+              value: "1234"
