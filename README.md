@@ -38,14 +38,16 @@ en caso contrario será necesaria su instalación.
 que zookeeper no ha completado su arranque. En ese caso, volvemos a ejecutar "docker-compose up -d".
 6. Arrancamos los distintos servicios de la aplicación:
 ```shell script
+  # Para cada servicio:
   cd ejemplo_servicio
-  ./mvnw compile quarkus:dev
+  ./mvnw quarkus:dev
 ```
 ## Ejecutar la aplicación empleando Docker-Compose
 En este apartado se da por hecho que ya se dispone de Docker y Docker-Compose instalados en el sistema. 
 Para ejecutar la aplicación empleando Docker-Compose, sigue los siguientes pasos:
 1. Empaquetamos los distintos servicios:
 ```shell script
+  # Para cada servicio:
   cd ejemplo_servicio
   ./mvnw clean package -DskipTests
 ```
