@@ -1,6 +1,7 @@
 package Cliente;
 
 import DTO.ProductoDTO;
+import io.quarkus.cache.CacheResult;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -90,6 +91,7 @@ public class StockClient {
         }
     }
 
+    @CacheResult(cacheName = "producto-cache")
     public ProductoDTO obtenerProductoPorId(Long id) {
         Client client = ClientBuilder.newBuilder().build();
         try {

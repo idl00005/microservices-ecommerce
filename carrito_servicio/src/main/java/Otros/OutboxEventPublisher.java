@@ -32,8 +32,8 @@ public class OutboxEventPublisher {
 
     @Scheduled(every = "5s")
     public void publishPending() {
+
         List<OutboxEvent> pendientes = outboxRepo.findPending();
-        System.out.println("Publicando eventos pendientes... Total: " + pendientes.size());
         for(OutboxEvent evt : pendientes) {
             System.out.println("Evento pendiente: " + evt.id + ", Tipo: " + evt.aggregateType + ", Contenido: " + evt.payload);
         }

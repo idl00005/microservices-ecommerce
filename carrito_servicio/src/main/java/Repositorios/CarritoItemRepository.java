@@ -22,8 +22,10 @@ public class CarritoItemRepository implements PanacheRepository<CarritoItem> {
         return list("userId", userId);
     }
 
-    public void deleteByProductoId(Long productoId) {
-        delete("productoId", productoId);
+    public List<String> findUserIdsByProductoId(Long productoId) {
+        return find("SELECT DISTINCT c.userId FROM CarritoItem c WHERE c.productoId = ?1", productoId)
+                .project(String.class)
+                .list();
     }
 }
 

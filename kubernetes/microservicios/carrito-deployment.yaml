@@ -40,3 +40,5 @@ spec:
               value: "idl00005@red.ujaen.es"
             - name: AUTH_ADMIN_PASSWORD
               value: "1234"
+            - name: CACHE_REDIS_HOSTS
+              value: "redis://redis:6379"

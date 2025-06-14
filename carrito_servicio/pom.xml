@@ -132,6 +132,10 @@
             <artifactId>commons-logging</artifactId>
             <version>1.2</version>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-redis-cache</artifactId>
+        </dependency>
         <!-- H2 Database Driver (solo para tests) -->
         <dependency>
             <groupId>com.h2database</groupId>

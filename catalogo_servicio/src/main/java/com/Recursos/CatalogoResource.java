@@ -61,14 +61,14 @@ public class CatalogoResource {
     @RolesAllowed({"admin"})
     public Response updateProduct(@PathParam("id") Long id, @Valid ProductoDTO producto) {
         try {
-            boolean updated = catalogoService.actualizarProducto(id, producto);
-            if (updated) {
+            if (catalogoService.actualizarProducto(id, producto)) {
+                ProductEvent event = new ProductEvent(id, "UPDATED", null);
+                catalogoService.emitirEventoProducto(event);
                 return Response.ok("Producto actualizado con éxito.").build();
             }
             return Response.status(Response.Status.NOT_FOUND).entity("Producto con ID " + id + " no encontrado.").build();
         } catch (Exception e) {
-            LOG.error("Error actualizando producto", e);
-            return Response.serverError().entity("Error actualizando el producto.").build();
+            return Response.serverError().entity("Error actualizando el producto: "+e.getMessage()).build();
         }
     }
 
@@ -76,12 +76,16 @@ public class CatalogoResource {
     @Path("/{id}")
     @RolesAllowed("admin")
     public Response deleteProduct(@PathParam("id") Long id) {
-        if (catalogoService.eliminarProducto(id)) {
-            ProductEvent event = new ProductEvent(id, "DELETED", null);
-            catalogoService.emitirEventoProducto(event);
-            return Response.ok("Producto eliminado con éxito.").build();
+        try {
+            if (catalogoService.eliminarProducto(id)) {
+                ProductEvent event = new ProductEvent(id, "DELETED", null);
+                catalogoService.emitirEventoProducto(event);
+                return Response.ok("Producto eliminado con éxito.").build();
+            }
+            return Response.status(Response.Status.NOT_FOUND).entity("Producto con ID " + id + " no encontrado.").build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al eliminar el producto: " + e.getMessage()).build();
         }
-        return Response.status(Response.Status.NOT_FOUND).entity("Producto con ID " + id + " no encontrado.").build();
     }
 
     @GET

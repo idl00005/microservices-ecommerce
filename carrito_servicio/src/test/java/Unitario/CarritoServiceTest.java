@@ -71,29 +71,6 @@ public class CarritoServiceTest {
 
     @Test
     @TestTransaction
-    public void testProcesarEventoProductoUpdated() throws JsonProcessingException {
-        // Mock del evento
-        ProductoDTO productoMock = new ProductoDTO(1L, "Producto Actualizado", BigDecimal.valueOf(150), 20);
-        ProductEvent event = new ProductEvent(1L, "UPDATED", productoMock);
-        String eventJson = new ObjectMapper().writeValueAsString(event);
-
-        // Mock del CarritoItem
-        CarritoItem itemMock = new CarritoItem();
-        itemMock.productoId = 1L;
-        itemMock.cantidad = 5;
-
-        // Mock del repositorio
-        when(carritoItemRepository.findByProductoId(1L)).thenReturn(List.of(itemMock));
-
-        // Llamada al método
-        carritoService.procesarEventoProducto(eventJson);
-
-        // Verificaciones
-        verify(carritoItemRepository).persist(itemMock);
-    }
-
-    @Test
-    @TestTransaction
     public void testProcesarEventoProductoDeleted() throws JsonProcessingException {
         // Mock del evento
         ProductEvent event = new ProductEvent(1L, "DELETED", null);

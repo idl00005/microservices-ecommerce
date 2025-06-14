@@ -13,6 +13,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import io.quarkus.cache.CacheInvalidate;
+import io.quarkus.cache.CacheKey;
+import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
@@ -254,7 +257,8 @@ public class CarritoService {
 
 
     @Transactional
-    public CarritoItemDetalleDTO agregarProducto(String userId, Long productoId, int cantidad) {
+    @CacheInvalidate(cacheName = "carrito-cache")
+    public CarritoItemDetalleDTO agregarProducto(@CacheKey String userId, Long productoId, int cantidad) {
         ProductoDTO producto = stockClient.obtenerProductoPorId(productoId);
 
         if (producto == null) {
@@ -294,7 +298,9 @@ public class CarritoService {
     }
 
     @Transactional
+    @CacheResult(cacheName = "carrito-cache")
     public List<CarritoItemDetalleDTO> obtenerCarrito(String userId) {
+        LOGGER.info("Obteniendo carrito para el usuario: {}", userId);
         List<CarritoItem> carrito =  carritoItemRepository.findByUserId(userId);
         List<CarritoItemDetalleDTO> carritoDetalles = new ArrayList<>();
         for (CarritoItem item : carrito) {
@@ -321,10 +327,12 @@ public class CarritoService {
         ProductEvent event = parseEvent(eventJson);
         LOGGER.info("Iniciando operación...");
 
-        if ("UPDATED".equals(event.getAction())) {
-            actualizarProductoEnCarritos(event.getProductId(), event.getProducto());
-        } else if ("DELETED".equals(event.getAction())) {
+        if ("DELETED".equals(event.getAction())) {
             eliminarProductoDeCarritos(event.getProductId());
+        } else if ("UPDATED".equals(event.getAction())) {
+            invalidarCacheProducto(event.getProductId());
+        } else {
+            LOGGER.warn("Acción desconocida: " + event.getAction());
         }
     }
 
@@ -333,24 +341,42 @@ public class CarritoService {
         return new ObjectMapper().readValue(eventJson, ProductEvent.class);
     }
 
+    //@Transactional
+    //public void actualizarProductoEnCarritos(long productId, ProductoDTO producto) {
+    //    List<CarritoItem> items = carritoItemRepository.findByProductoId(productId);
+    //    for (CarritoItem item : items) {
+    //        if(item.cantidad > producto.stock()) {
+    //            item.cantidad = producto.stock();
+    //        }
+    //        carritoItemRepository.persist(item);
+    //    }
+    //}
+
     @Transactional
-    public void actualizarProductoEnCarritos(long productId, ProductoDTO producto) {
-        List<CarritoItem> items = carritoItemRepository.findByProductoId(productId);
-        for (CarritoItem item : items) {
-            if(item.cantidad > producto.stock()) {
-                item.cantidad = producto.stock();
-            }
-            carritoItemRepository.persist(item);
+    public void eliminarProductoDeCarritos(long productId) {
+        List<String> userIds = carritoItemRepository.findUserIdsByProductoId(productId);
+
+        carritoItemRepository.delete("productoId", productId);
+
+        for (String userId : userIds) {
+            invalidarCarritoUsuario(userId);
+        }
+    }
+
+    @CacheInvalidate(cacheName = "carrito-cache")
+    public void invalidarCarritoUsuario(@CacheKey String userId) {}
+
+    @CacheInvalidate(cacheName = "producto-cache")
+    public void invalidarCacheProducto(@CacheKey Long id) {
+        List<String> userIds = carritoItemRepository.findUserIdsByProductoId(id);
+        for (String userId : userIds) {
+            invalidarCarritoUsuario(userId);
         }
     }
 
     @Transactional
-    public void eliminarProductoDeCarritos(long productId) {
-        carritoItemRepository.delete("productoId", productId);
-    }
-
-    @Transactional
-    public void eliminarProducto(String userId, Long productoId) {
+    @CacheInvalidate(cacheName = "carrito-cache")
+    public void eliminarProducto(@CacheKey String userId, Long productoId) {
         Optional<CarritoItem> item = carritoItemRepository.findByUserAndProducto(userId, productoId);
         if (item.isEmpty()) {
             throw new WebApplicationException("Producto no encontrado en el carrito", Response.Status.NOT_FOUND);
@@ -359,12 +385,14 @@ public class CarritoService {
     }
 
     @Transactional
-    public void vaciarCarrito(String userId) {
+    @CacheInvalidate(cacheName = "carrito-cache")
+    public void vaciarCarrito(@CacheKey String userId) {
         carritoItemRepository.delete("userId", userId);
     }
 
     @Transactional
-    public CarritoItem actualizarCantidadProducto(String userId, Long productoId, int nuevaCantidad) {
+    @CacheInvalidate(cacheName = "carrito-cache")
+    public CarritoItem actualizarCantidadProducto(@CacheKey String userId, Long productoId, int nuevaCantidad) {
         Optional<CarritoItem> item = carritoItemRepository.findByUserAndProducto(userId, productoId);
         if (item.isEmpty()) {
             throw new WebApplicationException("Producto no encontrado en el carrito", Response.Status.NOT_FOUND);

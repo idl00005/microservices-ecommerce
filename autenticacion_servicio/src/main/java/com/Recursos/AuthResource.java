@@ -1,6 +1,5 @@
 package com.Recursos;
 
-import com.Entidades.Usuario;
 import com.Servicios.AuthService;
 import io.quarkus.security.UnauthorizedException;
 import jakarta.enterprise.context.ApplicationScoped;

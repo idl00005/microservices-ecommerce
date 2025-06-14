@@ -20,4 +20,8 @@ public class CarritoItem {
     @NotNull(message = "La cantidad no puede ser nula")
     @Min(value = 0, message = "La cantidad no puede ser menor que 0")
     public Integer cantidad;
+
+    public String getUserId() {
+        return userId;
+    }
 }
