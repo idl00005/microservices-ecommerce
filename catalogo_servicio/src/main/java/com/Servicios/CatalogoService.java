@@ -10,6 +10,9 @@ import com.Repositorios.RepositorioProducto;
 import com.Repositorios.ValoracionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.cache.CacheInvalidate;
+import io.quarkus.cache.CacheKey;
+import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -74,6 +77,7 @@ public class CatalogoService {
 
     @Transactional
     public boolean actualizarProducto(Long id, ProductoDTO producto) {
+        invalidarCacheProducto(id);
         return productoRepository.updateProduct(
                 id, producto.getNombre(), producto.getDescripcion(),
                 producto.getPrecio(), producto.getStock(), producto.getDetalles()
@@ -85,6 +89,7 @@ public class CatalogoService {
         Producto producto = productoRepository.findById(id);
         if (producto != null) {
             productoRepository.delete(producto);
+            invalidarCacheProducto(id);
             return true;
         }
         return false;
@@ -100,6 +105,7 @@ public class CatalogoService {
         if (producto.getStock() - producto.getStockReservado() >= cantidad) {
             producto.setStockReservado(producto.getStockReservado() + cantidad);
             productoRepository.persist(producto);
+            invalidarCacheProducto(productoId);
             return true;
         }
         return false;
@@ -135,6 +141,9 @@ public class CatalogoService {
                 });
                 break;
         }
+
+        // Invalidar el caché de del producto afectado
+        evento.productos().keySet().forEach(this::invalidarCacheProducto);
     }
 
     @Incoming("valoraciones-in")
@@ -161,7 +170,10 @@ public class CatalogoService {
             producto.agregarValoracion(valoracionEntity);
 
             // Actualizar la puntuación promedio del producto
-            actualizarValoracionProducto(producto, valoracionDTO.puntuacion());
+            actualizarPuntuacionProducto(producto, valoracionDTO.puntuacion());
+
+            // Invalidar el caché de número de valoraciones
+            invalidarCacheNumValoraciones(valoracionDTO.idProducto());
 
             System.out.println("Valoración procesada y guardada: " + valoracionDTO);
         } catch (Exception e) {
@@ -175,20 +187,28 @@ public class CatalogoService {
     }
 
     @Transactional
-    public void actualizarValoracionProducto(Producto producto, int puntuacion) {
+    public void actualizarPuntuacionProducto(Producto producto, int puntuacion) {
         long totalValoraciones = productoRepository.contarValoraciones(producto.getId());
         producto.actualizarPuntuacion(puntuacion, totalValoraciones);
         productoRepository.persist(producto);
     }
 
     @Transactional
+    @CacheResult(cacheName = "num-valoracion-cache")
     public long contarValoracionesPorProducto(Long idProducto) {
         return productoRepository.contarValoraciones(idProducto);
     }
 
+    @CacheInvalidate(cacheName = "num-valoracion-cache")
+    public void invalidarCacheNumValoraciones(@CacheKey Long idProducto) {}
+
+    @CacheResult(cacheName = "procducto-cache")
     public Producto obtenerProductoPorId(Long id) {
         return productoRepository.findById(id);
     }
+
+    @CacheInvalidate(cacheName = "procducto-cache")
+    public void invalidarCacheProducto(@CacheKey Long id) {}
 
     public void emitirEventoProducto(ProductEvent event) {
         productEventEmitter.send(event);
