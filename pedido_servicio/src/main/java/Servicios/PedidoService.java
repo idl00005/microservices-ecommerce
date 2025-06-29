@@ -7,6 +7,9 @@ import Entidades.Pedido;
 import Repositorios.OutboxEventRepository;
 import Repositorios.PedidoRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.quarkus.cache.CacheInvalidate;
+import io.quarkus.cache.CacheKey;
+import io.quarkus.cache.CacheResult;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -46,6 +49,7 @@ public class PedidoService {
     }
 
     @Transactional
+    @CacheResult(cacheName = "pedidos-por-usuario-cache")
     public List<PedidoDTO> obtenerPedidosPorUsuario(String usuarioId) {
         List<Pedido> pedidos = pedidoRepository.buscarPorUsuarioId(usuarioId);
         List<PedidoDTO> pedidosDTO = pedidos.stream()
@@ -58,7 +62,8 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido obtenerPedidoPorId(Long id, String usuarioId) {
+    @CacheResult(cacheName = "pedidos-por-id-cache")
+    public Pedido obtenerPedidoPorId(@CacheKey Long id, String usuarioId) {
         Pedido pedido = pedidoRepository.buscarPorId(id);
         if(pedido != null && pedido.getUsuarioId().equals(usuarioId)) {
             return pedido;
@@ -70,7 +75,8 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido obtenerPedidoPorIdParaAdmin(Long id) {
+    @CacheResult(cacheName = "pedidos-por-id-cache")
+    public Pedido obtenerPedidoPorIdParaAdmin(@CacheKey Long id) {
         Pedido pedido = pedidoRepository.buscarPorId(id);
         if (pedido == null) {
             throw new WebApplicationException("Pedido no encontrado", 404);
@@ -148,12 +154,20 @@ public class PedidoService {
     @Transactional
     public void actualizarPedido(Long id, String estado) {
         Pedido pedidoExistente = pedidoRepository.buscarPorId(id);
+        invalidarCachePedidoPorId(id);
+        invalidarCachePedidoPorUsuario(pedidoExistente.getUsuarioId());
         if (pedidoExistente == null) {
             throw new WebApplicationException("Pedido no encontrado", 404);
         }
         pedidoExistente.setEstado(estado);
         pedidoRepository.actualizar(pedidoExistente);
     }
+
+    @CacheInvalidate(cacheName = "pedidos-por-id-cache")
+    public void invalidarCachePedidoPorId(Long id) {}
+
+    @CacheInvalidate(cacheName = "pedidos-por-usuario-cache")
+    public void invalidarCachePedidoPorUsuario(@CacheKey String usuarioId) {}
 
     @Transactional
     public void crearValoracion(Long pedidoId, String usuarioId, int puntuacion, String comentario) throws JsonProcessingException {

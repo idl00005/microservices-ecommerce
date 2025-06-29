@@ -54,6 +54,7 @@ public class CarritoService {
     public StockClient stockClient;
 
     @Transactional
+    // Todo: Reservar stock y obtener productos en una sola llamada
     public OrdenPago iniciarPago(String userId, String direccion, String telefono) {
         List<CarritoItem> carrito = carritoItemRepository.findByUserId(userId);
         if (carrito.isEmpty()) {
@@ -94,7 +95,7 @@ public class CarritoService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // 1. Reservar stock de forma SÍNCRONA (esperando respuesta)
-        Response reservaExitosa = stockClient.reservarStock(productosAReservar, null);
+        Response reservaExitosa = stockClient.reservarStock(productosAReservar);
         if (reservaExitosa.getStatus() != 200) {
             throw new WebApplicationException(reservaExitosa.toString(), reservaExitosa.getStatus());
         }
@@ -192,6 +193,8 @@ public class CarritoService {
     }
 
     @Transactional
+    // Todo: separar esta función en varias para que no se consulte ordenPagoRepository si el coste el 0
+    // Todo: el usuario podría agregar objetos al carrito antes de pagar y comprar productos sin pagar, hay que arreglar eso
     public void procesarPagoCompletado(Long ordenId) {
         OrdenPago orden = ordenPagoRepository.findById(ordenId);
         if (orden != null && "PAGADO".equals(orden.estado)) {
@@ -226,8 +229,7 @@ public class CarritoService {
 
 
     @Transactional
-    public void procesarPagoCancelado(Long ordenId) {
-        OrdenPago orden = ordenPagoRepository.findById(ordenId);
+    public void procesarPagoCancelado(OrdenPago orden) {
         if (orden != null) {
             List<CarritoItem> carrito = carritoItemRepository.findByUserId(orden.userId);
 
@@ -244,7 +246,7 @@ public class CarritoService {
                 String payload = JsonbBuilder.create().toJson(evento);
                 OutboxEvent outboxEvent = new OutboxEvent();
                 outboxEvent.aggregateType = "Catalogo";
-                outboxEvent.aggregateId = String.valueOf(ordenId);
+                outboxEvent.aggregateId = String.valueOf(orden.id);
                 outboxEvent.eventType = "PAGO_CANCELADO";
                 outboxEvent.payload = payload;
                 outboxEvent.status = OutboxEvent.Status.PENDING;

@@ -88,7 +88,7 @@ Para ejecutar la aplicación empleando kubernetes, sigue los siguientes pasos:
   docker build -t autenticacion_servicio_quarkus:v1 -f ./autenticacion_servicio/src/main/docker/Dockerfile.jvm ./autenticacion_servicio
   docker build -t catalogo_servicio_quarkus:v1 -f ./catalogo_servicio/src/main/docker/Dockerfile.jvm ./catalogo_servicio
   docker build -t carrito_servicio_quarkus:v1 -f ./carrito_servicio/src/main/docker/Dockerfile.jvm ./carrito_servicio
-  docker build -t pedido_servicio_quarkus:v1 -f ./pedido_servicio/src/main/docker/Dockerfile.native ./pedido_servicio
+  docker build -t pedido_servicio_quarkus:v1 -f ./pedido_servicio/src/main/docker/Dockerfile.jvm ./pedido_servicio
 ```
 5. Activamos el plugin de ingress de minikube:
 ```shell script

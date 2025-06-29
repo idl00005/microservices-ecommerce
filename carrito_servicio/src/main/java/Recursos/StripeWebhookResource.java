@@ -60,7 +60,7 @@ public class StripeWebhookResource {
                             break;
                         case "payment_intent.canceled":
                             orden.estado = "CANCELADO";
-                            carritoService.procesarPagoCancelado(orden.id);
+                            carritoService.procesarPagoCancelado(orden);
                             break;
                     }
 

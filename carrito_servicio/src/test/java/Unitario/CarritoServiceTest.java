@@ -175,7 +175,7 @@ public class CarritoServiceTest {
         // Mock del cliente de stock
         Response mockResponse = mock(Response.class);
         when(mockResponse.getStatus()).thenReturn(200);
-        when(stockClient.reservarStock(any(), any())).thenReturn(mockResponse);
+        when(stockClient.reservarStock(any())).thenReturn(mockResponse);
         when(stockClient.obtenerProductoPorId(1L)).thenReturn(new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10));
 
         // Mock del servicio de Stripe
@@ -192,7 +192,7 @@ public class CarritoServiceTest {
         assertEquals("CREADO", orden.estado);
         assertEquals(BigDecimal.valueOf(200), orden.montoTotal);
         verify(carritoItemRepository, times(1)).findByUserId("user1");
-        verify(stockClient, times(1)).reservarStock(any(), any());
+        verify(stockClient, times(1)).reservarStock(any());
     }
 
     @Test
@@ -239,17 +239,6 @@ public class CarritoServiceTest {
 
         // No lanza excepción, simplemente ignora
         carritoService.procesarPagoCompletado(100L);
-
-        verify(ordenPagoRepository, never()).persist((OrdenPago) any());
-    }
-
-    @Test
-    @TestTransaction
-    public void testProcesarPagoCancelado_OrdenNoExiste() {
-        when(ordenPagoRepository.findById(70L)).thenReturn(null);
-
-        // No lanza excepción, simplemente ignora
-        carritoService.procesarPagoCancelado(70L);
 
         verify(ordenPagoRepository, never()).persist((OrdenPago) any());
     }

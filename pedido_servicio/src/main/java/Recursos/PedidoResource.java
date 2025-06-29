@@ -1,7 +1,6 @@
 package Recursos;
 
 import DTO.PedidoDTO;
-import DTO.ValoracionDTO;
 import Entidades.Pedido;
 import Servicios.PedidoService;
 import jakarta.annotation.security.RolesAllowed;

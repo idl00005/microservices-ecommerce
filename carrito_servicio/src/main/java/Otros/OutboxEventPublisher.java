@@ -22,7 +22,7 @@ public class OutboxEventPublisher {
     OutboxEventRepository outboxRepo;
 
     @Channel("carrito-a-pedidos-out")
-    Emitter<CarritoEventDTO> emitter;
+    Emitter<CarritoEventDTO> carritoEmitter;
 
     @Channel("eventos-stock")
     Emitter<StockEventDTO> catalogoEmitter;
@@ -40,7 +40,7 @@ public class OutboxEventPublisher {
         for (OutboxEvent evt : pendientes) {
             if ("Carrito".equals(evt.aggregateType)) {
                 CarritoEventDTO carritoEvent = mapToCarritoEvent(evt);
-                emitter.send(carritoEvent)
+                carritoEmitter.send(carritoEvent)
                         .whenComplete((r, ex) -> {
                             if (ex == null) {
                                 markPublished(evt);
@@ -79,7 +79,7 @@ public class OutboxEventPublisher {
     }
 
     @Transactional
-    void markPublished(OutboxEvent evt) {
+    private void markPublished(OutboxEvent evt) {
         evt.status = OutboxEvent.Status.PUBLISHED;
         outboxRepo.merge(evt); // Persistir el cambio de estado
     }

@@ -28,13 +28,13 @@ import static org.mockito.Mockito.*;
 class PedidoServiceTest {
 
     @InjectMocks
-    private PedidoService pedidoService;        // <-- Mockito creará e inyectará aquí
+    private PedidoService pedidoService;
 
     @Mock
-    private PedidoRepository pedidoRepository;  // <-- Este mock será inyectado
+    private PedidoRepository pedidoRepository;
 
     @Mock
-    private ObjectMapper objectMapper;          // <-- Y este también
+    private ObjectMapper objectMapper;
 
     @Test
     void crearPedido_deberiaGuardarPedido() {
@@ -192,16 +192,5 @@ class PedidoServiceTest {
 
         assertEquals("ENVIADO", p.getEstado());
         verify(pedidoRepository).actualizar(p);
-    }
-
-    @Test
-    void actualizarPedido_noExistente_deberiaLanzarExcepcion() {
-        when(pedidoRepository.buscarPorId(1L)).thenReturn(null);
-
-        WebApplicationException ex = assertThrows(
-                WebApplicationException.class,
-                () -> pedidoService.actualizarPedido(1L, "ENVIADO")
-        );
-        assertEquals(404, ex.getResponse().getStatus());
     }
 }

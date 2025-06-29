@@ -20,19 +20,8 @@ public class PedidoRepository {
         return entityManager.find(Pedido.class, id);
     }
 
-    public List<Pedido> listarTodos() {
-        return entityManager.createQuery("SELECT p FROM Pedido p", Pedido.class).getResultList();
-    }
-
     public void actualizar(Pedido pedido) {
         entityManager.merge(pedido);
-    }
-
-    public void eliminar(Long id) {
-        Pedido pedido = buscarPorId(id);
-        if (pedido != null) {
-            entityManager.remove(pedido);
-        }
     }
 
     public List<Pedido> buscarPorUsuarioId(String usuarioId) {

@@ -8,7 +8,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -30,14 +29,14 @@ public class StockClient {
     @ConfigProperty(name = "auth.admin.password")
     String adminPassword;
 
-    private String JwtToken = "";
+    String jwtToken = "";
 
     /**
      * Intenta reservar stock para todos los productos especificados.
      * Es totalmente síncrono: realiza 1 petición HTTP por cada producto.
      * Devuelve true si todos los productos se pueden reservar, false si alguno falla.
      */
-    public Response reservarStock(Map<Long, Integer> productos, Long ordenId) {
+    public Response reservarStock(Map<Long, Integer> productos) {
         Client client = ClientBuilder.newBuilder().build();
         try {
             for (Map.Entry<Long, Integer> entrada : productos.entrySet()) {
@@ -49,7 +48,7 @@ public class StockClient {
                         .resolveTemplate("id", productoId)
                         .queryParam("cantidad", cantidad)
                         .request(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + JwtToken)
+                        .header("Authorization", "Bearer " + jwtToken)
                         .post(Entity.json(null)); // El recurso espera POST vacío
 
                 if (respuesta.getStatus() != 200) {
@@ -58,7 +57,7 @@ public class StockClient {
                 }
                 respuesta.close();
             }
-            return Response.ok(ordenId).build();
+            return Response.ok().build();
         } finally {
             client.close();
         }
@@ -73,7 +72,7 @@ public class StockClient {
     }
 
     @Scheduled(every = "50m")
-    public void obtenerJwtParaCarrito() {
+    private void obtenerJwtParaCarrito() {
         String json = String.format("{\"username\": \"%s\", \"password\": \"%s\"}", adminUser, adminPassword);
 
         Client client = ClientBuilder.newBuilder().build();
@@ -82,7 +81,7 @@ public class StockClient {
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(json));
             if (resp.getStatus() == 200) {
-                JwtToken = resp.readEntity(String.class);
+                jwtToken = resp.readEntity(String.class);
             } else {
                 throw new RuntimeException("No se obtuvo token: status " + resp.getStatus());
             }

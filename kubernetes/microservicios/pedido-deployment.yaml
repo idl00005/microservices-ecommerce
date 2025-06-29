@@ -28,3 +28,5 @@ spec:
               value: "kafka-service:9092"
             - name: QUARKUS_PROFILE
               value: "docker"
+            - name: CACHE_REDIS_HOSTS
+              value: "redis://redis:6379"

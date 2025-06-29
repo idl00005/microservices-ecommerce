@@ -160,7 +160,7 @@ public class CarritoResourceIT {
 
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
-        when(stockClient.reservarStock(productosAReservar,null)).thenReturn(Response.ok().build());
+        when(stockClient.reservarStock(productosAReservar)).thenReturn(Response.ok().build());
         when(stockClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
 
         // Realizar la solicitud
@@ -208,7 +208,7 @@ public class CarritoResourceIT {
 
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
-        when(stockClient.reservarStock(productosAReservar,null)).thenReturn(Response.ok().build());
+        when(stockClient.reservarStock(productosAReservar)).thenReturn(Response.ok().build());
         when(stockClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
         // Realizar la solicitud
         given()
