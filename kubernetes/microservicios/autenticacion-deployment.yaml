@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: auth
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: auth
@@ -14,9 +14,21 @@ spec:
     spec:
       containers:
         - name: auth
-          image: autenticacion_servicio_quarkus:v1
+          image: autenticacion_servicio_quarkus:v2
           ports:
             - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+            initialDelaySeconds: 100
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            initialDelaySeconds: 130
+            periodSeconds: 10
           env:
             - name: QUARKUS_DATASOURCE_USERNAME
               value: "ignacio_ad"

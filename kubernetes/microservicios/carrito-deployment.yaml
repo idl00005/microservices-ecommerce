@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: carrito-servicio
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: carrito-servicio
@@ -17,6 +17,18 @@ spec:
           image: carrito_servicio_quarkus:v1
           ports:
             - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+            initialDelaySeconds: 115
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            initialDelaySeconds: 135
+            periodSeconds: 10
           env:
             - name: QUARKUS_DATASOURCE_USERNAME
               value: "ignacio_ad"

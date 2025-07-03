@@ -79,7 +79,7 @@ public class OutboxEventPublisher {
     }
 
     @Transactional
-    private void markPublished(OutboxEvent evt) {
+    protected void markPublished(OutboxEvent evt) {
         evt.status = OutboxEvent.Status.PUBLISHED;
         outboxRepo.merge(evt); // Persistir el cambio de estado
     }

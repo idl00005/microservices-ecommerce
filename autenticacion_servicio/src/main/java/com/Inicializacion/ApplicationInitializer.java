@@ -21,6 +21,7 @@ public class ApplicationInitializer {
     Logger logger;
 
     @PostConstruct
+    @Transactional
     public void initialize() {
         // Verificar si ya existen usuarios
         if (usuarioRepository.count() == 0) {

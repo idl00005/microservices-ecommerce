@@ -5,6 +5,7 @@ import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 
 @ApplicationScoped
@@ -22,6 +23,17 @@ public class RepositorioUsuario implements PanacheRepository<Usuario> {
     public void save(Usuario... usuarios) {
         for (Usuario usuario : usuarios) {
             em.persist(usuario);
+        }
+    }
+
+    @Transactional
+    public boolean checkDatabaseConnection() {
+        try {
+            Query query = em.createNativeQuery("SELECT 1");
+            query.getSingleResult();
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 }
