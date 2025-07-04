@@ -1,6 +1,6 @@
-package Otros;
+package Health;
 
-import Repositorios.CarritoItemRepository;
+import Repositorios.PedidoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.health.HealthCheck;
@@ -12,21 +12,27 @@ import org.eclipse.microprofile.health.Readiness;
 public class ReadinessCheck implements HealthCheck {
 
     @Inject
-    CarritoItemRepository repositorioCarrito;
+    PedidoRepository repositorioPedido;
+
+    @Inject
+    KafkaHealthClient kafkaHealthClient;
 
     @Override
     public HealthCheckResponse call() {
         boolean dbOk = checkDatabaseConnection();
+        boolean kafkaOk = kafkaHealthClient.isHealthy();
+        boolean allOk = dbOk && kafkaOk;
 
-        if (dbOk) {
-            return HealthCheckResponse.up("Readiness check: todas las dependencias están operativas");
-        } else {
-            return HealthCheckResponse.down("Readiness check: dependencias no operativas");
-        }
+        return HealthCheckResponse.named("Readiness check")
+                .status(allOk)
+                .withData("database", dbOk)
+                .withData("kafka", kafkaOk)
+                .build();
     }
 
     private boolean checkDatabaseConnection() {
-        return repositorioCarrito.checkDatabaseConnection();
+        return repositorioPedido.checkDatabaseConnection();
     }
 }
+
 

@@ -1,4 +1,4 @@
-package Otros;
+package Health;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.health.HealthCheck;
