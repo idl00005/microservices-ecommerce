@@ -23,12 +23,14 @@ spec:
               port: 8080
             initialDelaySeconds: 115
             periodSeconds: 15
+            failureThreshold: 2
           livenessProbe:
             httpGet:
               path: /q/health/live
               port: 8080
             initialDelaySeconds: 135
-            periodSeconds: 10
+            periodSeconds: 3
+            failureThreshold: 3
           env:
             - name: QUARKUS_DATASOURCE_USERNAME
               value: "ignacio_ad"
