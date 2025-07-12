@@ -200,7 +200,7 @@ public class CatalogoService {
     }
 
     @CacheInvalidate(cacheName = "num-valoracion-cache")
-    private void invalidarCacheNumValoraciones(@CacheKey Long idProducto) {}
+    protected void invalidarCacheNumValoraciones(@CacheKey Long idProducto) {}
 
     @CacheResult(cacheName = "procducto-cache")
     public Producto obtenerProductoPorId(Long id) {
@@ -208,7 +208,7 @@ public class CatalogoService {
     }
 
     @CacheInvalidate(cacheName = "procducto-cache")
-    private void invalidarCacheProducto(@CacheKey Long id) {}
+    protected void invalidarCacheProducto(@CacheKey Long id) {}
 
     public void emitirEventoProducto(ProductEvent event) {
         productEventEmitter.send(event);

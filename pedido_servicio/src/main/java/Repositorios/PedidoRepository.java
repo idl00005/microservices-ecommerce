@@ -4,6 +4,9 @@ import Entidades.Pedido;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
+import jakarta.transaction.Transactional;
+
 import java.util.List;
 
 @ApplicationScoped
@@ -38,6 +41,17 @@ public class PedidoRepository {
                 .setFirstResult(offset)
                 .setMaxResults(limit)
                 .getResultList();
+    }
+
+    @Transactional
+    public boolean checkDatabaseConnection() {
+        try {
+            Query query = entityManager.createNativeQuery("SELECT 1");
+            query.getSingleResult();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
 
