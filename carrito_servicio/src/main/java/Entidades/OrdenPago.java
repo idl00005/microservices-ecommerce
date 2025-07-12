@@ -1,44 +1,124 @@
 package Entidades;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class OrdenPago {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    private Long id;
 
     @NotBlank(message = "El userId no puede estar vacío")
-    public String userId;
+    private String userId;
 
     @NotNull(message = "El monto total no puede ser nulo")
     @DecimalMin(value = "0.0", message = "El monto total debe ser mayor que 0")
-    public BigDecimal montoTotal;
+    private BigDecimal montoTotal;
 
     @NotBlank(message = "El estado no puede estar vacío")
     @Pattern(regexp = "PENDIENTE|CREADO|PAGADO|FALLIDO|CANCELADO|COMPLETADO",
             message = "El estado debe ser PENDIENTE, CREADO, PAGADO, FALLIDO o CANCELADO")
-    public String estado;
+    private String estado;
 
-    public String proveedor;
-    public String referenciaExterna;
+    private String proveedor;
+    private String referenciaExterna;
 
     @NotNull(message = "La fecha de creación no puede ser nula")
-    public LocalDateTime fechaCreacion;
+    private LocalDateTime fechaCreacion;
 
     @NotBlank(message = "La dirección no puede estar vacía")
-    public String direccion;
+    private String direccion;
 
     @NotBlank(message = "El número de teléfono no puede estar vacío")
     @Pattern(regexp = "\\+?[0-9]{9,15}", message = "El número de teléfono debe ser válido")
-    public String telefono;
+    private String telefono;
 
+    @OneToMany
+    private List<CarritoItem> itemsComprados = new ArrayList<>();
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public BigDecimal getMontoTotal() {
+        return montoTotal;
+    }
+
+    public void setMontoTotal(BigDecimal montoTotal) {
+        this.montoTotal = montoTotal;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public String getProveedor() {
+        return proveedor;
+    }
+
+    public void setProveedor(String proveedor) {
+        this.proveedor = proveedor;
+    }
+
+    public String getReferenciaExterna() {
+        return referenciaExterna;
+    }
+
+    public void setReferenciaExterna(String referenciaExterna) {
+        this.referenciaExterna = referenciaExterna;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public List<CarritoItem> getItemsComprados() {
+        return itemsComprados;
+    }
+
+    public void setItemsComprados(List<CarritoItem> itemsComprados) {
+        this.itemsComprados = itemsComprados;
+    }
 }
 

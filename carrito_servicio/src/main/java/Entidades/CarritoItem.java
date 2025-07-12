@@ -1,27 +1,53 @@
 package Entidades;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import java.math.BigDecimal;
 
 @Entity
 public class CarritoItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    private Long id;
 
     @NotBlank(message = "El userId no puede estar vacío")
-    public String userId;
+    private String userId;
 
     @NotNull(message = "El productoId no puede ser nulo")
-    public Long productoId;
+    private Long productoId;
 
     @NotNull(message = "La cantidad no puede ser nula")
     @Min(value = 0, message = "La cantidad no puede ser menor que 0")
-    public Integer cantidad;
+    private Integer cantidad;
 
     public String getUserId() {
         return userId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public Long getProductoId() {
+        return productoId;
+    }
+
+    public void setProductoId(Long productoId) {
+        this.productoId = productoId;
+    }
+
+    public Integer getCantidad() {
+        return cantidad;
+    }
+
+    public void setCantidad(Integer cantidad) {
+        this.cantidad = cantidad;
     }
 }

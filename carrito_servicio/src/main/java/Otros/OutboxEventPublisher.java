@@ -35,10 +35,10 @@ public class OutboxEventPublisher {
 
         List<OutboxEvent> pendientes = outboxRepo.findPending();
         for(OutboxEvent evt : pendientes) {
-            System.out.println("Evento pendiente: " + evt.id + ", Tipo: " + evt.aggregateType + ", Contenido: " + evt.payload);
+            System.out.println("Evento pendiente: " + evt.getId() + ", Tipo: " + evt.getAggregateType() + ", Contenido: " + evt.getPayload());
         }
         for (OutboxEvent evt : pendientes) {
-            if ("Carrito".equals(evt.aggregateType)) {
+            if ("Carrito".equals(evt.getAggregateType())) {
                 CarritoEventDTO carritoEvent = mapToCarritoEvent(evt);
                 carritoEmitter.send(carritoEvent)
                         .whenComplete((r, ex) -> {
@@ -48,7 +48,7 @@ public class OutboxEventPublisher {
                                 ex.printStackTrace(); // Log del error
                             }
                         });
-            } else if ("Catalogo".equals(evt.aggregateType)) {
+            } else if ("Catalogo".equals(evt.getAggregateType())) {
                 StockEventDTO reducirStockEvent = mapToReducirStockEvent(evt);
                 catalogoEmitter.send(reducirStockEvent)
                         .whenComplete((r, ex) -> {
@@ -64,23 +64,23 @@ public class OutboxEventPublisher {
 
     private StockEventDTO mapToReducirStockEvent(OutboxEvent evt) {
         try {
-            return objectMapper.readValue(evt.payload, StockEventDTO.class);
+            return objectMapper.readValue(evt.getPayload(), StockEventDTO.class);
         } catch (Exception e) {
-            throw new RuntimeException("Error al deserializar el payload: " + evt.payload, e);
+            throw new RuntimeException("Error al deserializar el payload: " + evt.getPayload(), e);
         }
     }
 
     private CarritoEventDTO mapToCarritoEvent(OutboxEvent evt) {
         try {
-            return objectMapper.readValue(evt.payload, CarritoEventDTO.class);
+            return objectMapper.readValue(evt.getPayload(), CarritoEventDTO.class);
         } catch (Exception e) {
-            throw new RuntimeException("Error al deserializar el payload: " + evt.payload, e);
+            throw new RuntimeException("Error al deserializar el payload: " + evt.getPayload(), e);
         }
     }
 
     @Transactional
-    private void markPublished(OutboxEvent evt) {
-        evt.status = OutboxEvent.Status.PUBLISHED;
+    protected void markPublished(OutboxEvent evt) {
+        evt.setStatus(OutboxEvent.Status.PUBLISHED);
         outboxRepo.merge(evt); // Persistir el cambio de estado
     }
 }

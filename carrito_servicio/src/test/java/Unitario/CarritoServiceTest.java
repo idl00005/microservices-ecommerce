@@ -88,9 +88,9 @@ public class CarritoServiceTest {
     public void testObtenerCarrito() {
         // Mock del repositorio
         CarritoItem item = new CarritoItem();
-        item.userId = "user1";
-        item.productoId = 1L;
-        item.cantidad = 2;
+        item.setUserId("user1");
+        item.setProductoId(1L);
+        item.setCantidad(2);
 
         when(carritoItemRepository.findByUserId("user1")).thenReturn(List.of(item));
         when(stockClient.obtenerProductoPorId(1L)).thenReturn(new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10));
@@ -109,8 +109,9 @@ public class CarritoServiceTest {
     public void testEliminarProducto() {
         // Mock del repositorio
         CarritoItem item = new CarritoItem();
-        item.userId = "user1";
-        item.productoId = 1L;
+        item.setUserId("user1");
+        item.setProductoId(1L);
+        item.setCantidad(2);
 
         when(carritoItemRepository.findByUserAndProducto("user1", 1L)).thenReturn(Optional.of(item));
         doNothing().when(carritoItemRepository).delete(item);
@@ -145,9 +146,9 @@ public class CarritoServiceTest {
 
         // Mock del repositorio
         CarritoItem item = new CarritoItem();
-        item.userId = "user1";
-        item.productoId = 1L;
-        item.cantidad = 2;
+        item.setUserId("user1");
+        item.setProductoId(1L);
+        item.setCantidad(2);
 
         when(carritoItemRepository.findByUserAndProducto("user1", 1L)).thenReturn(Optional.of(item));
 
@@ -156,7 +157,7 @@ public class CarritoServiceTest {
 
         // Verificaciones
         assertNotNull(actualizado);
-        assertEquals(5, actualizado.cantidad);
+        assertEquals(5, actualizado.getCantidad());
         verify(carritoItemRepository, times(1)).findByUserAndProducto("user1", 1L);
         verify(carritoItemRepository, times(1)).persist(item);
     }
@@ -166,9 +167,9 @@ public class CarritoServiceTest {
     public void testIniciarPagoExitoso() {
         // Mock del carrito con productos
         CarritoItem item = new CarritoItem();
-        item.userId = "user1";
-        item.productoId = 1L;
-        item.cantidad = 2;
+        item.setUserId("user1");
+        item.setProductoId(1L);
+        item.setCantidad(2);
 
         when(carritoItemRepository.findByUserId("user1")).thenReturn(List.of(item));
 
@@ -180,17 +181,17 @@ public class CarritoServiceTest {
 
         // Mock del servicio de Stripe
         OrdenPago ordenMock = new OrdenPago();
-        ordenMock.userId = "user1";
-        ordenMock.montoTotal = BigDecimal.valueOf(200);
-        ordenMock.estado = "CREADO";
+        ordenMock.setUserId("user1");
+        ordenMock.setMontoTotal(BigDecimal.valueOf(200));
+        ordenMock.setEstado("CREADO");
 
         // Llamada al método
         OrdenPago orden = carritoService.iniciarPago("user1", "Calle tralala", "6834345454");
 
         // Verificaciones
         assertNotNull(orden);
-        assertEquals("CREADO", orden.estado);
-        assertEquals(BigDecimal.valueOf(200), orden.montoTotal);
+        assertEquals("CREADO", orden.getEstado());
+        assertEquals(BigDecimal.valueOf(200), orden.getMontoTotal());
         verify(carritoItemRepository, times(1)).findByUserId("user1");
         verify(stockClient, times(1)).reservarStock(any());
     }
@@ -213,23 +214,23 @@ public class CarritoServiceTest {
     public void testProcesarPagoCompletado_CambiaEstadoCorrectamente() {
         Long ordenId = 99L;
         OrdenPago orden = new OrdenPago();
-        orden.id = ordenId;
-        orden.estado = "PAGADO";
-        orden.userId = "user1";
+        orden.setId(ordenId);
+        orden.setEstado("PAGADO");
+        orden.setUserId("user1");
         CarritoItem item = new CarritoItem();
-        item.productoId = 1L;
-        item.cantidad = 2;
+        item.setProductoId(1L);
+        item.setCantidad(2);
         List<CarritoItem> items = List.of(item);
 
         // Mock del repositorio
         when(ordenPagoRepository.findById(ordenId)).thenReturn(orden);
-        when(carritoItemRepository.findByUserId(orden.userId)).thenReturn(items);
+        when(carritoItemRepository.findByUserId(orden.getUserId())).thenReturn(items);
 
         // Llamada al método
-        carritoService.procesarPagoCompletado(ordenId);
+        carritoService.pagoCostoMayorQue0(orden.getId());
 
         // Verificaciones
-        assertEquals("COMPLETADO", orden.estado);
+        assertEquals("COMPLETADO", orden.getEstado());
     }
 
     @Test
@@ -238,7 +239,7 @@ public class CarritoServiceTest {
         when(ordenPagoRepository.findById(100L)).thenReturn(null);
 
         // No lanza excepción, simplemente ignora
-        carritoService.procesarPagoCompletado(100L);
+        carritoService.pagoCostoMayorQue0(100L);
 
         verify(ordenPagoRepository, never()).persist((OrdenPago) any());
     }

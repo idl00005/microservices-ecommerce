@@ -72,7 +72,7 @@ public class StockClient {
     }
 
     @Scheduled(every = "50m")
-    private void obtenerJwtParaCarrito() {
+    public void obtenerJwtParaCarrito() {
         String json = String.format("{\"username\": \"%s\", \"password\": \"%s\"}", adminUser, adminPassword);
 
         Client client = ClientBuilder.newBuilder().build();

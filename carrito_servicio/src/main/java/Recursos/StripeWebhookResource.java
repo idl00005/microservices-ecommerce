@@ -52,14 +52,14 @@ public class StripeWebhookResource {
                 if (orden != null) {
                     switch (event.getType()) {
                         case "payment_intent.succeeded":
-                            orden.estado = "PAGADO";
-                            carritoService.procesarPagoCompletado(orden.id);
+                            orden.setEstado("PAGADO");
+                            carritoService.pagoCostoMayorQue0(orden.getId());
                             break;
                         case "payment_intent.payment_failed":
-                            orden.estado = "FALLIDO";
+                            orden.setEstado("FALLIDO");
                             break;
                         case "payment_intent.canceled":
-                            orden.estado = "CANCELADO";
+                            orden.setEstado("CANCELADO");
                             carritoService.procesarPagoCancelado(orden);
                             break;
                     }

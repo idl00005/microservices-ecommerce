@@ -64,11 +64,11 @@ public class CarritoService {
         // Obtener precios actualizados de los productos
         Map<Long, BigDecimal> precios = carrito.stream()
                 .collect(Collectors.toMap(
-                        item -> item.productoId,
+                        item -> item.getProductoId(),
                         item -> {
-                            ProductoDTO producto = stockClient.obtenerProductoPorId(item.productoId);
+                            ProductoDTO producto = stockClient.obtenerProductoPorId(item.getProductoId());
                             if (producto == null) {
-                                throw new WebApplicationException("Producto no encontrado: " + item.productoId, 404);
+                                throw new WebApplicationException("Producto no encontrado: " + item.getProductoId(), 404);
                             }
                             return producto.precio();
                         }
@@ -77,21 +77,21 @@ public class CarritoService {
         // 2) Construir lista de DTO con precio
         List<CarritoItemDTO> itemsConPrecio = carrito.stream()
                 .map(item -> new CarritoItemDTO(
-                        item.productoId,
-                        item.cantidad,
-                        precios.get(item.productoId)
+                        item.getProductoId(),
+                        item.getCantidad(),
+                        precios.get(item.getProductoId())
                 ))
                 .toList();
 
         Map<Long, Integer> productosAReservar = carrito.stream()
                 .collect(Collectors.toMap(
-                        item -> item.productoId,
-                        item -> item.cantidad
+                        item -> item.getProductoId(),
+                        item -> item.getCantidad()
                 ));
 
         // Calcular el total
         BigDecimal total = carrito.stream()
-                .map(item -> precios.get(item.productoId).multiply(BigDecimal.valueOf(item.cantidad)))
+                .map(item -> precios.get(item.getProductoId()).multiply(BigDecimal.valueOf(item.getCantidad())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // 1. Reservar stock de forma SÍNCRONA (esperando respuesta)
@@ -101,18 +101,19 @@ public class CarritoService {
         }
 
         OrdenPago orden = new OrdenPago();
-        orden.userId = userId;
-        orden.montoTotal = total;
-        orden.estado = "PENDIENTE";
-        orden.fechaCreacion = LocalDateTime.now();
-        orden.direccion = direccion;
-        orden.telefono = telefono;
+        orden.setUserId(userId);
+        orden.setMontoTotal(total);
+        orden.setEstado("PENDIENTE");
+        orden.setFechaCreacion(LocalDateTime.now());
+        orden.setDireccion(direccion);
+        orden.setTelefono(telefono);
+        orden.setItemsComprados(carrito);
         ordenPagoRepository.persist(orden);
 
-        if(orden.montoTotal.compareTo(BigDecimal.ZERO) == 0) {
-            orden.estado = "PAGADO";
+        if(orden.getMontoTotal().compareTo(BigDecimal.ZERO) == 0) {
+            orden.setEstado("PAGADO");
             try {
-                procesarPagoCompletado(orden.id);
+                procesarPagoCompletado(orden);
             } catch (WebApplicationException e) {
                 throw new WebApplicationException("Error al procesar el pago: " + e.getMessage(), 500);
             }
@@ -120,9 +121,9 @@ public class CarritoService {
         } else {
             try {
                 PaymentIntent pi = stripeService.crearPago(orden,itemsConPrecio);
-                orden.referenciaExterna = pi.getId();
-                orden.proveedor         = "Stripe";
-                orden.estado            = "CREADO";
+                orden.setReferenciaExterna(pi.getId());
+                orden.setProveedor("Stripe");
+                orden.setEstado("CREADO");
             } catch (StripeException e) {
                 throw new WebApplicationException("Error al procesar el pago: " + e.getMessage(), 500);
             }
@@ -137,11 +138,11 @@ public class CarritoService {
 
         System.out.println("Enviando pedido...");//
 
-        if(orden.referenciaExterna != null && !orden.referenciaExterna.isBlank()) {
+        if(orden.getReferenciaExterna() != null && !orden.getReferenciaExterna().isBlank()) {
             // 1) Recuperar el PaymentIntent de Stripe
             PaymentIntent pi;
             try {
-                pi = PaymentIntent.retrieve(orden.referenciaExterna);
+                pi = PaymentIntent.retrieve(orden.getReferenciaExterna());
             } catch (StripeException e) {
                 throw new WebApplicationException("No pude recuperar el pago: " + e.getMessage(), 500);
             }
@@ -163,11 +164,11 @@ public class CarritoService {
 
         } else {
             // Si no hay referencia externa significa que el precio es 0 (pago sin Stripe)
-            List<CarritoItem> carrito = carritoItemRepository.findByUserId(orden.userId);
+            List<CarritoItem> carrito = carritoItemRepository.findByUserId(orden.getUserId());
             itemsConPrecio = carrito.stream()
                     .map(item -> new CarritoItemDTO(
-                            item.productoId,
-                            item.cantidad,
+                            item.getProductoId(),
+                            item.getCantidad(),
                             BigDecimal.ZERO
                     ))
                     .toList();
@@ -175,49 +176,51 @@ public class CarritoService {
 
         // 3) Armar y enviar el evento al servicio de pedidos
         CarritoEventDTO carritoEvent = new CarritoEventDTO();
-        carritoEvent.setUserId(orden.userId);
-        carritoEvent.setOrdenId(orden.id);
+        carritoEvent.setUserId(orden.getUserId());
+        carritoEvent.setOrdenId(orden.getId());
         carritoEvent.setItems(itemsConPrecio);
 
         String payloadJson = JsonbBuilder.create().toJson(carritoEvent);
         OutboxEvent evt = new OutboxEvent();
-        evt.aggregateType = "Carrito";
-        evt.aggregateId   = orden.userId;
-        evt.eventType     = "Carrito.CompraProcesada";
-        evt.payload       = payloadJson;
+        evt.setAggregateType("Carrito");
+        evt.setAggregateId(orden.getUserId());
+        evt.setEventType("Carrito.CompraProcesada");
+        evt.setPayload(payloadJson);
         outboxRepo.persist(evt);
 
         // 4) Finalizar estado y vaciar carrito
-        orden.estado = "COMPLETADO";
-        carritoItemRepository.delete("userId", orden.userId);
+        orden.setEstado("COMPLETADO");
+        carritoItemRepository.delete("userId", orden.getUserId());
     }
 
     @Transactional
-    // Todo: separar esta función en varias para que no se consulte ordenPagoRepository si el coste el 0
-    // Todo: el usuario podría agregar objetos al carrito antes de pagar y comprar productos sin pagar, hay que arreglar eso
-    public void procesarPagoCompletado(Long ordenId) {
+    public void pagoCostoMayorQue0(Long ordenId) {
         OrdenPago orden = ordenPagoRepository.findById(ordenId);
-        if (orden != null && "PAGADO".equals(orden.estado)) {
-            List<CarritoItem> carrito = carritoItemRepository.findByUserId(orden.userId);
+        procesarPagoCompletado(orden);
+    }
+
+    @Transactional
+    public void procesarPagoCompletado(OrdenPago orden) {
+        if (orden != null && "PAGADO".equals(orden.getEstado())) {
 
             // Preparar el evento
             StockEventDTO evento = StockEventDTO.confirmacionCompra(
-                    carrito.stream()
+                    orden.getItemsComprados().stream()
                             .collect(Collectors.toMap(
-                                    item -> item.productoId,
-                                    item -> item.cantidad
+                                    item -> item.getProductoId(),
+                                    item -> item.getCantidad()
                             )),
-                    orden.id
+                    orden.getId()
             );
 
             try {
                 String payload = JsonbBuilder.create().toJson(evento);
                 OutboxEvent outboxEvent = new OutboxEvent();
-                outboxEvent.aggregateType = "Catalogo";
-                outboxEvent.aggregateId = String.valueOf(ordenId); // O userId si prefieres
-                outboxEvent.eventType = "PAGO_COMPLETADO";
-                outboxEvent.payload = payload;
-                outboxEvent.status = OutboxEvent.Status.PENDING;
+                outboxEvent.setAggregateType("Catalogo");
+                outboxEvent.setAggregateId(String.valueOf(orden.getId())); // O userId si prefieres
+                outboxEvent.setEventType("PAGO_COMPLETADO");
+                outboxEvent.setPayload(payload);
+                outboxEvent.setStatus(OutboxEvent.Status.PENDING);
                 outboxRepo.persist(outboxEvent);
             } catch (Exception e) {
                 throw new RuntimeException("Error serializando evento de pago completado", e);
@@ -231,25 +234,23 @@ public class CarritoService {
     @Transactional
     public void procesarPagoCancelado(OrdenPago orden) {
         if (orden != null) {
-            List<CarritoItem> carrito = carritoItemRepository.findByUserId(orden.userId);
-
             // Enviar evento asíncrono para liberar stock
             StockEventDTO evento = StockEventDTO.liberacionStock(
-                    carrito.stream()
+                    orden.getItemsComprados().stream()
                             .collect(Collectors.toMap(
-                                    item -> item.productoId,
-                                    item -> item.cantidad
+                                    item -> item.getProductoId(),
+                                    item -> item.getCantidad()
                             )),
-                    orden.id
+                    orden.getId()
             );
             try {
                 String payload = JsonbBuilder.create().toJson(evento);
                 OutboxEvent outboxEvent = new OutboxEvent();
-                outboxEvent.aggregateType = "Catalogo";
-                outboxEvent.aggregateId = String.valueOf(orden.id);
-                outboxEvent.eventType = "PAGO_CANCELADO";
-                outboxEvent.payload = payload;
-                outboxEvent.status = OutboxEvent.Status.PENDING;
+                outboxEvent.setAggregateType("Catalogo");
+                outboxEvent.setAggregateId(String.valueOf(orden.getId()));
+                outboxEvent.setEventType("PAGO_CANCELADO");
+                outboxEvent.setPayload(payload);
+                outboxEvent.setStatus(OutboxEvent.Status.PENDING);
                 outboxRepo.persist(outboxEvent);
             } catch (Exception e) {
                 throw new RuntimeException("Error serializando evento de pago cancelado", e);
@@ -278,23 +279,23 @@ public class CarritoService {
         CarritoItem item;
         if (itemExistente.isPresent()) {
             item = itemExistente.get();
-            item.cantidad += cantidad; // Incrementar la cantidad
-            if (item.cantidad > producto.stock()) {
+            item.setCantidad(item.getCantidad()+cantidad);
+            if (item.getCantidad() > producto.stock()) {
                 throw new WebApplicationException("Stock insuficiente para el producto: " + producto.nombre(), 400);
             }
             carritoItemRepository.persist(item);
         } else {
             item = new CarritoItem();
-            item.userId = userId;
-            item.productoId = producto.id();
-            item.cantidad = cantidad;
+            item.setUserId(userId);
+            item.setProductoId(productoId);
+            item.setCantidad(cantidad);
             carritoItemRepository.persist(item);
         }
 
         return new CarritoItemDetalleDTO(
-                item.productoId,
+                item.getProductoId(),
                 producto.nombre(),
-                item.cantidad,
+                item.getCantidad(),
                 producto.precio()
         );
     }
@@ -306,15 +307,15 @@ public class CarritoService {
         List<CarritoItem> carrito =  carritoItemRepository.findByUserId(userId);
         List<CarritoItemDetalleDTO> carritoDetalles = new ArrayList<>();
         for (CarritoItem item : carrito) {
-            ProductoDTO producto = stockClient.obtenerProductoPorId(item.productoId);
+            ProductoDTO producto = stockClient.obtenerProductoPorId(item.getProductoId());
             if (producto == null) {
-                throw new WebApplicationException("Producto no encontrado: " + item.productoId, Response.Status.NOT_FOUND);
+                throw new WebApplicationException("Producto no encontrado: " + item.getProductoId(), Response.Status.NOT_FOUND);
             }
-            item.cantidad = Math.min(item.cantidad, producto.stock()); // Ajustar cantidad al stock disponible
+            item.setCantidad(Math.min(item.getCantidad(), producto.stock())); // Ajustar cantidad al stock disponible
             CarritoItemDetalleDTO detalle = new CarritoItemDetalleDTO(
-                    item.productoId,
+                    item.getProductoId(),
                     producto.nombre(),
-                    item.cantidad,
+                    item.getCantidad(),
                     producto.precio()
             );
             carritoDetalles.add(detalle);
@@ -413,7 +414,7 @@ public class CarritoService {
             throw new WebApplicationException("Stock insuficiente para el producto: " + producto.nombre(), Response.Status.BAD_REQUEST);
         }
 
-        carritoItem.cantidad = nuevaCantidad;
+        carritoItem.setCantidad(nuevaCantidad);
         carritoItemRepository.persist(carritoItem);
 
         return carritoItem;

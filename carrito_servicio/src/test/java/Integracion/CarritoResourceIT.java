@@ -62,12 +62,12 @@ public class CarritoResourceIT {
     public void testObtenerCarrito() {
         // Configura el mock del repositorio
         CarritoItem item = new CarritoItem();
-        item.userId = "user"; // Debe coincidir con el userId del SecurityContext
-        item.productoId = 1L;
-        item.cantidad = 2;
+        item.setUserId("user");
+        item.setProductoId(1L);
+        item.setCantidad(2);
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
-        when(stockClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
+        when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10));
 
         // Realiza la solicitud y verifica la respuesta
         given()
@@ -85,9 +85,9 @@ public class CarritoResourceIT {
     public void testEliminarProducto() {
         // Mock del repositorio para la búsqueda
         CarritoItem item = new CarritoItem();
-        item.userId = "user"; // Debe coincidir con el userId del SecurityContext
-        item.productoId = 1L;
-        item.cantidad = 2;
+        item.setUserId("user");
+        item.setProductoId(1L);
+        item.setCantidad(2);
         when(carritoItemRepository.findByUserAndProducto("user", 1L)).thenReturn(Optional.of(item));
 
         // Eliminar producto
@@ -102,9 +102,9 @@ public class CarritoResourceIT {
     @TestSecurity(user = "user", roles = {"user"})
     public void testVaciarCarrito() {
         CarritoItem item = new CarritoItem();
-        item.userId = "user";
-        item.productoId = 1L;
-        item.cantidad = 1;
+        item.setUserId("user");
+        item.setProductoId(1L);
+        item.setCantidad(1);
         carritoItemRepository.persist(item);
 
         given()
@@ -123,9 +123,9 @@ public class CarritoResourceIT {
 
         // Mock del repositorio para la búsqueda
         CarritoItem item = new CarritoItem();
-        item.userId = "user"; // Debe coincidir con el userId del SecurityContext
-        item.productoId = 1L;
-        item.cantidad = 1;
+        item.setUserId("user");
+        item.setProductoId(1L);
+        item.setCantidad(1);
 
         when(carritoItemRepository.findByUserAndProducto("user", 1L)).thenReturn(Optional.of(item));
 
@@ -149,19 +149,19 @@ public class CarritoResourceIT {
     public void testIniciarPagoExitoso() {
         // Mock del carrito con productos
         CarritoItem item = new CarritoItem();
-        item.userId = "user";
-        item.productoId = 1L;
-        item.cantidad = 2;
+        item.setUserId("user");
+        item.setProductoId(1L);
+        item.setCantidad(2);
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
 
         Map<Long, Integer> productosAReservar = new HashMap<>();
-        productosAReservar.put(item.productoId, item.cantidad);
+        productosAReservar.put(item.getProductoId(), item.getCantidad());
 
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
         when(stockClient.reservarStock(productosAReservar)).thenReturn(Response.ok().build());
-        when(stockClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
+        when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10));
 
         // Realizar la solicitud
         given()
@@ -197,19 +197,19 @@ public class CarritoResourceIT {
     public void testIniciarPagoMontoCero() {
         // Mock del carrito con productos gratuitos
         CarritoItem item = new CarritoItem();
-        item.userId = "user";
-        item.productoId = 1L;
-        item.cantidad = 1;
+        item.setUserId("user");
+        item.setProductoId(1L);
+        item.setCantidad(1);
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
 
         Map<Long, Integer> productosAReservar = new HashMap<>();
-        productosAReservar.put(item.productoId, item.cantidad);
+        productosAReservar.put(item.getProductoId(), item.getCantidad());
 
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
         when(stockClient.reservarStock(productosAReservar)).thenReturn(Response.ok().build());
-        when(stockClient.obtenerProductoPorId(item.productoId)).thenReturn(new ProductoDTO(item.productoId, "Producto Test", BigDecimal.valueOf(100), 10));
+        when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10));
         // Realizar la solicitud
         given()
                 .contentType(ContentType.JSON)
@@ -227,9 +227,9 @@ public class CarritoResourceIT {
     public void testIniciarPagoErrorStripe() {
         // Mock del carrito con productos
         CarritoItem item = new CarritoItem();
-        item.userId = "user";
-        item.productoId = 1L;
-        item.cantidad = 2;
+        item.setUserId("user");
+        item.setProductoId(1L);
+        item.setCantidad(2);
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
 

@@ -31,7 +31,7 @@ public class StripeService {
         String itemsJson = JsonbBuilder.create().toJson(itemsConPrecio);
 
         PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setAmount(ordenPago.montoTotal.multiply(BigDecimal.valueOf(100)).longValue())  // en céntimos
+                .setAmount(ordenPago.getMontoTotal().multiply(BigDecimal.valueOf(100)).longValue())  // en céntimos
                 .setCurrency("eur")
                 .putMetadata("items", itemsJson)
                 .build();
