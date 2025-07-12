@@ -1,6 +1,6 @@
 package Unitario;
 
-import DTO.CarritoEventDTO;
+import DTO.NuevoPedidoEventDTO;
 import DTO.CarritoItemDTO;
 import DTO.PedidoDTO;
 import Entidades.Pedido;
@@ -160,14 +160,14 @@ class PedidoServiceTest {
         CarritoItemDTO item = new CarritoItemDTO(2L, 3, BigDecimal.valueOf(10.0));
 
         // Crear el objeto CarritoEventDTO con ítems válidos
-        CarritoEventDTO carritoEvent = new CarritoEventDTO();
+        NuevoPedidoEventDTO carritoEvent = new NuevoPedidoEventDTO();
         carritoEvent.setUserId("usuario123");
         carritoEvent.setItems(List.of(item));
 
         // Configurar el mock de ObjectMapper para devolver el objeto simulado
         String json = "{\"userId\":\"usuario123\",\"items\":[{\"productoId\":2,\"cantidad\":3,\"precio\":10.0}]}";
         Message<String> msg = Message.of(json);
-        when(objectMapper.readValue(json, CarritoEventDTO.class)).thenReturn(carritoEvent);
+        when(objectMapper.readValue(json, NuevoPedidoEventDTO.class)).thenReturn(carritoEvent);
 
         // Llamar al método a probar
         pedidoService.procesarMensajeCarrito(msg).await().indefinitely();

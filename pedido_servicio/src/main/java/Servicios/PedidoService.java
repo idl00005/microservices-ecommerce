@@ -16,7 +16,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import DTO.CarritoEventDTO;
+import DTO.NuevoPedidoEventDTO;
 import DTO.CarritoItemDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -105,9 +105,9 @@ public class PedidoService {
         String mensaje = msg.getPayload();
         log.info("Mensaje recibido: {}", mensaje);
 
-        CarritoEventDTO carritoEvent;
+        NuevoPedidoEventDTO carritoEvent;
         try {
-            carritoEvent = objectMapper.readValue(mensaje, CarritoEventDTO.class);
+            carritoEvent = objectMapper.readValue(mensaje, NuevoPedidoEventDTO.class);
         } catch (JsonProcessingException e) {
             log.error("JSON inválido, descartando mensaje", e);
             return Uni.createFrom().completionStage(msg.ack());

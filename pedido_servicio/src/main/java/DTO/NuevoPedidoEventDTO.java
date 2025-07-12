@@ -2,7 +2,7 @@ package DTO;
 
 import java.util.List;
 
-public class CarritoEventDTO {
+public class NuevoPedidoEventDTO {
     private String userId;
     private Long ordenId;
     private List<CarritoItemDTO> items;
@@ -23,12 +23,7 @@ public class CarritoEventDTO {
     public void setItems(List<CarritoItemDTO> items) {
         this.items = items;
     }
-
     public Long getOrdenId() {
         return ordenId;
-    }
-
-    public void setOrdenId(Long ordenId) {
-        this.ordenId = ordenId;
     }
 }

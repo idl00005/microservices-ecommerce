@@ -139,7 +139,7 @@ public class CarritoService {
         System.out.println("Enviando pedido...");//
 
         if(orden.getReferenciaExterna() != null && !orden.getReferenciaExterna().isBlank()) {
-            // 1) Recuperar el PaymentIntent de Stripe
+            // Recuperar el PaymentIntent de Stripe
             PaymentIntent pi;
             try {
                 pi = PaymentIntent.retrieve(orden.getReferenciaExterna());
@@ -147,16 +147,16 @@ public class CarritoService {
                 throw new WebApplicationException("No pude recuperar el pago: " + e.getMessage(), 500);
             }
 
-            // 2) Leer la metadata y deserializar la lista de CarritoItemDTO
+            // Leer la metadata y deserializar la lista de CarritoItemDTO
             Jsonb jsonb = JsonbBuilder.create();
 
-            // 1) Obtenemos el JSON de Stripe
+            // Obtenemos el JSON de Stripe
             String itemsJson = pi.getMetadata().get("items");
 
-            // 2) Deserializamos a array
+            // Deserializamos a array
             CarritoItemDTO[] array = jsonb.fromJson(itemsJson, CarritoItemDTO[].class);
 
-            // 3) Convertimos a List
+            // Convertimos a List
             itemsConPrecio = Arrays.asList(array);
 
             System.out.println("itemsJson: " + itemsJson);
@@ -175,12 +175,12 @@ public class CarritoService {
         }
 
         // 3) Armar y enviar el evento al servicio de pedidos
-        CarritoEventDTO carritoEvent = new CarritoEventDTO();
-        carritoEvent.setUserId(orden.getUserId());
-        carritoEvent.setOrdenId(orden.getId());
-        carritoEvent.setItems(itemsConPrecio);
+        NuevoPedidoEventDTO nuevoPedidoEvent = new NuevoPedidoEventDTO();
+        nuevoPedidoEvent.setUserId(orden.getUserId());
+        nuevoPedidoEvent.setOrdenId(orden.getId());
+        nuevoPedidoEvent.setItems(itemsConPrecio);
 
-        String payloadJson = JsonbBuilder.create().toJson(carritoEvent);
+        String payloadJson = JsonbBuilder.create().toJson(nuevoPedidoEvent);
         OutboxEvent evt = new OutboxEvent();
         evt.setAggregateType("Carrito");
         evt.setAggregateId(orden.getUserId());

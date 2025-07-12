@@ -1,6 +1,6 @@
 package Otros;
 
-import DTO.CarritoEventDTO;
+import DTO.NuevoPedidoEventDTO;
 import DTO.StockEventDTO;
 import Entidades.OutboxEvent;
 import Repositorios.OutboxEventRepository;
@@ -22,7 +22,7 @@ public class OutboxEventPublisher {
     OutboxEventRepository outboxRepo;
 
     @Channel("carrito-a-pedidos-out")
-    Emitter<CarritoEventDTO> carritoEmitter;
+    Emitter<NuevoPedidoEventDTO> carritoEmitter;
 
     @Channel("eventos-stock")
     Emitter<StockEventDTO> catalogoEmitter;
@@ -39,7 +39,7 @@ public class OutboxEventPublisher {
         }
         for (OutboxEvent evt : pendientes) {
             if ("Carrito".equals(evt.getAggregateType())) {
-                CarritoEventDTO carritoEvent = mapToCarritoEvent(evt);
+                NuevoPedidoEventDTO carritoEvent = mapToCarritoEvent(evt);
                 carritoEmitter.send(carritoEvent)
                         .whenComplete((r, ex) -> {
                             if (ex == null) {
@@ -70,9 +70,9 @@ public class OutboxEventPublisher {
         }
     }
 
-    private CarritoEventDTO mapToCarritoEvent(OutboxEvent evt) {
+    private NuevoPedidoEventDTO mapToCarritoEvent(OutboxEvent evt) {
         try {
-            return objectMapper.readValue(evt.getPayload(), CarritoEventDTO.class);
+            return objectMapper.readValue(evt.getPayload(), NuevoPedidoEventDTO.class);
         } catch (Exception e) {
             throw new RuntimeException("Error al deserializar el payload: " + evt.getPayload(), e);
         }
