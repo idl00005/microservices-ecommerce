@@ -5,6 +5,7 @@ import com.DTO.StockEventDTO;
 import com.DTO.ValoracionDTO;
 import com.Entidades.Producto;
 import com.Entidades.Valoracion;
+import com.Excepciones.ValoracionDuplicadaException;
 import com.Otros.ProductEvent;
 import com.Repositorios.RepositorioProducto;
 import com.Repositorios.ValoracionRepository;
@@ -156,8 +157,14 @@ public class CatalogoService {
                 throw new IllegalArgumentException("Producto no encontrado con ID: " + valoracionDTO.idProducto());
             }
 
+            // Verificar si el usuario ya ha valorado este producto
+            if (valoracionRepository.existsByProductoIdAndUsuarioId(valoracionDTO.idProducto(), valoracionDTO.idUsuario())) {
+                throw new ValoracionDuplicadaException("El usuario ya ha valorado este producto");
+            }
+
             // Crear y guardar la valoración (asociada al producto)
             Valoracion valoracionEntity = new Valoracion();
+            valoracionEntity.setProducto(producto);
             valoracionEntity.setIdUsuario(valoracionDTO.idUsuario());
             valoracionEntity.setPuntuacion(valoracionDTO.puntuacion());
             valoracionEntity.setComentario(valoracionDTO.comentario());
@@ -211,7 +218,7 @@ public class CatalogoService {
         productEventEmitter.send(event);
     }
 
-    public boolean existeValoracionPorPedido(Long pedidoId, String usuarioId) {
-        return valoracionRepository.find("pedidoId", pedidoId).firstResultOptional().isPresent();
+    public boolean existeValoracionPorPedido(Long productoId, String usuarioId) {
+        return valoracionRepository.count("producto.id = ?1 and usuarioId = ?2", productoId, usuarioId) > 0;
     }
 }

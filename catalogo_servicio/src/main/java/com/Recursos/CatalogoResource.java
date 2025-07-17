@@ -137,13 +137,13 @@ public class CatalogoResource {
     }
 
     @GET
-    @Path("/{pedidoId}/valoracion")
+    @Path("/{productoId}/valoracion")
     @RolesAllowed("user")
     @Produces(MediaType.APPLICATION_JSON)
     public Response existeValoracion(
-            @PathParam("pedidoId") Long pedidoId, @Context SecurityContext sctx) {
+            @PathParam("productoId") Long productoId, @Context SecurityContext sctx) {
         String userId = sctx.getUserPrincipal().getName();
-        boolean existe = catalogoService.existeValoracionPorPedido(pedidoId, userId);
+        boolean existe = catalogoService.existeValoracionPorPedido(productoId, userId);
         return Response.ok(existe).build();
     }
 

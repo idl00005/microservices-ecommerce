@@ -53,7 +53,7 @@ public class StripeWebhookResource {
                     switch (event.getType()) {
                         case "payment_intent.succeeded":
                             orden.setEstado("PAGADO");
-                            carritoService.pagoCostoMayorQue0(orden.getId());
+                            carritoService.procesarPagoCompletado(orden);
                             break;
                         case "payment_intent.payment_failed":
                             orden.setEstado("FALLIDO");
@@ -69,7 +69,6 @@ public class StripeWebhookResource {
                     System.err.println("Orden no encontrada para PaymentIntent ID: " + paymentIntentId);
                 }
             }
-
             return Response.ok().build();
         } catch (Exception e) {
             System.err.println("Error al procesar el webhook: " + e.getMessage());

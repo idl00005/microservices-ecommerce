@@ -194,12 +194,6 @@ public class CarritoService {
     }
 
     @Transactional
-    public void pagoCostoMayorQue0(Long ordenId) {
-        OrdenPago orden = ordenPagoRepository.findById(ordenId);
-        procesarPagoCompletado(orden);
-    }
-
-    @Transactional
     public void procesarPagoCompletado(OrdenPago orden) {
         if (orden != null && "PAGADO".equals(orden.getEstado())) {
 
