@@ -1,5 +1,6 @@
 package Servicios;
 
+import Clientes.CatalogoClient;
 import DTO.PedidoDTO;
 import DTO.ValoracionDTO;
 import Entidades.OutboxEvent;
@@ -30,6 +31,9 @@ import java.util.List;
 
 @ApplicationScoped
 public class PedidoService {
+
+    @Inject
+    public CatalogoClient catalogoClient;
 
     @Inject
     public PedidoRepository pedidoRepository;
@@ -184,6 +188,8 @@ public class PedidoService {
         if (!"COMPLETADO".equals(pedido.getEstado())) {
             throw new WebApplicationException("Solo se pueden valorar pedidos completados", 400);
         }
+
+        // if(catalogoClient.comprobarValoracionExsistente(pedidoId))
 
         // Crear la valoración
         ValoracionDTO valoracionDTO = new ValoracionDTO(usuarioId, pedido.getProductoId(), puntuacion, comentario);

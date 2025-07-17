@@ -84,15 +84,12 @@ public class CatalogoService {
         );
     }
 
-    @Transactional
     public boolean eliminarProducto(Long id) {
-        Producto producto = productoRepository.findById(id);
-        if (producto != null) {
-            productoRepository.delete(producto);
+        boolean eliminado = productoRepository.eliminarPorId(id);
+        if (eliminado) {
             invalidarCacheProducto(id);
-            return true;
         }
-        return false;
+        return eliminado;
     }
 
     @Transactional
@@ -212,5 +209,9 @@ public class CatalogoService {
 
     public void emitirEventoProducto(ProductEvent event) {
         productEventEmitter.send(event);
+    }
+
+    public boolean existeValoracionPorPedido(Long pedidoId, String usuarioId) {
+        return valoracionRepository.find("pedidoId", pedidoId).firstResultOptional().isPresent();
     }
 }

@@ -11,8 +11,10 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
@@ -133,4 +135,16 @@ public class CatalogoResource {
                     .build();
         }
     }
+
+    @GET
+    @Path("/{pedidoId}/valoracion")
+    @RolesAllowed("user")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response existeValoracion(
+            @PathParam("pedidoId") Long pedidoId, @Context SecurityContext sctx) {
+        String userId = sctx.getUserPrincipal().getName();
+        boolean existe = catalogoService.existeValoracionPorPedido(pedidoId, userId);
+        return Response.ok(existe).build();
+    }
+
 }

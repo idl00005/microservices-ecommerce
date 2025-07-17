@@ -12,6 +12,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
+import org.jboss.logging.annotations.Param;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -52,6 +53,12 @@ public class RepositorioProducto implements PanacheRepository<Producto> {
 
         // Retorna true si la operación tuvo éxito
         return true;
+    }
+
+    @Transactional
+    public boolean eliminarPorId(Long id) {
+        long filas = delete("id = ?1", id);
+        return filas > 0;
     }
 
     public long contarValoraciones(Long productoId) {
