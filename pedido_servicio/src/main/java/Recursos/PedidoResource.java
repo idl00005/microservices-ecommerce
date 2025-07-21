@@ -10,10 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Max;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.SecurityContext;
+import jakarta.ws.rs.core.*;
 
 import java.util.List;
 
@@ -24,6 +21,9 @@ public class PedidoResource {
 
     @Inject
     PedidoService pedidoService;
+
+    @Context
+    HttpHeaders headers;
 
     @POST
     public Response crearPedido(@Valid Pedido pedido) {
@@ -116,8 +116,9 @@ public class PedidoResource {
     @RolesAllowed({"user","admin"})
     public Response crearValoracion(@PathParam("id") Long pedidoId, @Valid ValoracionRequest valoracionRequest, @Context SecurityContext securityContext) {
         String usuarioId = securityContext.getUserPrincipal().getName();
+        String token = headers.getHeaderString(HttpHeaders.AUTHORIZATION);
         try {
-            pedidoService.crearValoracion(pedidoId, usuarioId, valoracionRequest.puntuacion, valoracionRequest.comentario);
+            pedidoService.crearValoracion(pedidoId, usuarioId, valoracionRequest.puntuacion, valoracionRequest.comentario, token);
             return Response.status(Response.Status.CREATED).entity("Valoración creada y enviada correctamente").build();
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();

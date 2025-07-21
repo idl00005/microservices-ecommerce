@@ -38,8 +38,8 @@ public class OrdenPago {
     @Pattern(regexp = "\\+?[0-9]{9,15}", message = "El número de teléfono debe ser válido")
     private String telefono;
 
-    @OneToMany
-    private List<CarritoItem> itemsComprados = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LineaPago> itemsComprados = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -113,11 +113,11 @@ public class OrdenPago {
         this.telefono = telefono;
     }
 
-    public List<CarritoItem> getItemsComprados() {
+    public List<LineaPago> getItemsComprados() {
         return itemsComprados;
     }
 
-    public void setItemsComprados(List<CarritoItem> itemsComprados) {
+    public void setItemsComprados(List<LineaPago> itemsComprados) {
         this.itemsComprados = itemsComprados;
     }
 }

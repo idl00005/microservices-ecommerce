@@ -3,6 +3,7 @@ package Servicios;
 import Cliente.StockClient;
 import DTO.*;
 import Entidades.CarritoItem;
+import Entidades.LineaPago;
 import Entidades.OrdenPago;
 import Entidades.OutboxEvent;
 import Otros.ProductEvent;
@@ -26,6 +27,7 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.hibernate.Hibernate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -100,6 +102,13 @@ public class CarritoService {
             throw new WebApplicationException(reservaExitosa.toString(), reservaExitosa.getStatus());
         }
 
+        List<LineaPago> lineas = carrito.stream()
+                .map(item -> new LineaPago(
+                        item.getProductoId(),
+                        item.getCantidad()
+                ))
+                .toList();
+
         OrdenPago orden = new OrdenPago();
         orden.setUserId(userId);
         orden.setMontoTotal(total);
@@ -107,7 +116,7 @@ public class CarritoService {
         orden.setFechaCreacion(LocalDateTime.now());
         orden.setDireccion(direccion);
         orden.setTelefono(telefono);
-        orden.setItemsComprados(carrito);
+        orden.setItemsComprados(lineas);
         ordenPagoRepository.persist(orden);
 
         if(orden.getMontoTotal().compareTo(BigDecimal.ZERO) == 0) {
@@ -133,6 +142,7 @@ public class CarritoService {
     }
 
     @Transactional
+    // Todo: Decidir si quedarme con los metadatos de stripe para obtener el listado de productos comprados
     public void procesarCompra(OrdenPago orden) {
         List<CarritoItemDTO> itemsConPrecio;
 
@@ -164,7 +174,8 @@ public class CarritoService {
 
         } else {
             // Si no hay referencia externa significa que el precio es 0 (pago sin Stripe)
-            List<CarritoItem> carrito = carritoItemRepository.findByUserId(orden.getUserId());
+            Hibernate.initialize(orden.getItemsComprados());
+            List<LineaPago> carrito = orden.getItemsComprados();
             itemsConPrecio = carrito.stream()
                     .map(item -> new CarritoItemDTO(
                             item.getProductoId(),

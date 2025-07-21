@@ -16,6 +16,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import DTO.NuevoPedidoEventDTO;
 import DTO.CarritoItemDTO;
@@ -174,7 +175,7 @@ public class PedidoService {
     public void invalidarCachePedidoPorUsuario(@CacheKey String usuarioId) {}
 
     @Transactional
-    public void crearValoracion(Long pedidoId, String usuarioId, int puntuacion, String comentario) throws JsonProcessingException {
+    public void crearValoracion(Long pedidoId, String usuarioId, int puntuacion, String comentario, String jwtToken) throws JsonProcessingException {
         Pedido pedido = pedidoRepository.buscarPorId(pedidoId);
 
         if (pedido == null) {
@@ -189,7 +190,14 @@ public class PedidoService {
             throw new WebApplicationException("Solo se pueden valorar pedidos completados", 400);
         }
 
-        // if(catalogoClient.comprobarValoracionExsistente(pedidoId))
+        Response valoracionExistenteRequest = catalogoClient.comprobarValoracionExsistente(pedido.getProductoId(), jwtToken);
+        if( valoracionExistenteRequest.getStatus() == 200){
+            if(valoracionExistenteRequest.readEntity(Boolean.class)){
+                throw new WebApplicationException("Producto ya valorado por el usuario", 409);
+            }
+        } else {
+            throw new WebApplicationException("Error al comprobar si existe valoración", valoracionExistenteRequest.getStatus());
+        }
 
         // Crear la valoración
         ValoracionDTO valoracionDTO = new ValoracionDTO(usuarioId, pedido.getProductoId(), puntuacion, comentario);

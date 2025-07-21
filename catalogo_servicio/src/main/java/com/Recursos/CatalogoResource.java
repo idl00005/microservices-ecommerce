@@ -15,9 +15,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-import org.jboss.logging.Logger;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Path("/catalogo")
@@ -27,8 +25,6 @@ public class CatalogoResource {
 
     @Inject
     public CatalogoService catalogoService;
-
-    private static final Logger LOG = Logger.getLogger(CatalogoResource.class);
 
     @GET
     public Response getProducts(@QueryParam("page") @DefaultValue("1") int page,
@@ -139,12 +135,16 @@ public class CatalogoResource {
     @GET
     @Path("/{productoId}/valoracion")
     @RolesAllowed("user")
-    @Produces(MediaType.APPLICATION_JSON)
     public Response existeValoracion(
             @PathParam("productoId") Long productoId, @Context SecurityContext sctx) {
-        String userId = sctx.getUserPrincipal().getName();
-        boolean existe = catalogoService.existeValoracionPorPedido(productoId, userId);
-        return Response.ok(existe).build();
+        try{
+            String userId = sctx.getUserPrincipal().getName();
+            boolean existe = catalogoService.existeValoracionPorPedido(productoId, userId);
+            return Response.ok(existe).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error al comprobar si existe la valoracion: " + e.getMessage())
+                    .build();
+        }
     }
-
 }

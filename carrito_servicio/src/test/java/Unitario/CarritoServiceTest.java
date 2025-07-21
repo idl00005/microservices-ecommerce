@@ -227,7 +227,7 @@ public class CarritoServiceTest {
         when(carritoItemRepository.findByUserId(orden.getUserId())).thenReturn(items);
 
         // Llamada al método
-        carritoService.pagoCostoMayorQue0(orden.getId());
+        carritoService.procesarPagoCompletado(orden);
 
         // Verificaciones
         assertEquals("COMPLETADO", orden.getEstado());
@@ -239,7 +239,7 @@ public class CarritoServiceTest {
         when(ordenPagoRepository.findById(100L)).thenReturn(null);
 
         // No lanza excepción, simplemente ignora
-        carritoService.pagoCostoMayorQue0(100L);
+        carritoService.procesarPagoCompletado(null);
 
         verify(ordenPagoRepository, never()).persist((OrdenPago) any());
     }
