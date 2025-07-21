@@ -258,7 +258,7 @@ class CatalogoTest {
         producto.setId(1L);
 
         // Configurar el comportamiento del repositorio
-        when(productoRepository.findById(1L)).thenReturn(producto);
+        when(productoRepository.eliminarPorId(1L)).thenReturn(true);
         doNothing().when(productoRepository).delete(producto);
 
         // Llamar al método del servicio directamente
@@ -268,7 +268,7 @@ class CatalogoTest {
         assertTrue(resultado);
 
         // Verificar que el método delete fue llamado
-        verify(productoRepository).delete(producto);
+        verify(productoRepository).eliminarPorId(producto.getId());
     }
 
     @Test

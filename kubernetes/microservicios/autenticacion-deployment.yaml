@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: auth
-          image: autenticacion_servicio_quarkus:v2
+          image: autenticacion_servicio_quarkus:v1
           ports:
             - containerPort: 8080
           readinessProbe:
