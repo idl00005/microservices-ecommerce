@@ -14,7 +14,6 @@ public class Valoracion {
     private String idUsuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_producto", nullable = false)
     private Producto producto;
 
     @Min(value = 1, message = "La puntuación mínima es 1")
