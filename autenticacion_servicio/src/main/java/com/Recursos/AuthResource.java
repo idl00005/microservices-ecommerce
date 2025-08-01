@@ -55,10 +55,6 @@ public class AuthResource {
             return Response.status(Response.Status.CONFLICT)
                     .entity("El correo ya está registrado.")
                     .build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Ocurrió un error al registrar el usuario.")
-                    .build();
         }
     }
 

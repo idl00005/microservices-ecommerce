@@ -15,6 +15,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.faulttolerance.Retry;
 
 import java.util.List;
 
@@ -76,11 +77,15 @@ public class CarritoResource {
     @GET
     @Path("/")
     @RolesAllowed({"user", "admin"})
+    @Retry(maxRetries = 3)
     public Response obtenerCarrito(@Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
-
-        List<CarritoItemDetalleDTO> carrito = carritoService.obtenerCarrito(userId);
-        return Response.ok(carrito).build();
+        try {
+            List<CarritoItemDetalleDTO> carrito = carritoService.obtenerCarrito(userId);
+            return Response.ok(carrito).build();
+        } catch (WebApplicationException e) {
+            return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
+        }
     }
 
     @DELETE
@@ -114,16 +119,16 @@ public class CarritoResource {
     @Path("/{productoId}")
     @RolesAllowed({"user","admin"})
     public Response actualizarCantidad(@PathParam("productoId") Long productoId,
-                                       @Valid ActualizarCantidadRequest cantidad,
+                                       @Valid ActualizarCantidadRequest cantidadr,
                                        @Context SecurityContext securityContext) {
         String userId = securityContext.getUserPrincipal().getName();
         try {
             // Si la cantidad es 0, se interpreta como eliminación.
-            if (cantidad.getCantidad() == 0) {
+            if (cantidadr.cantidad == 0) {
                 carritoService.eliminarProducto(userId, productoId);
                 return Response.ok("Producto eliminado del carrito.").build();
             } else {
-                CarritoItem actualizado = carritoService.actualizarCantidadProducto(userId, productoId, cantidad.getCantidad());
+                CarritoItem actualizado = carritoService.actualizarCantidadProducto(userId, productoId, cantidadr.cantidad);
                 return Response.ok(actualizado).build();
             }
         } catch (NotFoundException e) {
@@ -133,16 +138,7 @@ public class CarritoResource {
         }
     }
 
-    public static class ActualizarCantidadRequest {
-        @Min(value = 1, message = "La cantidad debe ser al menos 0")
-        @NotNull(message = "La cantidad no puede ser nula")
-        private int cantidad;
-
-        public int getCantidad() {
-            return cantidad;
-        }
-        public void setCantidad(int cantidad) {
-            this.cantidad = cantidad;
-        }
-    }
+    public record ActualizarCantidadRequest (@Min(value = 0, message = "La cantidad debe ser al menos 0")
+                                             @NotNull(message = "La cantidad no puede ser nula")
+                                             int cantidad){}
 }

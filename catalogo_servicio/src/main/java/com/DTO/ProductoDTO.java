@@ -32,10 +32,6 @@ public class ProductoDTO {
     @Min(value = 0, message = "El stock no puede ser menor que 0")
     private Integer stock;
 
-    private Integer stockReservado = 0;
-
-    private double puntuacion = 0.0;
-
     @Type(JsonBinaryType.class)
     private JsonNode detalles;
 
@@ -96,22 +92,6 @@ public class ProductoDTO {
 
     public void setStock(Integer stock) {
         this.stock = stock;
-    }
-
-    public Integer getStockReservado() {
-        return stockReservado;
-    }
-
-    public void setStockReservado(Integer stockReservado) {
-        this.stockReservado = stockReservado;
-    }
-
-    public double getPuntuacion() {
-        return puntuacion;
-    }
-
-    public void setPuntuacion(double puntuacion) {
-        this.puntuacion = puntuacion;
     }
 
     public JsonNode getDetalles() {

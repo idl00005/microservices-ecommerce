@@ -15,7 +15,9 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import org.eclipse.microprofile.faulttolerance.Retry;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Path("/catalogo")
@@ -27,6 +29,7 @@ public class CatalogoResource {
     public CatalogoService catalogoService;
 
     @GET
+    @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     public Response getProducts(@QueryParam("page") @DefaultValue("1") int page,
                                 @QueryParam("size") @DefaultValue("10") int size,
                                 @QueryParam("nombre") String nombre,
@@ -88,6 +91,7 @@ public class CatalogoResource {
 
     @GET
     @Path("/{id}")
+    @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     public Response getProductById(@PathParam("id") Long id) {
         Producto producto = catalogoService.obtenerProductoPorId(id);
         if (producto == null) {
@@ -115,6 +119,7 @@ public class CatalogoResource {
 
     @GET
     @Path("/{id}/valoraciones")
+    @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     public Response obtenerValoracionesPorProducto(@PathParam("id") Long idProducto,
                                                    @QueryParam("pagina") @DefaultValue("1") int pagina,
                                                    @QueryParam("tamanio") @DefaultValue("10") int tamanio) {
@@ -135,6 +140,7 @@ public class CatalogoResource {
     @GET
     @Path("/{productoId}/valoracion")
     @RolesAllowed("user")
+    @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     public Response existeValoracion(
             @PathParam("productoId") Long productoId, @Context SecurityContext sctx) {
         try{

@@ -190,13 +190,9 @@ public class PedidoService {
             throw new WebApplicationException("Solo se pueden valorar pedidos completados", 400);
         }
 
-        Response valoracionExistenteRequest = catalogoClient.comprobarValoracionExsistente(pedido.getProductoId(), jwtToken);
-        if( valoracionExistenteRequest.getStatus() == 200){
-            if(valoracionExistenteRequest.readEntity(Boolean.class)){
-                throw new WebApplicationException("Producto ya valorado por el usuario", 409);
-            }
-        } else {
-            throw new WebApplicationException("Error al comprobar si existe valoración", valoracionExistenteRequest.getStatus());
+
+        if(catalogoClient.comprobarValoracionExistente(pedido.getProductoId(), jwtToken)){
+            throw new WebApplicationException("Producto ya valorado por el usuario", 409);
         }
 
         // Crear la valoración

@@ -11,7 +11,9 @@ import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.faulttolerance.Retry;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 @ApplicationScoped
@@ -36,6 +38,7 @@ public class StockClient {
      * Es totalmente síncrono: realiza 1 petición HTTP por cada producto.
      * Devuelve true si todos los productos se pueden reservar, false si alguno falla.
      */
+    @Retry(maxRetries = 2, delay = 1, delayUnit = ChronoUnit.SECONDS)
     public Response reservarStock(Map<Long, Integer> productos) {
         Client client = ClientBuilder.newBuilder().build();
         try {
@@ -72,6 +75,7 @@ public class StockClient {
     }
 
     @Scheduled(every = "50m")
+    @Retry(maxRetries = 4, delay = 2, delayUnit = ChronoUnit.SECONDS)
     public void obtenerJwtParaCarrito() {
         String json = String.format("{\"username\": \"%s\", \"password\": \"%s\"}", adminUser, adminPassword);
 
@@ -91,6 +95,7 @@ public class StockClient {
     }
 
     @CacheResult(cacheName = "producto-cache")
+    @Retry(maxRetries = 3, delay = 200, delayUnit = ChronoUnit.MILLIS)
     public ProductoDTO obtenerProductoPorId(Long id) {
         Client client = ClientBuilder.newBuilder().build();
         try {
