@@ -9,6 +9,9 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.faulttolerance.Timeout;
+
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 
 @Path("/auth")
@@ -22,6 +25,7 @@ public class AuthResource {
     @Path("/login")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response login(UserCredentials credentials) {
         try {
             String token = authService.login(credentials);
@@ -37,6 +41,7 @@ public class AuthResource {
     @Path("/register")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response register(RegisterRequest newUser) {
         try {
             String token = authService.register(newUser);

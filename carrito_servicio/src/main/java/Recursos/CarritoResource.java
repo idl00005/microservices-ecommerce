@@ -16,7 +16,9 @@ import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.Retry;
+import org.eclipse.microprofile.faulttolerance.Timeout;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Path("/carrito")
@@ -30,6 +32,7 @@ public class CarritoResource {
     @POST
     @Path("/pago")
     @RolesAllowed({"user", "admin"})
+    @Timeout(value = 4, unit = ChronoUnit.SECONDS)
     public Response iniciarPago(@Context SecurityContext ctx, @Valid IniciarPagoRequest request) {
         String userId = ctx.getUserPrincipal().getName();
         try {
@@ -38,7 +41,6 @@ public class CarritoResource {
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
         } catch (Exception e) {
-            e.printStackTrace();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Error al iniciar el pago: " + e.getMessage()).build();
         }
@@ -53,6 +55,7 @@ public class CarritoResource {
     @POST
     @Path("/")
     @RolesAllowed({"user", "admin"})
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response agregarProducto(@Valid AgregarProductoRequest req, @Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
         try {
@@ -77,7 +80,8 @@ public class CarritoResource {
     @GET
     @Path("/")
     @RolesAllowed({"user", "admin"})
-    @Retry(maxRetries = 3)
+    @Retry()
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response obtenerCarrito(@Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
         try {
@@ -91,6 +95,7 @@ public class CarritoResource {
     @DELETE
     @Path("/{productoId}")
     @RolesAllowed({"user", "admin"})
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response eliminarProducto(@PathParam("productoId") Long productoId, @Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
         try {
@@ -104,6 +109,7 @@ public class CarritoResource {
     @DELETE
     @Path("/")
     @RolesAllowed({"user", "admin"})
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response vaciarCarrito(@Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
         try {
@@ -118,6 +124,7 @@ public class CarritoResource {
     @PUT
     @Path("/{productoId}")
     @RolesAllowed({"user","admin"})
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response actualizarCantidad(@PathParam("productoId") Long productoId,
                                        @Valid ActualizarCantidadRequest cantidadr,
                                        @Context SecurityContext securityContext) {

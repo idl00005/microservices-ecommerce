@@ -3,7 +3,6 @@ package com.Recursos;
 import com.DTO.ProductoDTO;
 import com.Entidades.Producto;
 import com.Entidades.Valoracion;
-import com.Otros.ProductEvent;
 import com.Otros.ResponseMessage;
 import com.Otros.PaginacionResponse;
 import com.Servicios.CatalogoService;
@@ -16,6 +15,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import org.eclipse.microprofile.faulttolerance.Retry;
+import org.eclipse.microprofile.faulttolerance.Timeout;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -30,12 +30,17 @@ public class CatalogoResource {
 
     @GET
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response getProducts(@QueryParam("page") @DefaultValue("1") int page,
                                 @QueryParam("size") @DefaultValue("10") int size,
                                 @QueryParam("nombre") String nombre,
                                 @QueryParam("categoria") String categoria,
                                 @QueryParam("precioMin") Double precioMin,
                                 @QueryParam("precioMax") Double precioMax) {
+        if (size > 100) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("El tamaño máximo permitido por página es 100").build();
+        }
         try {
             List<Producto> productos = catalogoService.obtenerProductos(page, size, nombre, categoria, precioMin, precioMax);
             return Response.ok(productos).build();
@@ -46,6 +51,7 @@ public class CatalogoResource {
 
     @POST
     @RolesAllowed("admin")
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response addProduct(@Valid ProductoDTO producto) {
         try {
             Producto nuevoProducto = catalogoService.agregarProducto(producto);
@@ -60,6 +66,7 @@ public class CatalogoResource {
     @PUT
     @Path("/{id}")
     @RolesAllowed({"admin"})
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response updateProduct(@PathParam("id") Long id, @Valid ProductoDTO producto) {
         try {
             if (catalogoService.actualizarProducto(id, producto)) {
@@ -74,6 +81,7 @@ public class CatalogoResource {
     @DELETE
     @Path("/{id}")
     @RolesAllowed("admin")
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response deleteProduct(@PathParam("id") Long id) {
         try {
             if (catalogoService.eliminarProducto(id)) {
@@ -88,6 +96,7 @@ public class CatalogoResource {
     @GET
     @Path("/{id}")
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response getProductById(@PathParam("id") Long id) {
         Producto producto = catalogoService.obtenerProductoPorId(id);
         if (producto == null) {
@@ -99,6 +108,7 @@ public class CatalogoResource {
     @POST
     @RolesAllowed("admin")
     @Path("/{id}/reserva")
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response reservarStock(@PathParam("id") Long productoId,
                                   @QueryParam("cantidad") int cantidad) {
         try {
@@ -116,6 +126,7 @@ public class CatalogoResource {
     @GET
     @Path("/{id}/valoraciones")
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response obtenerValoracionesPorProducto(@PathParam("id") Long idProducto,
                                                    @QueryParam("pagina") @DefaultValue("1") int pagina,
                                                    @QueryParam("tamanio") @DefaultValue("10") int tamanio) {
@@ -137,6 +148,7 @@ public class CatalogoResource {
     @Path("/{productoId}/valoracion")
     @RolesAllowed("user")
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response existeValoracion(
             @PathParam("productoId") Long productoId, @Context SecurityContext sctx) {
         try{

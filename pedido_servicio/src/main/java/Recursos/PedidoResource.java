@@ -12,7 +12,9 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
+import org.eclipse.microprofile.faulttolerance.Timeout;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Path("/pedido")
@@ -35,9 +37,10 @@ public class PedidoResource {
 
     @GET
     @RolesAllowed({"user", "admin"})
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response obtenerPedidosPorUsuario(@Context SecurityContext securityContext) {
         String usuarioId = securityContext.getUserPrincipal().getName();
-        List<PedidoDTO> pedidos = null;
+        List<PedidoDTO> pedidos;
         try {
             pedidos = pedidoService.obtenerPedidosPorUsuario(usuarioId);
         } catch (WebApplicationException e) {
@@ -51,6 +54,7 @@ public class PedidoResource {
     @GET
     @Path("/{id}")
     @RolesAllowed({"user", "admin"})
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response obtenerPedidoPorId(@PathParam("id") Long id, @Context SecurityContext securityContext) {
         String usuarioId = securityContext.getUserPrincipal().getName();
         Pedido pedido;
@@ -82,6 +86,7 @@ public class PedidoResource {
     @GET
     @Path("/filtro")
     @RolesAllowed("admin")
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response listarPedidos(@Valid FiltroPedidoRequest filtro) {
         try {
             List<PedidoDTO> pedidos = pedidoService.listarPedidos(
@@ -99,6 +104,7 @@ public class PedidoResource {
     @PATCH
     @Path("/{id}/estado")
     @RolesAllowed("admin")
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response cambiarEstadoPedido(@PathParam("id") Long id, @QueryParam("estado") String nuevoEstado) {
         if (nuevoEstado == null || nuevoEstado.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -118,6 +124,7 @@ public class PedidoResource {
     @POST
     @Path("/{id}/valoracion")
     @RolesAllowed({"user","admin"})
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response crearValoracion(@PathParam("id") Long pedidoId, @Valid ValoracionRequest valoracionRequest, @Context SecurityContext securityContext) {
         String usuarioId = securityContext.getUserPrincipal().getName();
         String token = headers.getHeaderString(HttpHeaders.AUTHORIZATION);
@@ -134,10 +141,11 @@ public class PedidoResource {
     public static class FiltroPedidoRequest {
         private String estado;
         private String usuarioId;
-        @Positive
+        @Positive(message = "El número de página debe ser mayor o igual a 0")
         private Integer pagina;
 
-        @Positive
+        @Positive(message = "El tamaño de página debe ser mayor que 0")
+        @Max(value = 100, message = "El tamaño máximo permitido por página es 100")
         private Integer tamanio;
 
         // Getters y Setters
