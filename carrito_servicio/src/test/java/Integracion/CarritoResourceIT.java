@@ -130,8 +130,7 @@ public class CarritoResourceIT {
         when(carritoItemRepository.findByUserAndProducto("user", 1L)).thenReturn(Optional.of(item));
 
         // Configurar la solicitud para actualizar la cantidad
-        CarritoResource.ActualizarCantidadRequest request = new CarritoResource.ActualizarCantidadRequest();
-        request.setCantidad(5);
+        CarritoResource.ActualizarCantidadRequest request = new CarritoResource.ActualizarCantidadRequest(5);
 
         // Realizar la solicitud y verificar la respuesta
         given()
