@@ -23,7 +23,7 @@ public class Valoracion {
     @Max(value = 5, message = "La puntuación máxima es 5")
     private int puntuacion; // Debe estar entre 1 y 5
 
-    @Size(max = 500, message = "El comentario no puede tener más de 500 caracteres")
+    @Size(max = 2000, message = "El comentario no puede tener más de 2000 caracteres")
     private String comentario;
 
     @NotNull(message = "La fecha de creación no puede ser nula")

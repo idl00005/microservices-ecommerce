@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 
@@ -26,6 +27,7 @@ public class PedidoResource {
     HttpHeaders headers;
 
     @POST
+    @RolesAllowed({"admin"})
     public Response crearPedido(@Valid Pedido pedido) {
         Pedido nuevoPedido = pedidoService.crearPedido(pedido);
         return Response.status(Response.Status.CREATED).entity(nuevoPedido).build();
@@ -98,10 +100,12 @@ public class PedidoResource {
     @Path("/{id}/estado")
     @RolesAllowed("admin")
     public Response cambiarEstadoPedido(@PathParam("id") Long id, @QueryParam("estado") String nuevoEstado) {
+        if (nuevoEstado == null || nuevoEstado.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("El parámetro 'estado' es obligatorio y no puede estar vacío").build();
+        }
         try {
-
             pedidoService.actualizarPedido(id,nuevoEstado);
-
             return Response.ok("Estado del pedido actualizado correctamente").build();
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
@@ -175,7 +179,7 @@ public class PedidoResource {
             @Max(value = 5, message = "La puntuación no puede ser mayor que 5")
             @NotNull
             int puntuacion,
-            @NotNull(message = "El comentario no puede ser nulo")
+            @Size(max = 2000, message = "El comentario no puede superar los 2000 caracteres")
             String comentario
     ) {}
 }
