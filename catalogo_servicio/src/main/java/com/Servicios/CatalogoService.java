@@ -78,17 +78,26 @@ public class CatalogoService {
 
     @Transactional
     public boolean actualizarProducto(Long id, ProductoDTO producto) {
-        invalidarCacheProducto(id);
-        return productoRepository.updateProduct(
+        boolean actualizado = productoRepository.updateProduct(
                 id, producto.getNombre(), producto.getDescripcion(),
                 producto.getPrecio(), producto.getStock(), producto.getDetalles()
         );
+        if (actualizado) {
+            ProductEvent event = new ProductEvent(id, "UPDATED", null);
+            emitirEventoProducto(event);
+            invalidarCacheProducto(id);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public boolean eliminarProducto(Long id) {
         boolean eliminado = productoRepository.eliminarPorId(id);
         if (eliminado) {
             invalidarCacheProducto(id);
+            ProductEvent event = new ProductEvent(id, "DELETED", null);
+            emitirEventoProducto(event);
         }
         return eliminado;
     }
@@ -155,11 +164,6 @@ public class CatalogoService {
             Producto producto = productoRepository.findById(valoracionDTO.idProducto());
             if (producto == null) {
                 throw new IllegalArgumentException("Producto no encontrado con ID: " + valoracionDTO.idProducto());
-            }
-
-            // Verificar si el usuario ya ha valorado este producto
-            if (valoracionRepository.existsByProductoIdAndUsuarioId(valoracionDTO.idProducto(), valoracionDTO.idUsuario())) {
-                throw new ValoracionDuplicadaException("El usuario ya ha valorado este producto");
             }
 
             // Crear y guardar la valoración (asociada al producto)

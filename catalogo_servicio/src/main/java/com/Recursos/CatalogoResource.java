@@ -63,8 +63,6 @@ public class CatalogoResource {
     public Response updateProduct(@PathParam("id") Long id, @Valid ProductoDTO producto) {
         try {
             if (catalogoService.actualizarProducto(id, producto)) {
-                ProductEvent event = new ProductEvent(id, "UPDATED", null);
-                catalogoService.emitirEventoProducto(event);
                 return Response.ok("Producto actualizado con éxito.").build();
             }
             return Response.status(Response.Status.NOT_FOUND).entity("Producto con ID " + id + " no encontrado.").build();
@@ -79,8 +77,6 @@ public class CatalogoResource {
     public Response deleteProduct(@PathParam("id") Long id) {
         try {
             if (catalogoService.eliminarProducto(id)) {
-                ProductEvent event = new ProductEvent(id, "DELETED", null);
-                catalogoService.emitirEventoProducto(event);
                 return Response.ok("Producto eliminado con éxito.").build();
             }
             return Response.status(Response.Status.NOT_FOUND).entity("Producto con ID " + id + " no encontrado.").build();

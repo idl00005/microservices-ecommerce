@@ -5,6 +5,9 @@ import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"idUsuario", "id_producto"})
+})
 public class Valoracion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

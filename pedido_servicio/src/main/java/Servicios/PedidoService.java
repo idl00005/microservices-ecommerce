@@ -190,10 +190,10 @@ public class PedidoService {
             throw new WebApplicationException("Solo se pueden valorar pedidos completados", 400);
         }
 
-
-        if(catalogoClient.comprobarValoracionExistente(pedido.getProductoId(), jwtToken)){
-            throw new WebApplicationException("Producto ya valorado por el usuario", 409);
-        }
+        // Ya no se comprueba si la valoración existe, esto se realiza en el microservicio de catálogo
+        //if(catalogoClient.comprobarValoracionExistente(pedido.getProductoId(), jwtToken)){
+        //    throw new WebApplicationException("Producto ya valorado por el usuario", 409);
+        //}
 
         // Crear la valoración
         ValoracionDTO valoracionDTO = new ValoracionDTO(usuarioId, pedido.getProductoId(), puntuacion, comentario);
