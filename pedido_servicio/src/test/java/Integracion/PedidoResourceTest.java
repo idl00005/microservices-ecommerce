@@ -1,13 +1,11 @@
 package Integracion;
 
 import Entidades.Pedido;
-import Recursos.PedidoResource;
 import Repositorios.PedidoRepository;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -41,7 +39,7 @@ public class PedidoResourceTest {
                 .contentType(ContentType.JSON)
                 .body(pedido)
                 .when()
-                .post("/pedido")
+                .post("/pedidos")
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode())
                 .body("usuarioId", equalTo("user1"))
@@ -52,7 +50,7 @@ public class PedidoResourceTest {
     @Test
     @TestSecurity(user = "user1", roles = {"user"})
     public void testObtenerPedidosPorUsuario() {
-        // Crear un pedido de prueba
+        // Pedido de prueba para user1
         Pedido pedido = new Pedido();
         pedido.setId(1L);
         pedido.setUsuarioId("user1");
@@ -62,25 +60,27 @@ public class PedidoResourceTest {
         pedido.setEstado("PENDIENTE");
         pedido.setFechaCreacion(LocalDateTime.now());
 
-        Mockito.when(pedidoRepository.buscarPorUsuarioId("user1")).thenReturn(List.of(pedido));
+        // El repositorio solo debe buscar por usuarioId
+        Mockito.when(pedidoRepository.buscarPorEstadoYUsuarioConPaginacion(null, "user1", 0, 10))
+                .thenReturn(List.of(pedido));
 
         given()
                 .auth().basic("user1", "password")
                 .when()
-                .get("/pedido")
+                .get("/pedidos")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body("$", not(empty()))
                 .body("[0].productoId", equalTo(1))
                 .body("[0].cantidad", equalTo(2))
                 .body("[0].estado", equalTo("PENDIENTE"))
-                .body("[0].precioTotal", equalTo(200.0f)); // Ojo, compara float/double
+                .body("[0].precioTotal", equalTo(200.0f));
     }
 
     @Test
     @TestSecurity(user = "admin", roles = {"admin"})
-    public void testListarPedidos_Admin() {
-        // Crear un pedido de prueba
+    public void testListarPedidos_AdminConFiltros() {
+        // Pedido de prueba para admin con filtro
         Pedido pedido = new Pedido();
         pedido.setId(1L);
         pedido.setUsuarioId("user1");
@@ -90,24 +90,15 @@ public class PedidoResourceTest {
         pedido.setEstado("PENDIENTE");
         pedido.setFechaCreacion(LocalDateTime.now());
 
-        // Configurar el mock para devolver una lista de pedidos
-        Mockito.when(pedidoRepository.buscarPorEstadoYUsuarioConPaginacion("PENDIENTE", null, 0, 10))
+        // Para admin, usuarioId viene null; paginación 1, tamaño 10
+        Mockito.when(pedidoRepository.buscarPorEstadoYUsuarioConPaginacion(
+                        "PENDIENTE", null, 0, 10))
                 .thenReturn(List.of(pedido));
 
-        // Crear el filtro de búsqueda
-        PedidoResource.FiltroPedidoRequest filtro = new PedidoResource.FiltroPedidoRequest();
-        filtro.setEstado("PENDIENTE");
-        filtro.setUsuarioId(null);
-        filtro.setPagina(1);
-        filtro.setTamanio(10);
-
-        // Ejecutar el test
         given()
                 .auth().basic("admin", "adminpassword")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(filtro)
                 .when()
-                .get("/pedido/filtro")
+                .get("/pedidos?estado=PENDIENTE&pagina=1&tamanio=10")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body("$", not(empty()))
@@ -135,7 +126,7 @@ public class PedidoResourceTest {
                 .auth().basic("admin", "adminpassword")
                 .queryParam("estado", "ENVIADO")
                 .when()
-                .patch("/pedido/1/estado")
+                .patch("/pedidos/1/estado")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body(equalTo("Estado del pedido actualizado correctamente"));

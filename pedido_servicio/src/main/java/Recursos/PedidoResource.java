@@ -16,8 +16,9 @@ import org.eclipse.microprofile.faulttolerance.Timeout;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 
-@Path("/pedido")
+@Path("/pedidos")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class PedidoResource {
@@ -38,17 +39,32 @@ public class PedidoResource {
     @GET
     @RolesAllowed({"user", "admin"})
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
-    public Response obtenerPedidosPorUsuario(@Context SecurityContext securityContext) {
-        String usuarioId = securityContext.getUserPrincipal().getName();
-        List<PedidoDTO> pedidos;
+    public Response listarPedidos(
+            @Context SecurityContext securityContext,
+            @BeanParam @Valid FiltroPedidoRequest filtro
+    ) {
         try {
-            pedidos = pedidoService.obtenerPedidosPorUsuario(usuarioId);
+            // Si el caller no es admin, forzamos el filtro a su propio usuario
+            String callerId = securityContext.getUserPrincipal().getName();
+            if (!securityContext.isUserInRole("admin")) {
+                filtro.setUsuarioId(callerId);
+            }
+
+            List<PedidoDTO> pedidos = pedidoService.listarPedidos(
+                    filtro.getEstado(),
+                    filtro.getUsuarioId(),
+                    filtro.getPagina(),
+                    filtro.getTamanio()
+            );
+            return Response.ok(pedidos).build();
+
         } catch (WebApplicationException e) {
-            return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
+            return Response.status(e.getResponse().getStatus())
+                    .entity(Map.of("error", e.getMessage())).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al obtener los pedidos").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error al listar los pedidos: " + e.getMessage()).build();
         }
-        return Response.ok(pedidos).build();
     }
 
     @GET
@@ -80,24 +96,6 @@ public class PedidoResource {
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al obtener el pedido").build();
             }
             return Response.ok(pedido).build();
-        }
-    }
-
-    @GET
-    @Path("/filtro")
-    @RolesAllowed("admin")
-    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
-    public Response listarPedidos(@Valid FiltroPedidoRequest filtro) {
-        try {
-            List<PedidoDTO> pedidos = pedidoService.listarPedidos(
-                    filtro.getEstado(),
-                    filtro.getUsuarioId(),
-                    filtro.getPagina(),
-                    filtro.getTamanio()
-            );
-            return Response.ok(pedidos).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al listar los pedidos: "+e.getMessage()).build();
         }
     }
 
@@ -139,14 +137,20 @@ public class PedidoResource {
     }
 
     public static class FiltroPedidoRequest {
+        @QueryParam("estado")
         private String estado;
+
+        @QueryParam("usuarioId")
         private String usuarioId;
+
         @Positive(message = "El número de página debe ser mayor o igual a 0")
-        private Integer pagina;
+        @QueryParam("pagina")
+        private Integer pagina = 1;
 
         @Positive(message = "El tamaño de página debe ser mayor que 0")
         @Max(value = 100, message = "El tamaño máximo permitido por página es 100")
-        private Integer tamanio;
+        @QueryParam("tamanio")
+        private Integer tamanio = 10;
 
         // Getters y Setters
         public String getEstado() {

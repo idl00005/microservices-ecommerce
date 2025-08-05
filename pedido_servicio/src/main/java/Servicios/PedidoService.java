@@ -90,14 +90,10 @@ public class PedidoService {
 
     @Transactional
     public List<PedidoDTO> listarPedidos(String estado, String usuarioId, Integer pagina, Integer tamanio) {
-        // Valores predeterminados
-        int paginaDefecto = (pagina == null || pagina < 1) ? 1 : pagina;
-        int tamanioDefecto = (tamanio == null || tamanio < 1) ? 10 : tamanio;
-
-        int offset = (paginaDefecto - 1) * tamanioDefecto;
+        int offset = (pagina - 1) * tamanio;
 
         // Si estado o usuarioId son null, se ignoran en el filtro
-        List<Pedido> pedidos = pedidoRepository.buscarPorEstadoYUsuarioConPaginacion(estado, usuarioId, offset, tamanioDefecto);
+        List<Pedido> pedidos = pedidoRepository.buscarPorEstadoYUsuarioConPaginacion(estado, usuarioId, offset, tamanio);
         return pedidos.stream()
                 .map(p -> new PedidoDTO(p.getId(), p.getProductoId(), p.getCantidad(), p.getEstado(), p.getPrecioTotal().doubleValue()))
                 .toList();
