@@ -240,7 +240,7 @@ class CatalogoTestIntegracion {
                 .get("/catalogo/9999")
                 .then()
                 .statusCode(404)
-                .body(containsString("Producto con ID 9999 no encontrado."));
+                .body(containsString("Producto no encontrado con ID: 9999"));
     }
 
     @Test
@@ -265,7 +265,7 @@ class CatalogoTestIntegracion {
                 .contentType(ContentType.JSON) // Asegura que el encabezado Content-Type esté presente
                 .queryParam("cantidad", 5)
                 .when()
-                .post("/catalogo/" + id + "/reservar")
+                .post("/catalogo/" + id + "/reserva")
                 .then()
                 .statusCode(200);
 
@@ -299,7 +299,7 @@ class CatalogoTestIntegracion {
                 .contentType(ContentType.JSON) // Asegura que el encabezado Content-Type esté presente
                 .queryParam("cantidad", 20)
                 .when()
-                .post("/catalogo/" + id + "/reservar")
+                .post("/catalogo/" + id + "/reserva")
                 .then()
                 .statusCode(409) // Conflicto
                 .body(containsString("Stock insuficiente"));

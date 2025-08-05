@@ -16,6 +16,8 @@ import io.quarkus.cache.CacheKey;
 import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.NoResultException;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -76,7 +78,6 @@ public class CatalogoService {
         return nuevoProducto;
     }
 
-    @Transactional
     public boolean actualizarProducto(Long id, ProductoDTO producto) {
         boolean actualizado = productoRepository.updateProduct(
                 id, producto.getNombre(), producto.getDescripcion(),
@@ -212,7 +213,11 @@ public class CatalogoService {
 
     @CacheResult(cacheName = "procducto-cache")
     public Producto obtenerProductoPorId(Long id) {
-        return productoRepository.findById(id);
+        Producto producto = productoRepository.findById(id);
+        if( producto == null) {
+            throw new WebApplicationException("Producto no encontrado con ID: " + id, 404);
+        }
+        return producto;
     }
 
     @CacheInvalidate(cacheName = "procducto-cache")

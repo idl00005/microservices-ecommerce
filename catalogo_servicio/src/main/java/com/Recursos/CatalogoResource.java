@@ -98,11 +98,20 @@ public class CatalogoResource {
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response getProductById(@PathParam("id") Long id) {
-        Producto producto = catalogoService.obtenerProductoPorId(id);
-        if (producto == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("Producto con ID " + id + " no encontrado.").build();
+        if (id == null || id <= 0) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("El ID del producto debe ser un número positivo.").build();
         }
-        return Response.ok(producto).build();
+        try {
+            Producto producto = catalogoService.obtenerProductoPorId(id);
+            return Response.ok(producto).build();
+        } catch (WebApplicationException e) {
+            return Response.status(e.getResponse().getStatus())
+                    .entity(e.getMessage()).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error obteniendo el producto con id "+id+": "+e.getMessage()).build();
+        }
     }
 
     @POST
