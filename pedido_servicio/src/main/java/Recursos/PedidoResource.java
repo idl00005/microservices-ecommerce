@@ -6,10 +6,7 @@ import Servicios.PedidoService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import org.eclipse.microprofile.faulttolerance.Timeout;
@@ -74,28 +71,20 @@ public class PedidoResource {
     public Response obtenerPedidoPorId(@PathParam("id") Long id, @Context SecurityContext securityContext) {
         String usuarioId = securityContext.getUserPrincipal().getName();
         Pedido pedido;
-
-        if (securityContext.isUserInRole("admin")) {
-            // Lógica para admin: puede acceder a cualquier pedido
-            try {
+        try {
+            if (securityContext.isUserInRole("admin")) {
+                // Lógica para admin: puede acceder a cualquier pedido
                 pedido = pedidoService.obtenerPedidoPorIdParaAdmin(id);
-            } catch (WebApplicationException e) {
-                return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
-            } catch (Exception e) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al obtener el pedido").build();
+                return Response.ok(pedido).build();
+            } else {
+                // Lógica para usuario normal: solo puede acceder a sus propios pedidos
+                pedido = pedidoService.obtenerPedidoPorIdParaUsuario(id, usuarioId);
+                return Response.ok(pedido).build();
             }
-
-            return Response.ok(pedido).build();
-        } else {
-            // Lógica para usuario normal: solo puede acceder a sus propios pedidos
-            try {
-                pedido = pedidoService.obtenerPedidoPorId(id, usuarioId);
-            } catch (WebApplicationException e) {
-                return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
-            } catch (Exception e) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al obtener el pedido").build();
-            }
-            return Response.ok(pedido).build();
+        } catch (WebApplicationException e) {
+            return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al obtener el pedido").build();
         }
     }
 
@@ -103,11 +92,8 @@ public class PedidoResource {
     @Path("/{id}/estado")
     @RolesAllowed("admin")
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
-    public Response cambiarEstadoPedido(@PathParam("id") Long id, @QueryParam("estado") String nuevoEstado) {
-        if (nuevoEstado == null || nuevoEstado.isBlank()) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("El parámetro 'estado' es obligatorio y no puede estar vacío").build();
-        }
+    public Response cambiarEstadoPedido(@PathParam("id") Long id, @Valid CambioEstadoRequest request) {
+        String nuevoEstado = request.estado;
         try {
             pedidoService.actualizarPedido(id,nuevoEstado);
             return Response.ok("Estado del pedido actualizado correctamente").build();
@@ -193,5 +179,10 @@ public class PedidoResource {
             int puntuacion,
             @Size(max = 2000, message = "El comentario no puede superar los 2000 caracteres")
             String comentario
+    ) {}
+
+    public record CambioEstadoRequest (
+        @NotBlank
+        String estado
     ) {}
 }

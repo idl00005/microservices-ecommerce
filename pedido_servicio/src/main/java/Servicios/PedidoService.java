@@ -1,6 +1,5 @@
 package Servicios;
 
-import Clientes.CatalogoClient;
 import DTO.PedidoDTO;
 import DTO.ValoracionDTO;
 import Entidades.OutboxEvent;
@@ -33,9 +32,6 @@ import java.util.List;
 public class PedidoService {
 
     @Inject
-    public CatalogoClient catalogoClient;
-
-    @Inject
     public PedidoRepository pedidoRepository;
 
     @Inject
@@ -53,21 +49,8 @@ public class PedidoService {
     }
 
     @Transactional
-    @CacheResult(cacheName = "pedidos-por-usuario-cache")
-    public List<PedidoDTO> obtenerPedidosPorUsuario(String usuarioId) {
-        List<Pedido> pedidos = pedidoRepository.buscarPorUsuarioId(usuarioId);
-        List<PedidoDTO> pedidosDTO = pedidos.stream()
-                .map(p -> new PedidoDTO(p.getId(), p.getProductoId(), p.getCantidad(),p.getEstado(),p.getPrecioTotal().doubleValue()))
-                .toList();
-        if (pedidosDTO.isEmpty()) {
-            throw new WebApplicationException("No se encontraron pedidos para el usuario", 404);
-        }
-        return pedidosDTO;
-    }
-
-    @Transactional
     @CacheResult(cacheName = "pedidos-por-id-cache")
-    public Pedido obtenerPedidoPorId(@CacheKey Long id, String usuarioId) {
+    public Pedido obtenerPedidoPorIdParaUsuario(@CacheKey Long id, String usuarioId) {
         Pedido pedido = pedidoRepository.buscarPorId(id);
         if(pedido != null && pedido.getUsuarioId().equals(usuarioId)) {
             return pedido;
@@ -90,10 +73,13 @@ public class PedidoService {
 
     @Transactional
     public List<PedidoDTO> listarPedidos(String estado, String usuarioId, Integer pagina, Integer tamanio) {
-        int offset = (pagina - 1) * tamanio;
+        int paginaDefecto = (pagina == null || pagina < 1) ? 1 : pagina;
+        int tamanioDefecto = (tamanio == null || tamanio < 1) ? 10 : tamanio;
+
+        int offset = (paginaDefecto - 1) * tamanioDefecto;
 
         // Si estado o usuarioId son null, se ignoran en el filtro
-        List<Pedido> pedidos = pedidoRepository.buscarPorEstadoYUsuarioConPaginacion(estado, usuarioId, offset, tamanio);
+        List<Pedido> pedidos = pedidoRepository.buscarPorEstadoYUsuarioConPaginacion(estado, usuarioId, offset, tamanioDefecto);
         return pedidos.stream()
                 .map(p -> new PedidoDTO(p.getId(), p.getProductoId(), p.getCantidad(), p.getEstado(), p.getPrecioTotal().doubleValue()))
                 .toList();
@@ -158,17 +144,12 @@ public class PedidoService {
             throw new WebApplicationException("Pedido no encontrado", 404);
         }
         invalidarCachePedidoPorId(id);
-        invalidarCachePedidoPorUsuario(pedidoExistente.getUsuarioId());
         pedidoExistente.setEstado(estado);
         pedidoRepository.actualizar(pedidoExistente);
     }
 
     @CacheInvalidate(cacheName = "pedidos-por-id-cache")
     public void invalidarCachePedidoPorId(Long id) {}
-
-    @CacheInvalidate(cacheName = "pedidos-por-usuario-cache")
-    public void invalidarCachePedidoPorUsuario(@CacheKey String usuarioId) {}
-
     @Transactional
     public void crearValoracion(Long pedidoId, String usuarioId, int puntuacion, String comentario, String jwtToken) throws JsonProcessingException {
         Pedido pedido = pedidoRepository.buscarPorId(pedidoId);

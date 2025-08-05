@@ -124,7 +124,8 @@ public class PedidoResourceTest {
         // Ejecutar el test
         given()
                 .auth().basic("admin", "adminpassword")
-                .queryParam("estado", "ENVIADO")
+                .contentType("application/json")
+                .body("{ \"estado\": \"ENVIADO\" }")
                 .when()
                 .patch("/pedidos/1/estado")
                 .then()

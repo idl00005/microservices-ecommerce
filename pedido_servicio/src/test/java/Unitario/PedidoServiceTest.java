@@ -18,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.eclipse.microprofile.reactive.messaging.Message;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,26 +55,13 @@ class PedidoServiceTest {
         p.setEstado("PENDIENTE");
         p.setPrecioTotal(BigDecimal.TEN);
 
-        when(pedidoRepository.buscarPorUsuarioId("usuario123"))
+        when(pedidoRepository.buscarPorEstadoYUsuarioConPaginacion(null, "usuario123", 0, 10))
                 .thenReturn(List.of(p));
 
-        List<PedidoDTO> dtos = pedidoService.obtenerPedidosPorUsuario("usuario123");
+        List<PedidoDTO> dtos = pedidoService.listarPedidos(null, "usuario123", 1, 10);
 
         assertEquals(1, dtos.size());
         assertEquals(2L, dtos.get(0).productoId());
-    }
-
-    @Test
-    void obtenerPedidosPorUsuario_sinPedidos_deberiaLanzarExcepcion() {
-        when(pedidoRepository.buscarPorUsuarioId("usuario123"))
-                .thenReturn(Collections.emptyList());
-
-        WebApplicationException ex = assertThrows(
-                WebApplicationException.class,
-                () -> pedidoService.obtenerPedidosPorUsuario("usuario123")
-        );
-
-        assertEquals(404, ex.getResponse().getStatus());
     }
 
     @Test
@@ -86,7 +72,7 @@ class PedidoServiceTest {
 
         when(pedidoRepository.buscarPorId(1L)).thenReturn(p);
 
-        Pedido result = pedidoService.obtenerPedidoPorId(1L, "usuario123");
+        Pedido result = pedidoService.obtenerPedidoPorIdParaUsuario(1L, "usuario123");
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
@@ -98,7 +84,7 @@ class PedidoServiceTest {
 
         WebApplicationException ex = assertThrows(
                 WebApplicationException.class,
-                () -> pedidoService.obtenerPedidoPorId(1L, "usuario123")
+                () -> pedidoService.obtenerPedidoPorIdParaUsuario(1L, "usuario123")
         );
         assertEquals(404, ex.getResponse().getStatus());
     }
@@ -111,7 +97,7 @@ class PedidoServiceTest {
 
         WebApplicationException ex = assertThrows(
                 WebApplicationException.class,
-                () -> pedidoService.obtenerPedidoPorId(1L, "usuario123")
+                () -> pedidoService.obtenerPedidoPorIdParaUsuario(1L, "usuario123")
         );
         assertEquals(403, ex.getResponse().getStatus());
     }
