@@ -115,12 +115,12 @@
 					"raw": "{\n  \"usuarioId\": \"{{userAdmin}}\",\n  \"productoId\": 10,\n  \"ordenId\": 2001,\n  \"cantidad\": 3,\n  \"precioTotal\": 149.97,\n  \"estado\": \"PENDIENTE\",\n  \"fechaCreacion\": \"2025-06-04T10:30:00\"\n}\n"
 				},
 				"url": {
-					"raw": "{{pedido_url}}/pedido/",
+					"raw": "{{pedido_url}}/pedidos/",
 					"host": [
 						"{{pedido_url}}"
 					],
 					"path": [
-						"pedido",
+						"pedidos",
 						""
 					]
 				}
@@ -128,7 +128,7 @@
 			"response": []
 		},
 		{
-			"name": "Obtener pedidos por usuario",
+			"name": "Obtener pedidos filtrados",
 			"event": [
 				{
 					"listen": "test",
@@ -176,12 +176,30 @@
 					}
 				],
 				"url": {
-					"raw": "{{pedido_url}}/pedido",
+					"raw": "{{pedido_url}}/pedidos?estado=PENDIENTE&pagina=1&tamanio=1&usuarioId=idl00005@red.ujaen.es",
 					"host": [
 						"{{pedido_url}}"
 					],
 					"path": [
-						"pedido"
+						"pedidos"
+					],
+					"query": [
+						{
+							"key": "estado",
+							"value": "PENDIENTE"
+						},
+						{
+							"key": "pagina",
+							"value": "1"
+						},
+						{
+							"key": "tamanio",
+							"value": "1"
+						},
+						{
+							"key": "usuarioId",
+							"value": "idl00005@red.ujaen.es"
+						}
 					]
 				}
 			},
@@ -231,80 +249,13 @@
 					}
 				],
 				"url": {
-					"raw": "{{pedido_url}}/pedido/{{pedidoId}}",
+					"raw": "{{pedido_url}}/pedidos/{{pedidoId}}",
 					"host": [
 						"{{pedido_url}}"
 					],
 					"path": [
-						"pedido",
+						"pedidos",
 						"{{pedidoId}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Listar pedidos con filtro",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Código de respuesta 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Respuesta exitosa y formato correcto\", function () {",
-							"    const pedidos = pm.response.json();",
-							"    pm.expect(pedidos).to.be.an('array');",
-							"",
-							"    // Comprobar que cada pedido tiene los campos requeridos",
-							"    pedidos.forEach(pedido => {",
-							"        pm.expect(pedido).to.have.property(\"id\").that.is.a('number');",
-							"        pm.expect(pedido).to.have.property(\"productoId\").that.is.a('number');",
-							"        pm.expect(pedido).to.have.property(\"cantidad\").that.is.a('number');",
-							"        pm.expect(pedido).to.have.property(\"estado\").that.is.a('string');",
-							"        pm.expect(pedido).to.have.property(\"precioTotal\").that.is.a('number');",
-							"    });",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{jwt}}"
-					},
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"estado\" : \"PENDIENTE\",\n    \"usuarioId\" : \"idl00005@red.ujaen.es\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{pedido_url}}/pedido/filtro",
-					"host": [
-						"{{pedido_url}}"
-					],
-					"path": [
-						"pedido",
-						"filtro"
 					]
 				}
 			},
@@ -334,21 +285,135 @@
 						"value": "Bearer {{jwt}}"
 					}
 				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"estado\" : \"COMPLETADO\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
-					"raw": "{{pedido_url}}/pedido/{{pedidoId}}/estado?estado=ENVIADO",
+					"raw": "{{pedido_url}}/pedidos/{{pedidoId}}/estado",
 					"host": [
 						"{{pedido_url}}"
 					],
 					"path": [
-						"pedido",
+						"pedidos",
 						"{{pedidoId}}",
 						"estado"
-					],
-					"query": [
-						{
-							"key": "estado",
-							"value": "ENVIADO"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Escribir valoración",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"puntuacion\" : 5,\n    \"comentario\" : \"Muy buen producto\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
 						}
+					}
+				},
+				"url": {
+					"raw": "{{pedido_url}}/pedidos/{{pedidoId}}/valoracion",
+					"host": [
+						"{{pedido_url}}"
+					],
+					"path": [
+						"pedidos",
+						"{{pedidoId}}",
+						"valoracion"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener valoracion",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Código de respuesta 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Respuesta tiene la estructura correcta\", function () {",
+							"    const response = pm.response.json();",
+							"",
+							"    pm.expect(response).to.have.property(\"datos\").that.is.an(\"array\");",
+							"    pm.expect(response).to.have.property(\"pagina\").that.is.a(\"number\");",
+							"    pm.expect(response).to.have.property(\"tamanio\").that.is.a(\"number\");",
+							"    pm.expect(response).to.have.property(\"total\").that.is.a(\"number\");",
+							"",
+							"    response.datos.forEach(valoracion => {",
+							"        pm.expect(valoracion).to.have.property(\"id\").that.is.a(\"number\");",
+							"        pm.expect(valoracion).to.have.property(\"idUsuario\").that.is.a(\"string\");",
+							"        pm.expect(valoracion).to.have.property(\"puntuacion\").that.is.a(\"number\");",
+							"        pm.expect(valoracion).to.have.property(\"comentario\").that.is.a(\"string\");",
+							"        pm.expect(valoracion).to.have.property(\"fechaCreacion\").that.is.a(\"string\");",
+							"    });",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{catalogo_url}}/catalogo/10/valoraciones",
+					"host": [
+						"{{catalogo_url}}"
+					],
+					"path": [
+						"catalogo",
+						"10",
+						"valoraciones"
 					]
 				}
 			},
