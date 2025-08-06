@@ -183,6 +183,7 @@ public class PedidoResource {
 
     public record CambioEstadoRequest (
         @NotBlank
+        @Pattern(regexp = "PENDIENTE|ENVIADO|EN REPARTO|COMPLETADO|CANCELADO", message = "El estado debe ser uno de los valores permitidos")
         String estado
     ) {}
 }

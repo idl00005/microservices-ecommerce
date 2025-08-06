@@ -81,7 +81,7 @@ public class PedidoService {
         // Si estado o usuarioId son null, se ignoran en el filtro
         List<Pedido> pedidos = pedidoRepository.buscarPorEstadoYUsuarioConPaginacion(estado, usuarioId, offset, tamanioDefecto);
         return pedidos.stream()
-                .map(p -> new PedidoDTO(p.getId(), p.getProductoId(), p.getCantidad(), p.getEstado(), p.getPrecioTotal().doubleValue()))
+                .map(p -> new PedidoDTO(p.getId(), p.getProductoId(), p.getCantidad(), p.getUsuarioId(),p.getEstado(), p.getPrecioTotal().doubleValue()))
                 .toList();
     }
 

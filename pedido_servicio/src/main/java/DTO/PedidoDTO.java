@@ -1,3 +1,3 @@
 package DTO;
 
-public record PedidoDTO(long id, long productoId, int cantidad, String estado, double precioTotal) {}
+public record PedidoDTO(long id, long productoId, int cantidad, String usuarioId, String estado, double precioTotal) {}
