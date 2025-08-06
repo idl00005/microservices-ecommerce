@@ -1,9 +1,7 @@
 package com.Recursos;
 
 import com.DTO.ProductoDTO;
-import com.Entidades.Producto;
-import com.Entidades.Valoracion;
-import com.Otros.ResponseMessage;
+import com.DTO.ValoracionDTO;
 import com.Otros.PaginacionResponse;
 import com.Servicios.CatalogoService;
 import jakarta.annotation.security.RolesAllowed;
@@ -42,7 +40,7 @@ public class CatalogoResource {
                     .entity("El tamaño máximo permitido por página es 100").build();
         }
         try {
-            List<Producto> productos = catalogoService.obtenerProductos(page, size, nombre, categoria, precioMin, precioMax);
+            List<ProductoDTO> productos = catalogoService.obtenerProductos(page, size, nombre, categoria, precioMin, precioMax);
             return Response.ok(productos).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -54,12 +52,12 @@ public class CatalogoResource {
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response addProduct(@Valid ProductoDTO producto) {
         try {
-            Producto nuevoProducto = catalogoService.agregarProducto(producto);
-            ResponseMessage responseMessage = new ResponseMessage("Producto añadido con éxito.", nuevoProducto);
-            return Response.status(Response.Status.CREATED).entity(responseMessage).build();
+            ProductoDTO nuevoProducto = catalogoService.agregarProducto(producto);
+            return Response.status(Response.Status.CREATED)
+                    .entity(nuevoProducto).build();
         } catch (Exception e) {
-            ResponseMessage responseMessage = new ResponseMessage("Error al añadir el producto: " + e.getMessage(), null);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(responseMessage).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error al agregar el producto: " + e.getMessage()).build();
         }
     }
 
@@ -103,7 +101,7 @@ public class CatalogoResource {
                     .entity("El ID del producto debe ser un número positivo.").build();
         }
         try {
-            Producto producto = catalogoService.obtenerProductoPorId(id);
+            ProductoDTO producto = catalogoService.obtenerProductoPorId(id);
             return Response.ok(producto).build();
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus())
@@ -140,7 +138,7 @@ public class CatalogoResource {
                                                    @QueryParam("pagina") @DefaultValue("1") int pagina,
                                                    @QueryParam("tamanio") @DefaultValue("10") int tamanio) {
         try {
-            List<Valoracion> valoraciones = catalogoService.obtenerValoracionesPorProducto(idProducto, pagina, tamanio);
+            List<ValoracionDTO> valoraciones = catalogoService.obtenerValoracionesPorProducto(idProducto, pagina, tamanio);
             long total = catalogoService.contarValoracionesPorProducto(idProducto);
 
             return Response.ok()

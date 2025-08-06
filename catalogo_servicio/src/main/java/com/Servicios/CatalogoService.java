@@ -45,13 +45,13 @@ public class CatalogoService {
     @Channel("product-events")
     public Emitter<ProductEvent> productEventEmitter;
 
-    public List<Producto> obtenerProductos(int page, int size, String nombre, String categoria, Double precioMin, Double precioMax) {
+    public List<ProductoDTO> obtenerProductos(int page, int size, String nombre, String categoria, Double precioMin, Double precioMax) {
         List<Producto> productos = productoRepository.listAll().stream()
                 .filter(p -> nombre == null || p.getNombre().toLowerCase().contains(nombre.toLowerCase()))
                 .filter(p -> categoria == null || (p.getCategoria() != null && p.getCategoria().equalsIgnoreCase(categoria)))
                 .filter(p -> precioMin == null || p.getPrecio().compareTo(BigDecimal.valueOf(precioMin)) >= 0)
                 .filter(p -> precioMax == null || p.getPrecio().compareTo(BigDecimal.valueOf(precioMax)) <= 0)
-                .collect(Collectors.toList());
+                .toList();
 
         if (productos.isEmpty()) {
             return List.of(); // Retorna una lista vacía si no hay productos
@@ -63,19 +63,32 @@ public class CatalogoService {
         if (startIndex >= productos.size()) {
             throw new IllegalArgumentException("Página fuera de rango.");
         }
+        List<Producto> productosDTO = productos.subList(startIndex, endIndex);
 
-        return productos.subList(startIndex, endIndex);
+        // Mapeo a DTO
+        return productosDTO.stream()
+                .map(p -> new ProductoDTO(
+                        p.getNombre(),
+                        p.getDescripcion(),
+                        p.getPrecio(),
+                        p.getStock(),
+                        p.getCategoria(),
+                        p.getDetalles()
+                ))
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public Producto agregarProducto(ProductoDTO producto) {
+    public ProductoDTO agregarProducto(ProductoDTO producto) {
         Producto nuevoProducto = new Producto(
                 producto.getNombre(), producto.getDescripcion(),
                 producto.getPrecio(), producto.getStock(),
                 producto.getCategoria(), producto.getDetalles()
         );
         productoRepository.add(nuevoProducto);
-        return nuevoProducto;
+        return new ProductoDTO(nuevoProducto.getNombre(), nuevoProducto.getDescripcion(),
+                nuevoProducto.getPrecio(), nuevoProducto.getStock(),
+                nuevoProducto.getCategoria(), nuevoProducto.getDetalles());
     }
 
     public boolean actualizarProducto(Long id, ProductoDTO producto) {
@@ -191,8 +204,16 @@ public class CatalogoService {
     }
 
     @Transactional
-    public List<Valoracion> obtenerValoracionesPorProducto(Long idProducto, int pagina, int tamanio) {
-        return productoRepository.findValoracionesPaginadas(idProducto, pagina, tamanio);
+    public List<ValoracionDTO> obtenerValoracionesPorProducto(Long idProducto, int pagina, int tamanio) {
+        List<Valoracion> valoraciones = productoRepository.findValoracionesPaginadas(idProducto, pagina, tamanio);
+        return valoraciones.stream()
+                .map(v -> new ValoracionDTO(
+                        v.getIdUsuario(),
+                        v.getProducto() != null ? v.getProducto().getId() : null,
+                        v.getPuntuacion(),
+                        v.getComentario()
+                ))
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -212,12 +233,16 @@ public class CatalogoService {
     protected void invalidarCacheNumValoraciones(@CacheKey Long idProducto) {}
 
     @CacheResult(cacheName = "procducto-cache")
-    public Producto obtenerProductoPorId(Long id) {
+    public ProductoDTO obtenerProductoPorId(Long id) {
         Producto producto = productoRepository.findById(id);
         if( producto == null) {
             throw new WebApplicationException("Producto no encontrado con ID: " + id, 404);
         }
-        return producto;
+        return new ProductoDTO(
+                producto.getNombre(), producto.getDescripcion(),
+                producto.getPrecio(), producto.getStock(), producto.getCategoria(),
+                producto.getDetalles()
+        );
     }
 
     @CacheInvalidate(cacheName = "procducto-cache")

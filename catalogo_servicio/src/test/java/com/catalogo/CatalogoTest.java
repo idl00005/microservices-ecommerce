@@ -73,7 +73,7 @@ class CatalogoTest {
 
         when(productoRepository.listAll()).thenReturn(List.of(producto));
 
-        List<Producto> productos = catalogoService.obtenerProductos(1, 10, null, null, null, null);
+        List<ProductoDTO> productos = catalogoService.obtenerProductos(1, 10, null, null, null, null);
 
         assertNotNull(productos);
         assertEquals(1, productos.size());
@@ -86,7 +86,7 @@ class CatalogoTest {
 
         doNothing().when(productoRepository).add(any(Producto.class));
 
-        Producto resultado = catalogoService.agregarProducto(producto);
+        ProductoDTO resultado = catalogoService.agregarProducto(producto);
 
         assertNotNull(resultado);
         assertEquals("Camiseta", resultado.getNombre());
@@ -113,7 +113,7 @@ class CatalogoTest {
         when(productoRepository.listAll()).thenReturn(List.of(producto1, producto2));
 
         // Llamar al método del servicio
-        List<Producto> productos = catalogoService.obtenerProductos(1, 2, null, "Ropa", null, null);
+        List<ProductoDTO> productos = catalogoService.obtenerProductos(1, 2, null, "Ropa", null, null);
 
         // Validar los resultados
         assertNotNull(productos);
@@ -131,7 +131,7 @@ class CatalogoTest {
         when(productoRepository.listAll()).thenReturn(new ArrayList<>());
 
         // Llamar al método del servicio
-        List<Producto> productos = catalogoService.obtenerProductos(1, 10, null, null, null, null);
+        List<ProductoDTO> productos = catalogoService.obtenerProductos(1, 10, null, null, null, null);
 
         // Verificar que la lista devuelta esté vacía
         assertNotNull(productos);
@@ -146,7 +146,7 @@ class CatalogoTest {
         doNothing().when(productoRepository).add(any(Producto.class));
 
         // Llamar al método del servicio
-        Producto resultado = catalogoService.agregarProducto(producto);
+        ProductoDTO resultado = catalogoService.agregarProducto(producto);
 
         // Validar el resultado
         assertNotNull(resultado);

@@ -17,6 +17,7 @@ public class Valoracion {
     private String idUsuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "El producto no puede ser nulo")
     private Producto producto;
 
     @Min(value = 1, message = "La puntuación mínima es 1")
