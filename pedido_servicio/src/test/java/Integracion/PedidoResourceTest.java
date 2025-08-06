@@ -48,6 +48,28 @@ public class PedidoResourceTest {
     }
 
     @Test
+    @TestSecurity(user = "admin", roles = {"admin"})
+    public void testCrearPedidoInvalido() {
+        Pedido pedido = new Pedido();
+        pedido.setUsuarioId("user1");
+        pedido.setProductoId(1L);
+        pedido.setCantidad(-1); // Cantidad negativa, inválida
+        pedido.setPrecioTotal(BigDecimal.valueOf(200));
+        pedido.setEstado("INVALIDO"); // Estado inválido
+        pedido.setFechaCreacion(LocalDateTime.now());
+        pedido.setOrdenId(1L);
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(pedido)
+                .when()
+                .post("/pedidos")
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                .body("parameterViolations", not(empty()));
+    }
+
+    @Test
     @TestSecurity(user = "user1", roles = {"user"})
     public void testObtenerPedidosPorUsuario() {
         // Pedido de prueba para user1
@@ -78,31 +100,59 @@ public class PedidoResourceTest {
     }
 
     @Test
+    @TestSecurity(user = "user1", roles = {"user"})
+    public void testListarPedidosConParametrosInvalidos() {
+        given()
+                .queryParam("estado", "PENDIENTE")
+                .queryParam("pagina", 0) // inválido: debe ser > 0
+                .queryParam("tamanio", 5)
+                .when()
+                .get("/pedidos")
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                .body("parameterViolations", not(empty()))
+                .body("parameterViolations[0].path", containsString("pagina"))
+                .body("parameterViolations[0].message", containsString("El número de página debe ser mayor o igual a 0"));
+    }
+
+    @Test
     @TestSecurity(user = "admin", roles = {"admin"})
-    public void testListarPedidos_AdminConFiltros() {
-        // Pedido de prueba para admin con filtro
+    public void testObtenerPedidoPorIdExistente_Admin() {
         Pedido pedido = new Pedido();
         pedido.setId(1L);
         pedido.setUsuarioId("user1");
         pedido.setProductoId(1L);
         pedido.setCantidad(2);
-        pedido.setPrecioTotal(BigDecimal.valueOf(200));
+        pedido.setPrecioTotal(BigDecimal.valueOf(150));
         pedido.setEstado("PENDIENTE");
         pedido.setFechaCreacion(LocalDateTime.now());
 
-        // Para admin, usuarioId viene null; paginación 1, tamaño 10
-        Mockito.when(pedidoRepository.buscarPorEstadoYUsuarioConPaginacion(
-                        "PENDIENTE", null, 0, 10))
-                .thenReturn(List.of(pedido));
+        Mockito.when(pedidoRepository.buscarPorId(1L)).thenReturn(pedido);
 
         given()
                 .auth().basic("admin", "adminpassword")
                 .when()
-                .get("/pedidos?estado=PENDIENTE&pagina=1&tamanio=10")
+                .get("/pedidos/1")
                 .then()
-                .statusCode(Response.Status.OK.getStatusCode())
-                .body("$", not(empty()))
-                .body("[0].estado", equalTo("PENDIENTE"));
+                .statusCode(200)
+                .body("id", equalTo(1))
+                .body("usuarioId", equalTo("user1"))
+                .body("estado", equalTo("PENDIENTE"));
+    }
+
+    @Test
+    @TestSecurity(user = "admin", roles = {"admin"})
+    public void testObtenerPedidoPorIdInexistente() {
+        Mockito.when(pedidoRepository.buscarPorId(999L))
+                .thenReturn(null);
+
+        given()
+                .auth().basic("admin", "adminpassword")
+                .when()
+                .get("/pedidos/999")
+                .then()
+                .statusCode(404)
+                .body(containsString("Pedido no encontrado"));
     }
 
     @Test
@@ -132,4 +182,83 @@ public class PedidoResourceTest {
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body(equalTo("Estado del pedido actualizado correctamente"));
     }
+
+    @Test
+    @TestSecurity(user = "admin", roles = {"admin"})
+    public void testCambiarEstadoPedidoConEstadoInvalido() {
+        Long pedidoId = 1L;
+
+        String cuerpoInvalido = """
+        {
+            "estado": "ESTADOINVALIDO"
+        }
+    """;
+
+        given()
+                .auth().basic("admin", "adminpassword")
+                .contentType(ContentType.JSON)
+                .body(cuerpoInvalido)
+                .when()
+                .patch("/pedidos/" + pedidoId + "/estado")
+                .then()
+                .statusCode(400) // BAD_REQUEST
+                .body("parameterViolations[0].message", containsString("El estado debe ser uno de los valores permitidos"))
+                .body("parameterViolations[0].path", containsString("estado"));
+    }
+
+    @Test
+    @TestSecurity(user = "admin", roles = {"admin"})
+    public void testCrearValoracionValidaConPedidoCompleto() {
+        Pedido pedido = new Pedido();
+        pedido.setUsuarioId("admin");
+        pedido.setProductoId(1L);
+        pedido.setCantidad(2);
+        pedido.setPrecioTotal(BigDecimal.valueOf(200));
+        pedido.setEstado("COMPLETADO");
+        pedido.setFechaCreacion(LocalDateTime.now());
+        pedido.setOrdenId(1L);
+
+        Mockito.when(pedidoRepository.buscarPorId(1L)).thenReturn(pedido);
+        // Crear valoración
+        String valoracionJson = """
+        {
+            "puntuacion": 5,
+            "comentario": "Muy buen producto, entrega rápida."
+        }
+    """;
+
+        given()
+                .auth().basic("admin", "adminpassword")
+                .contentType(ContentType.JSON)
+                .body(valoracionJson)
+                .when()
+                .post("/pedidos/" + 1 + "/valoracion")
+                .then()
+                .statusCode(Response.Status.CREATED.getStatusCode())
+                .body(equalTo("Valoración creada y enviada correctamente"));
+    }
+
+    @Test
+    @TestSecurity(user = "user1", roles = {"user"})
+    public void testCrearValoracionInvalida() {
+        Long pedidoId = 1L;
+
+        String valoracionJson = """
+        {
+            "puntuacion": -1,
+            "comentario": "No me gustó nada."
+        }
+    """;
+
+        given()
+                .auth().basic("user1", "password")
+                .contentType(ContentType.JSON)
+                .body(valoracionJson)
+                .when()
+                .post("/pedidos/" + pedidoId + "/valoracion")
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                .body("parameterViolations[0].message", containsString("La puntuación debe ser mayor que 0"));  // ajusta al mensaje real de tu validación
+    }
+
 }
