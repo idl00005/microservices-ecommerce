@@ -46,12 +46,7 @@ public class CatalogoService {
     public Emitter<ProductEvent> productEventEmitter;
 
     public List<ProductoDTO> obtenerProductos(int page, int size, String nombre, String categoria, Double precioMin, Double precioMax) {
-        List<Producto> productos = productoRepository.listAll().stream()
-                .filter(p -> nombre == null || p.getNombre().toLowerCase().contains(nombre.toLowerCase()))
-                .filter(p -> categoria == null || (p.getCategoria() != null && p.getCategoria().equalsIgnoreCase(categoria)))
-                .filter(p -> precioMin == null || p.getPrecio().compareTo(BigDecimal.valueOf(precioMin)) >= 0)
-                .filter(p -> precioMax == null || p.getPrecio().compareTo(BigDecimal.valueOf(precioMax)) <= 0)
-                .toList();
+        List<Producto> productos = productoRepository.buscarProductos(page, size, nombre, categoria, precioMin, precioMax);
 
         if (productos.isEmpty()) {
             return List.of(); // Retorna una lista vacía si no hay productos
@@ -120,7 +115,7 @@ public class CatalogoService {
     public boolean reservarStock(Long productoId, int cantidad) {
         Producto producto = productoRepository.findById(productoId);
         if (producto == null) {
-            throw new WebApplicationException("Producto no encontrado", 404);
+            throw new WebApplicationException("Producto no encontrado con id "+productoId, 404);
         }
 
         if (producto.getStock() - producto.getStockReservado() >= cantidad) {
@@ -235,14 +230,15 @@ public class CatalogoService {
     @CacheResult(cacheName = "procducto-cache")
     public ProductoDTO obtenerProductoPorId(Long id) {
         Producto producto = productoRepository.findById(id);
-        if( producto == null) {
-            throw new WebApplicationException("Producto no encontrado con ID: " + id, 404);
+        if(producto == null) {
+            return null;
+        } else {
+            return new ProductoDTO(
+                    producto.getNombre(), producto.getDescripcion(),
+                    producto.getPrecio(), producto.getStock(), producto.getCategoria(),
+                    producto.getDetalles()
+            );
         }
-        return new ProductoDTO(
-                producto.getNombre(), producto.getDescripcion(),
-                producto.getPrecio(), producto.getStock(), producto.getCategoria(),
-                producto.getDetalles()
-        );
     }
 
     @CacheInvalidate(cacheName = "procducto-cache")

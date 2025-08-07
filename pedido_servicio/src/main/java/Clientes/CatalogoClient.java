@@ -20,7 +20,7 @@ public class CatalogoClient {
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     public boolean comprobarValoracionExistente(long productoId, String jwtToken) {
         try (Client client = ClientBuilder.newClient()) {
-            String targetUrl = urlCatalogoService + "/pedidos/" + productoId + "/valoracion";
+            String targetUrl = urlCatalogoService + "/catalogo/" + productoId + "/valoracion/existe";
 
             try (Response response = client
                     .target(targetUrl)

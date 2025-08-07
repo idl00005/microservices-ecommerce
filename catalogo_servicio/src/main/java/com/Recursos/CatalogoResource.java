@@ -7,6 +7,8 @@ import com.Servicios.CatalogoService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -39,26 +41,16 @@ public class CatalogoResource {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("El tamaño máximo permitido por página es 100").build();
         }
-        try {
-            List<ProductoDTO> productos = catalogoService.obtenerProductos(page, size, nombre, categoria, precioMin, precioMax);
-            return Response.ok(productos).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        List<ProductoDTO> productos = catalogoService.obtenerProductos(page, size, nombre, categoria, precioMin, precioMax);
+        return Response.ok(productos).build();
     }
 
     @POST
     @RolesAllowed("admin")
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response addProduct(@Valid ProductoDTO producto) {
-        try {
-            ProductoDTO nuevoProducto = catalogoService.agregarProducto(producto);
-            return Response.status(Response.Status.CREATED)
-                    .entity(nuevoProducto).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al agregar el producto: " + e.getMessage()).build();
-        }
+        ProductoDTO nuevoProducto = catalogoService.agregarProducto(producto);
+        return Response.status(Response.Status.CREATED).entity(nuevoProducto).build();
     }
 
     @PUT
@@ -102,10 +94,11 @@ public class CatalogoResource {
         }
         try {
             ProductoDTO producto = catalogoService.obtenerProductoPorId(id);
+            if (producto == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("Producto con ID " + id + " no encontrado.").build();
+            }
             return Response.ok(producto).build();
-        } catch (WebApplicationException e) {
-            return Response.status(e.getResponse().getStatus())
-                    .entity(e.getMessage()).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Error obteniendo el producto con id "+id+": "+e.getMessage()).build();
@@ -117,16 +110,20 @@ public class CatalogoResource {
     @Path("/{id}/reserva")
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response reservarStock(@PathParam("id") Long productoId,
-                                  @QueryParam("cantidad") int cantidad) {
+                                  @Valid ReservaRequest request) {
         try {
-            boolean reservado = catalogoService.reservarStock(productoId, cantidad);
+            boolean reservado = catalogoService.reservarStock(productoId, request.cantidad);
             if (reservado) {
                 return Response.ok().build();
             }
             return Response.status(Response.Status.CONFLICT)
                     .entity("Stock insuficiente").build();
+        } catch(WebApplicationException e) {
+            return Response.status(e.getResponse().getStatus())
+                    .entity("Error reservando stock: " + e.getMessage()).build();
         } catch (Exception e) {
-            return Response.serverError().build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error realizando reserva de stock para producto con id "+productoId+": "+e.getMessage()).build();
         }
     }
 
@@ -134,9 +131,13 @@ public class CatalogoResource {
     @Path("/{id}/valoraciones")
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
-    public Response obtenerValoracionesPorProducto(@PathParam("id") Long idProducto,
-                                                   @QueryParam("pagina") @DefaultValue("1") int pagina,
-                                                   @QueryParam("tamanio") @DefaultValue("10") int tamanio) {
+    public Response listarValoracionesDeProducto(@PathParam("id") Long idProducto,
+                                                 @QueryParam("pagina") @DefaultValue("1") int pagina,
+                                                 @QueryParam("tamanio") @DefaultValue("10") int tamanio) {
+        if (pagina <= 0 || tamanio <= 0 || tamanio > 100) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Parámetros de paginación inválidos").build();
+        }
         try {
             List<ValoracionDTO> valoraciones = catalogoService.obtenerValoracionesPorProducto(idProducto, pagina, tamanio);
             long total = catalogoService.contarValoracionesPorProducto(idProducto);
@@ -152,7 +153,7 @@ public class CatalogoResource {
     }
 
     @GET
-    @Path("/{productoId}/valoracion")
+    @Path("/{productoId}/valoracion/existe")
     @RolesAllowed("user")
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
@@ -168,4 +169,10 @@ public class CatalogoResource {
                     .build();
         }
     }
+
+    public record ReservaRequest (
+        @Min(1)
+        @NotNull
+        int cantidad
+    ) {}
 }
