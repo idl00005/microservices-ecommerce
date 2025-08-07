@@ -30,7 +30,7 @@ public class CarritoResource {
     CarritoService carritoService;
 
     @POST
-    @Path("/pago")
+    @Path("/ordenes-pago")
     @RolesAllowed({"user", "admin"})
     @Timeout(value = 4, unit = ChronoUnit.SECONDS)
     public Response iniciarPago(@Context SecurityContext ctx, @Valid IniciarPagoRequest request) {
@@ -53,7 +53,6 @@ public class CarritoResource {
     ) {}
 
     @POST
-    @Path("/")
     @RolesAllowed({"user", "admin"})
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response agregarProducto(@Valid AgregarProductoRequest req, @Context SecurityContext ctx) {
@@ -65,7 +64,7 @@ public class CarritoResource {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al agregar el producto al carrito").build();
+                    .entity("Error al agregar el producto al carrito: "+e.getMessage()).build();
         }
     }
 
@@ -78,7 +77,6 @@ public class CarritoResource {
     }
 
     @GET
-    @Path("/")
     @RolesAllowed({"user", "admin"})
     @Retry()
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
@@ -107,7 +105,6 @@ public class CarritoResource {
     }
 
     @DELETE
-    @Path("/")
     @RolesAllowed({"user", "admin"})
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response vaciarCarrito(@Context SecurityContext ctx) {
@@ -117,7 +114,7 @@ public class CarritoResource {
             return Response.noContent().build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al vaciar el carrito").build();
+                    .entity("Error al vaciar el carrito"+ e.getMessage()).build();
         }
     }
 
