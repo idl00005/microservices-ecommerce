@@ -139,7 +139,11 @@
             <artifactId>quarkus-test-security</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- H2 Database Driver (solo para tests) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-test-common</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>

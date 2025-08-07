@@ -33,6 +33,13 @@ public class Valoracion {
     public Valoracion() {
     }
 
+    public Valoracion(String idUsuario, Producto producto, int puntuacion, String comentario) {
+        this.idUsuario = idUsuario;
+        this.producto = producto;
+        this.puntuacion = puntuacion;
+        this.comentario = comentario;
+    }
+
     // Getters y Setters
     public Long getId() {
         return id;
