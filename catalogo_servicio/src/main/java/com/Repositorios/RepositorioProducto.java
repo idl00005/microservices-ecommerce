@@ -3,7 +3,9 @@ package com.Repositorios;
 import com.Entidades.Producto;
 import com.Entidades.Valoracion;
 import com.fasterxml.jackson.databind.JsonNode;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -15,7 +17,9 @@ import jakarta.validation.constraints.NotNull;
 import org.jboss.logging.annotations.Param;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class RepositorioProducto implements PanacheRepository<Producto> {
@@ -86,5 +90,32 @@ public class RepositorioProducto implements PanacheRepository<Producto> {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public List<Producto> buscarProductos(int page, int size, String nombre, String categoria, Double precioMin, Double precioMax) {
+        StringBuilder query = new StringBuilder("FROM Producto p WHERE 1=1");
+        Map<String, Object> params = new HashMap<>();
+
+        if (nombre != null && !nombre.isEmpty()) {
+            query.append(" AND LOWER(p.nombre) LIKE :nombre");
+            params.put("nombre", "%" + nombre.toLowerCase() + "%");
+        }
+        if (categoria != null && !categoria.isEmpty()) {
+            query.append(" AND LOWER(p.categoria) = :categoria");
+            params.put("categoria", categoria.toLowerCase());
+        }
+        if (precioMin != null) {
+            query.append(" AND p.precio >= :precioMin");
+            params.put("precioMin", BigDecimal.valueOf(precioMin));
+        }
+        if (precioMax != null) {
+            query.append(" AND p.precio <= :precioMax");
+            params.put("precioMax", BigDecimal.valueOf(precioMax));
+        }
+
+        PanacheQuery<Producto> panacheQuery = find(query.toString(), params)
+                .page(Page.of(page - 1, size));  // Ajustamos porque Panache usa índice 0 para página
+
+        return panacheQuery.list();
     }
 }
