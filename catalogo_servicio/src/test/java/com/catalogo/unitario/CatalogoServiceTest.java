@@ -64,7 +64,7 @@ class CatalogoServiceTest {
 
     @Test
     void obtenerProductosSinFiltros() {
-        Mockito.when(productoRepository.listAll()).thenReturn(crearProductosDeEjemplo());
+        Mockito.when(productoRepository.buscarProductos(1,10,null,null,null,null)).thenReturn(crearProductosDeEjemplo());
 
         List<ProductoDTO> productos = catalogoService.obtenerProductos(1, 10, null, null, null, null);
 
@@ -73,17 +73,17 @@ class CatalogoServiceTest {
 
     @Test
     void obtenerProductosConFiltros() {
-        Mockito.when(productoRepository.listAll()).thenReturn(crearProductosDeEjemplo());
+        Mockito.when(productoRepository.buscarProductos(1,10,"zapato", "ropa", 50.0, 100.0)).thenReturn(crearProductosDeEjemplo());
 
         List<ProductoDTO> filtrados = catalogoService.obtenerProductos(1, 10, "zapato", "ropa", 50.0, 100.0);
 
-        assertEquals(1, filtrados.size());
+        assertEquals(4, filtrados.size());
         assertEquals("Zapato", filtrados.get(0).getNombre());
     }
 
     @Test
     void obtenerProductosConPaginacionPagina1() {
-        Mockito.when(productoRepository.listAll()).thenReturn(crearProductosDeEjemplo());
+        Mockito.when(productoRepository.buscarProductos(1,2,null,null,null,null)).thenReturn(crearProductosDeEjemplo());
 
         List<ProductoDTO> pagina1 = catalogoService.obtenerProductos(1, 2, null, null, null, null);
 
@@ -93,7 +93,7 @@ class CatalogoServiceTest {
 
     @Test
     void obtenerProductosConPaginacionPagina2() {
-        Mockito.when(productoRepository.listAll()).thenReturn(crearProductosDeEjemplo());
+        Mockito.when(productoRepository.buscarProductos(2,2,null,null,null,null)).thenReturn(crearProductosDeEjemplo());
 
         List<ProductoDTO> pagina2 = catalogoService.obtenerProductos(2, 2, null, null, null, null);
 
@@ -103,7 +103,7 @@ class CatalogoServiceTest {
 
     @Test
     void obtenerProductosPaginaFueraDeRango() {
-        Mockito.when(productoRepository.listAll()).thenReturn(crearProductosDeEjemplo());
+        Mockito.when(productoRepository.buscarProductos(10,2,null,null,null,null)).thenReturn(crearProductosDeEjemplo());
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 catalogoService.obtenerProductos(10, 2, null, null, null, null)
