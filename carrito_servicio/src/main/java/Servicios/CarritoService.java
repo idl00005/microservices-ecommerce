@@ -349,17 +349,6 @@ public class CarritoService {
         return new ObjectMapper().readValue(eventJson, ProductEvent.class);
     }
 
-    //@Transactional
-    //public void actualizarProductoEnCarritos(long productId, ProductoDTO producto) {
-    //    List<CarritoItem> items = carritoItemRepository.findByProductoId(productId);
-    //    for (CarritoItem item : items) {
-    //        if(item.cantidad > producto.stock()) {
-    //            item.cantidad = producto.stock();
-    //        }
-    //        carritoItemRepository.persist(item);
-    //    }
-    //}
-
     @Transactional
     public void eliminarProductoDeCarritos(long productId) {
         List<String> userIds = carritoItemRepository.findUserIdsByProductoId(productId);

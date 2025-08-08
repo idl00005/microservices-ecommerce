@@ -26,7 +26,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
-public class CarritoResourceIT {
+public class CarritoResourceTest {
 
     @InjectMock
     CarritoItemRepository carritoItemRepository;
@@ -167,7 +167,7 @@ public class CarritoResourceIT {
                 .contentType(ContentType.JSON)
                 .body(requestBody)
                 .when()
-                .post("/carrito/pago")
+                .post("/carrito/ordenes-pago")
                 .then()
                 .statusCode(200)
                 .body("estado", equalTo("CREADO"))
@@ -185,7 +185,7 @@ public class CarritoResourceIT {
                 .contentType(ContentType.JSON)
                 .body(requestBody)
                 .when()
-                .post("/carrito/pago")
+                .post("/carrito/ordenes-pago")
                 .then()
                 .statusCode(400)
                 .body(containsString("El carrito está vacío"));
@@ -214,7 +214,7 @@ public class CarritoResourceIT {
                 .contentType(ContentType.JSON)
                 .body(requestBody)
                 .when()
-                .post("/carrito/pago")
+                .post("/carrito/ordenes-pago")
                 .then()
                 .statusCode(200)
                 .body("estado", equalTo("CREADO"))
@@ -240,7 +240,7 @@ public class CarritoResourceIT {
         given()
                 .contentType(ContentType.JSON)
                 .when()
-                .post("/carrito/pago")
+                .post("/carrito/ordenes-pago")
                 .then()
                 .statusCode(500)
                 .body(containsString("Error al iniciar el pago"));
