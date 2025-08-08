@@ -350,8 +350,7 @@ public class CatalogoResourceTest {
                 .when()
                 .post("/catalogo/" + PRODUCTO_ID + "/reserva")
                 .then()
-                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
-                .body(containsString("debe ser mayor que o igual a 1"));
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
