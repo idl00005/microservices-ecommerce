@@ -1,4 +1,4 @@
-package com.catalogo.integracion;
+package com.catalogo.Componente;
 
 import com.Entidades.Producto;
 import com.Entidades.Valoracion;

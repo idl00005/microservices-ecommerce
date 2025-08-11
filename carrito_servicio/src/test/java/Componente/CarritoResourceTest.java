@@ -1,12 +1,14 @@
-package Integracion;
+package Componente;
 
 import Cliente.StockClient;
 import DTO.ProductoDTO;
 import Entidades.CarritoItem;
+import Entidades.OrdenPago;
 import Recursos.CarritoResource;
 import Recursos.CarritoResource.IniciarPagoRequest;
 import Recursos.CarritoResource.AgregarProductoRequest;
 import Repositorios.CarritoItemRepository;
+import Repositorios.OrdenPagoRepository;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
@@ -14,6 +16,7 @@ import io.restassured.http.ContentType;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -22,14 +25,16 @@ import java.util.Map;
 import java.util.Optional;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 public class CarritoResourceTest {
 
     @InjectMock
     CarritoItemRepository carritoItemRepository;
+
+    @InjectMock
+    OrdenPagoRepository ordenPagoRepository;
 
     @InjectMock
     StockClient stockClient;
@@ -161,6 +166,8 @@ public class CarritoResourceTest {
 
         //when(stockClient.reservarStock(productosAReservar)).doNothing();
         when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10));
+        Mockito.doNothing().when(stockClient).reservarStock(Mockito.anyMap());
+        Mockito.doNothing().when(ordenPagoRepository).persist(Mockito.any(OrdenPago.class));
 
         // Realizar la solicitud
         given()
@@ -209,6 +216,9 @@ public class CarritoResourceTest {
 
         //when(stockClient.reservarStock(productosAReservar)).thenReturn(true);
         when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10));
+        Mockito.doNothing().when(stockClient).reservarStock(Mockito.anyMap());
+        Mockito.doNothing().when(ordenPagoRepository).persist(Mockito.any(OrdenPago.class));
+
         // Realizar la solicitud
         given()
                 .contentType(ContentType.JSON)

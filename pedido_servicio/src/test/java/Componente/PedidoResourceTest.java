@@ -1,6 +1,8 @@
-package Integracion;
+package Componente;
 
+import Entidades.OutboxEvent;
 import Entidades.Pedido;
+import Repositorios.OutboxEventRepository;
 import Repositorios.PedidoRepository;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -22,6 +24,9 @@ public class PedidoResourceTest {
 
     @InjectMock
     PedidoRepository pedidoRepository;
+
+    @InjectMock
+    OutboxEventRepository outboxEventRepository;
 
     @Test
     @TestSecurity(user = "admin", roles = {"admin"})
@@ -226,6 +231,8 @@ public class PedidoResourceTest {
             "comentario": "Muy buen producto, entrega rápida."
         }
     """;
+
+        Mockito.doNothing().when(outboxEventRepository).persist(Mockito.any(OutboxEvent.class));
 
         given()
                 .auth().basic("admin", "adminpassword")
