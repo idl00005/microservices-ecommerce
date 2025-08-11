@@ -117,8 +117,8 @@ se va a explicar cómo ejecutar los test de integración empleando Newman:
   sudo npm install -g newman
 ```
 2. Ejecuta la colección deseada. De forma de que se ejecutan un conjunto de test que prueban una o varias funcionalidades
-del sistema. En el caso de la colección `proceso_compra-pedido-valoracion`, se recomienda configurarla con un delay alto
+del sistema. En el caso de la colección `Carrito_Tests`, se recomienda configurarla con un delay alto
 ya que el proceso de propagación de los eventos de Kafka puede tardar un tiempo en completarse.
 ```shell script
-  newman run postman_integracion/proceso_compra-pedido-valoracion.postman_collection.json -e postman_integracion/KUBERNETES_ENV.postman_environment.jso
+  newman run postman_integracion/Carrito_Tests.postman_collection.json -e postman_integracion/KUBERNETES_ENV.postman_environment.jso
 ```

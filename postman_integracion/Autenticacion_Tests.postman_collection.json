@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "2a9a54b8-f414-48d6-9db2-7d883348eab6",
-		"name": "AuthResource Integration Tests",
+		"name": "Autenticacion Tests",
 		"description": "Registro y login contra AuthResource a través de API Gateway Nginx",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "42715512"
@@ -42,12 +42,12 @@
 					"raw": "{\n    \"firstName\": \"Test\",\n    \"lastName\": \"User\",\n    \"email\": \"test@example.com\",\n    \"phone\": \"123456789\",\n    \"password\": \"MiPassword123\"\n}"
 				},
 				"url": {
-					"raw": "{{auth_url}}/auth/register",
+					"raw": "{{url_base}}/autenticacion/register",
 					"host": [
-						"{{auth_url}}"
+						"{{url_base}}"
 					],
 					"path": [
-						"auth",
+						"autenticacion",
 						"register"
 					]
 				}
@@ -89,12 +89,12 @@
 					"raw": "{\n    \"username\": \"test@example.com\",\n    \"password\": \"MiPassword123\"\n}"
 				},
 				"url": {
-					"raw": "{{auth_url}}/auth/login",
+					"raw": "{{url_base}}/autenticacion/login",
 					"host": [
-						"{{auth_url}}"
+						"{{url_base}}"
 					],
 					"path": [
-						"auth",
+						"autenticacion",
 						"login"
 					]
 				}

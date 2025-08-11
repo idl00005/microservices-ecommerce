@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "32d1cf20-f0fe-4d88-9b5f-df84cad774b4",
-		"name": "CatalogoResource CRUD",
+		"name": "Catalogo Tests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "42715512"
 	},
@@ -51,12 +51,12 @@
 					"raw": "{\n  \"username\": \"{{userAdmin}}\",\n  \"password\": \"{{userAdminPass}}\"\n}"
 				},
 				"url": {
-					"raw": "{{auth_url}}/auth/login",
+					"raw": "{{auth_url}}/autenticacion/login",
 					"host": [
 						"{{auth_url}}"
 					],
 					"path": [
-						"auth",
+						"autenticacion",
 						"login"
 					]
 				}
@@ -88,9 +88,6 @@
 							"        pm.expect(item).to.have.property(\"precio\").that.is.a(\"number\");",
 							"        pm.expect(item).to.have.property(\"categoria\").that.is.a(\"string\");",
 							"        pm.expect(item).to.have.property(\"stock\").that.is.a(\"number\");",
-							"        pm.expect(item).to.have.property(\"stockReservado\").that.is.a(\"number\");",
-							"        pm.expect(item).to.have.property(\"puntuacion\").that.is.a(\"number\");",
-							"        pm.expect(item).to.have.property(\"valoraciones\").that.is.an(\"array\");",
 							"        pm.expect(item).to.have.property(\"detalles\").that.is.an(\"object\");",
 							"    });",
 							"});",
@@ -133,22 +130,22 @@
 							"    pm.response.to.have.status(201); // O usa 200 si no se usa 201 en tu API",
 							"});",
 							"",
-							"pm.test(\"Producto devuelto como respuesta\", function () {",
-							"    const producto = pm.response.json().producto;",
+							"const json = pm.response.json();",
 							"",
-							"    pm.expect(producto).to.have.property(\"id\");",
-							"    pm.expect(producto.nombre).to.eql(\"Camiseta técnica\");",
-							"    pm.expect(producto.descripcion).to.eql(\"Camiseta deportiva ligera\");",
-							"    pm.expect(producto.precio).to.eql(29.99);",
-							"    pm.expect(producto.categoria).to.eql(\"Ropa\");",
-							"    pm.expect(producto.stock).to.eql(100);",
-							"    pm.expect(producto.stockReservado).to.eql(0);",
-							"    pm.expect(producto.puntuacion).to.eql(0.0);",
-							"    pm.expect(producto.detalles).to.have.property(\"color\", \"azul\");",
-							"    pm.expect(producto.detalles).to.have.property(\"talla\", \"M\");",
-							"",
-							"    pm.environment.set(\"productoId\", producto.id);",
+							"pm.test(\"Estructura correcta\", () => {",
+							"    pm.expect(json.id).to.be.a(\"number\");",
+							"    pm.expect(json).to.include({",
+							"        nombre: \"Camiseta técnica\",",
+							"        descripcion: \"Camiseta deportiva ligera\",",
+							"        precio: 29.99,",
+							"        categoria: \"Ropa\",",
+							"        stock: 100",
+							"    });",
+							"    pm.expect(json.detalles).to.include({ color: \"azul\", talla: \"M\" });",
 							"});",
+							"",
+							"pm.environment.set(\"productoId\", json.id);",
+							"",
 							""
 						],
 						"type": "text/javascript",
