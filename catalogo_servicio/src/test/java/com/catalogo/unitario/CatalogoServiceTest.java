@@ -125,7 +125,7 @@ class CatalogoServiceTest {
     void agregarProductoCorrectamente() {
         // Arrange: DTO de entrada
         ProductoDTO dto = new ProductoDTO(
-                "Zapato", "Zapato deportivo",
+                2L,"Zapato", "Zapato deportivo",
                 new BigDecimal("59.99"), 10,
                 "Ropa", null
         );
@@ -142,7 +142,7 @@ class CatalogoServiceTest {
         assertEquals(dto.getCategoria(), result.getCategoria());
 
         // Verifica que se llamó a persistencia
-        Mockito.verify(productoRepository).add(Mockito.any(Producto.class));
+        Mockito.verify(productoRepository).persist(Mockito.any(Producto.class));
     }
 
     @Test
@@ -151,7 +151,7 @@ class CatalogoServiceTest {
         JsonNode detallesNode = objectMapper.readTree("{\"color\": \"azul\"}");
 
         ProductoDTO dto = new ProductoDTO(
-                "Camisa", "Camisa formal",
+                2L,"Camisa", "Camisa formal",
                 new BigDecimal("39.99"), 5,
                 "Ropa", detallesNode
         );
@@ -162,7 +162,7 @@ class CatalogoServiceTest {
         catalogoService.agregarProducto(dto);
 
         // Assert: Captura el producto persistido
-        Mockito.verify(productoRepository).add(captor.capture());
+        Mockito.verify(productoRepository).persist(captor.capture());
 
         Producto guardado = captor.getValue();
         assertEquals(dto.getNombre(), guardado.getNombre());
@@ -178,7 +178,7 @@ class CatalogoServiceTest {
         // Arrange
         Long productoId = 1L;
         ProductoDTO dto = new ProductoDTO(
-                "Zapatilla", "Zapatilla running",
+                3L, "Zapatilla", "Zapatilla running",
                 new BigDecimal("89.99"), 20,
                 "Calzado", null
         );
@@ -206,7 +206,7 @@ class CatalogoServiceTest {
         // Arrange
         Long productoId = 999L;
         ProductoDTO dto = new ProductoDTO(
-                "NoExiste", "Producto no existente",
+                4L,"NoExiste", "Producto no existente",
                 new BigDecimal("49.99"), 0,
                 "Desconocido", null
         );

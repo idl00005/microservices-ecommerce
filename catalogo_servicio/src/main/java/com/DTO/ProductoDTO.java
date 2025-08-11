@@ -37,7 +37,8 @@ public class ProductoDTO {
 
     public ProductoDTO() {
     }
-    public ProductoDTO(String nombre, String descripcion, BigDecimal precio, int stock, String categoria, JsonNode detalles) {
+    public ProductoDTO(Long id,String nombre, String descripcion, BigDecimal precio, int stock, String categoria, JsonNode detalles) {
+        this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;

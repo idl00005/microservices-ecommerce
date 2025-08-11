@@ -63,6 +63,7 @@ public class CatalogoService {
         // Mapeo a DTO
         return productosDTO.stream()
                 .map(p -> new ProductoDTO(
+                        p.getId(),
                         p.getNombre(),
                         p.getDescripcion(),
                         p.getPrecio(),
@@ -80,8 +81,9 @@ public class CatalogoService {
                 producto.getPrecio(), producto.getStock(),
                 producto.getCategoria(), producto.getDetalles()
         );
-        productoRepository.add(nuevoProducto);
-        return new ProductoDTO(nuevoProducto.getNombre(), nuevoProducto.getDescripcion(),
+        productoRepository.persist(nuevoProducto);
+
+        return new ProductoDTO(nuevoProducto.getId(),nuevoProducto.getNombre(), nuevoProducto.getDescripcion(),
                 nuevoProducto.getPrecio(), nuevoProducto.getStock(),
                 nuevoProducto.getCategoria(), nuevoProducto.getDetalles());
     }
@@ -234,7 +236,7 @@ public class CatalogoService {
             return null;
         } else {
             return new ProductoDTO(
-                    producto.getNombre(), producto.getDescripcion(),
+                    producto.getId(),producto.getNombre(), producto.getDescripcion(),
                     producto.getPrecio(), producto.getStock(), producto.getCategoria(),
                     producto.getDetalles()
             );
