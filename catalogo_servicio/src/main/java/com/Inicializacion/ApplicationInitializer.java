@@ -4,6 +4,7 @@ import com.Entidades.Producto;
 import com.Repositorios.RepositorioProducto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.annotation.PostConstruct;
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 
 @Startup
 @ApplicationScoped
+@IfBuildProfile("!test")
 public class ApplicationInitializer {
 
     @Inject
