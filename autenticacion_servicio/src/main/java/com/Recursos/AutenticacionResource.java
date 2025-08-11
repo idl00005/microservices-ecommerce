@@ -69,13 +69,31 @@ public class AutenticacionResource {
     }
 
     public record RegisterRequest(
-            @Size(max = 50) String firstName,
-            @NotBlank @Size(max = 50) String lastName,
-            @Email @NotBlank String email,
-            @Pattern(regexp = "\\d{9,15}") String phone,
-            @NotBlank @Size(min = 8) String password) {}
+            @NotBlank(message = "El nombre no puede quedar vacío")
+            @Size(max = 50, message = "El nombre debe tener un máximo de 50 caracteres")
+            String firstName,
+
+            @NotBlank(message = "El apellido no puede quedar vacío")
+            @Size(max = 50, message = "El apellido debe tener un máximo de 50 caracteres")
+            String lastName,
+
+            @Email(message = "El correo debe tener un formato válido")
+            @NotBlank(message = "El email no puede quedar vacío")
+            String email,
+
+            @Pattern(regexp = "\\d{9,15}")
+            String phone,
+
+            @NotBlank(message = "La contraseña no puede quedar vacía")
+            @Size(min = 8, message = "La contraseña no tener una longitud menor a 8 caracteres")
+            String password
+    ) {}
+
     public record UserCredentials(
-            @NotBlank String username,
-            @NotBlank String password) {}
+            @NotBlank(message = "El usuario no puede quedar vacío")
+            String username,
+            @NotBlank
+            @NotBlank(message = "La contraseña no puede quedar vacía")
+            String password) {}
 }
 

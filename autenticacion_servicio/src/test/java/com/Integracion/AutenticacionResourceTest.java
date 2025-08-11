@@ -151,7 +151,8 @@ public class AutenticacionResourceTest {
                 .then()
                 .statusCode(400)
                 .body("parameterViolations.message", hasItems(
-                        containsString("no debe estar vacío")
+                        containsString("El usuario no puede quedar vacío"),
+                        containsString("La contraseña no puede quedar vacía")
                 ));
     }
 
@@ -176,10 +177,10 @@ public class AutenticacionResourceTest {
                 .statusCode(400)
                 // Comprobamos que alguno de los mensajes de parameterViolations contiene el texto esperado
                 .body("parameterViolations.message", hasItems(
-                        containsString("debe coincidir"),
-                        containsString("debe ser una dirección de correo electrónico"),
-                        containsString("no debe estar vacío"),
-                        containsString("el tamaño debe estar entre")
+                        containsString("El nombre debe tener un máximo de 50 caracteres"),
+                        containsString("El correo debe tener un formato válido"),
+                        containsString("El apellido no puede quedar vacío"),
+                        containsString("La contraseña no tener una longitud menor a 8 caracteres")
                 ));
     }
 }
