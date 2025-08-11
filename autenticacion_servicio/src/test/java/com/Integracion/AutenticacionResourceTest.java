@@ -1,10 +1,11 @@
 package com.Integracion;
 
-import com.Recursos.AuthResource.RegisterRequest;
-import com.Recursos.AuthResource.UserCredentials;
+import com.Recursos.AutenticacionResource.RegisterRequest;
+import com.Recursos.AutenticacionResource.UserCredentials;
 import com.Repositorios.RepositorioUsuario;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.hamcrest.Matchers;
@@ -14,9 +15,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
-public class AuthResourceIntegracion {
+public class AutenticacionResourceTest {
 
     @Inject
     RepositorioUsuario userRepository;
@@ -45,7 +47,7 @@ public class AuthResourceIntegracion {
                 .contentType("application/json")
                 .body(newUser)
                 .when()
-                .post("/auth/register")
+                .post("/autenticacion/register")
                 .then()
                 .statusCode(201)
                 .body("token", Matchers.notNullValue());
@@ -66,7 +68,7 @@ public class AuthResourceIntegracion {
                 .contentType("application/json")
                 .body(newUser)
                 .when()
-                .post("/auth/register")
+                .post("/autenticacion/register")
                 .then()
                 .statusCode(201);
 
@@ -74,7 +76,7 @@ public class AuthResourceIntegracion {
                 .contentType("application/json")
                 .body(newUser)
                 .when()
-                .post("/auth/register")
+                .post("/autenticacion/register")
                 .then()
                 .statusCode(409);
     }
@@ -95,7 +97,7 @@ public class AuthResourceIntegracion {
                 .contentType("application/json")
                 .body(newUser)
                 .when()
-                .post("/auth/register")
+                .post("/autenticacion/register")
                 .then()
                 .statusCode(201);
 
@@ -109,7 +111,7 @@ public class AuthResourceIntegracion {
                 .contentType("application/json")
                 .body(credentials)
                 .when()
-                .post("/auth/login")
+                .post("/autenticacion/login")
                 .then()
                 .statusCode(200)
                 .body(Matchers.notNullValue());
@@ -127,8 +129,57 @@ public class AuthResourceIntegracion {
                 .contentType("application/json")
                 .body(credentials)
                 .when()
-                .post("/auth/login")
+                .post("/autenticacion/login")
                 .then()
                 .statusCode(500);
+    }
+
+    @Test
+    public void testLoginValidacionCampos() {
+        String jsonInvalido = """
+        {
+            "username": "",
+            "password": ""
+        }
+        """;
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(jsonInvalido)
+                .when()
+                .post("/autenticacion/login")
+                .then()
+                .statusCode(400)
+                .body("parameterViolations.message", hasItems(
+                        containsString("no debe estar vacío")
+                ));
+    }
+
+    @Test
+    public void testRegisterValidacionCampos() {
+        String jsonInvalido = """
+        {
+            "firstName": "%s",
+            "lastName": "",
+            "email": "correo-no-valido",
+            "phone": "abc123",
+            "password": "123"
+        }
+        """.formatted("a".repeat(60));
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(jsonInvalido)
+                .when()
+                .post("/autenticacion/register")
+                .then()
+                .statusCode(400)
+                // Comprobamos que alguno de los mensajes de parameterViolations contiene el texto esperado
+                .body("parameterViolations.message", hasItems(
+                        containsString("debe coincidir"),
+                        containsString("debe ser una dirección de correo electrónico"),
+                        containsString("no debe estar vacío"),
+                        containsString("el tamaño debe estar entre")
+                ));
     }
 }

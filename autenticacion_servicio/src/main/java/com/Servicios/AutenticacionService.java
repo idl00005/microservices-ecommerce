@@ -1,7 +1,7 @@
 package com.Servicios;
 
 import com.Entidades.Usuario;
-import com.Recursos.AuthResource;
+import com.Recursos.AutenticacionResource;
 import com.Repositorios.RepositorioUsuario;
 import io.smallrye.jwt.build.Jwt;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.Set;
 
 @ApplicationScoped
-public class AuthService {
+public class AutenticacionService {
 
     @Inject
     RepositorioUsuario userRepository;
@@ -24,7 +24,7 @@ public class AuthService {
     @Inject
     BCryptPasswordEncoder passwordEncoder;
 
-    public String login(AuthResource.UserCredentials credentials) {
+    public String login(AutenticacionResource.UserCredentials credentials) {
         // Buscar usuario en la base de datos
         Usuario user = userRepository.findByUsername(credentials.username());
 
@@ -46,7 +46,7 @@ public class AuthService {
         }
     }
 
-    public String register(AuthResource.RegisterRequest newUser) {
+    public String register(AutenticacionResource.RegisterRequest newUser) {
         // Validar si el correo ya está registrado
         if (userRepository.findByUsername(newUser.email()) != null) {
             throw new ConflictException("El correo ya está registrado");

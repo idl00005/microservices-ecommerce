@@ -43,7 +43,7 @@ spec:
             - name: CATALOGO_URL
               value: "http://catalogo-servicio:8080/catalogo"
             - name: AUTH_URL
-              value: "http://auth:8080/auth/login"
+              value: "http://auth:8080/autenticacion/login"
             - name: QUARKUS_PROFILE
               value: "docker"
             - name: STRIPE_SECRET
