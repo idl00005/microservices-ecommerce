@@ -2,41 +2,48 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: microservicios-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
     - host: microservicios.local
       http:
         paths:
-          - path: /authsvc(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /autenticacion
+            pathType: Prefix
             backend:
               service:
                 name: auth
                 port:
                   number: 8080
 
-          - path: /carritosvc(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /carrito
+            pathType: Prefix
             backend:
               service:
                 name: carrito-servicio
                 port:
                   number: 8080
 
-          - path: /catalogosvc(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /catalogo
+            pathType: Prefix
             backend:
               service:
                 name: catalogo-servicio
                 port:
                   number: 8080
 
-          - path: /pedidosvc(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /pedidos
+            pathType: Prefix
             backend:
               service:
                 name: pedido-servicio
                 port:
                   number: 8080
+
+          - path: /webhook
+            pathType: Prefix
+            backend:
+              service:
+                name: carrito-servicio
+                port:
+                  number: 8080
+
