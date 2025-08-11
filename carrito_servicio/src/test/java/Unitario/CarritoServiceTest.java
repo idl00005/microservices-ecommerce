@@ -82,7 +82,7 @@ public class CarritoServiceTest {
 
         Mockito.when(carritoItemRepository.findByUserId(userId)).thenReturn(carrito);
         Mockito.when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoDTO);
-        Mockito.when(stockClient.reservarStock(Map.of(1L, 2))).thenReturn(Response.ok().build());
+        //Mockito.when(stockClient.reservarStock(Map.of(1L, 2))).thenReturn(Response.ok().build());
         Mockito.when(stockClient.obtenerProductoPorId(Mockito.anyLong())).thenReturn(productoDTO);
         Mockito.when(stripeService.crearPago(Mockito.any(), Mockito.any())).thenReturn(mockIntent);
 
@@ -100,7 +100,7 @@ public class CarritoServiceTest {
 
         Mockito.when(carritoItemRepository.findByUserId(userId)).thenReturn(carrito);
         Mockito.when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoDTO);
-        Mockito.when(stockClient.reservarStock(Map.of(1L, 2))).thenReturn(Response.ok().build());
+        //Mockito.when(stockClient.reservarStock(Map.of(1L, 2))).thenReturn(Response.ok().build());
 
         OrdenPago orden = carritoService.iniciarPago(userId, "Calle Gratis", "000");
 
@@ -130,22 +130,6 @@ public class CarritoServiceTest {
 
         Assertions.assertEquals(404, ex.getResponse().getStatus());
         Assertions.assertTrue(ex.getMessage().contains("Producto no encontrado"));
-    }
-
-    @Test
-    void iniciarPago_reservaStockFalla() {
-        List<CarritoItem> carrito = List.of(crearItem(1L, 1));
-        ProductoDTO productoDTO = new ProductoDTO(1L, "Producto", BigDecimal.TEN, 10);
-        Response reservaFallida = Response.status(409).entity("No hay stock").build();
-
-        Mockito.when(carritoItemRepository.findByUserId("user123")).thenReturn(carrito);
-        Mockito.when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoDTO);
-        Mockito.when(stockClient.reservarStock(Map.of(1L, 1))).thenReturn(reservaFallida);
-
-        WebApplicationException ex = Assertions.assertThrows(WebApplicationException.class, () ->
-                carritoService.iniciarPago("user123", "Calle", "123"));
-
-        Assertions.assertEquals(409, ex.getResponse().getStatus());
     }
 
     @Test

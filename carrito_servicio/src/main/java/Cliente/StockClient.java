@@ -5,6 +5,7 @@ import io.quarkus.cache.CacheResult;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
@@ -38,29 +39,45 @@ public class StockClient {
      * Es totalmente síncrono: realiza 1 petición HTTP por cada producto.
      * Devuelve true si todos los productos se pueden reservar, false si alguno falla.
      */
-    @Retry(maxRetries = 2, delay = 1, delayUnit = ChronoUnit.SECONDS)
-    public Response reservarStock(Map<Long, Integer> productos) {
+    public void reservarStock(Map<Long, Integer> productos) {
         Client client = ClientBuilder.newBuilder().build();
         try {
+            if (jwtToken == null || jwtToken.isBlank()) {
+                throw new RuntimeException("No hay token JWT válido. Llama a obtenerJwtParaCarrito primero.");
+            }
+
             for (Map.Entry<Long, Integer> entrada : productos.entrySet()) {
                 Long productoId = entrada.getKey();
                 Integer cantidad = entrada.getValue();
 
+                // Construir body JSON que el recurso espera (ReservaRequest)
+                String bodyJson = String.format("{\"cantidad\": %d}", cantidad);
+
                 Response respuesta = client.target(urlCatalogoService)
                         .path("/{id}/reserva")
                         .resolveTemplate("id", productoId)
-                        .queryParam("cantidad", cantidad)
                         .request(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer " + jwtToken)
-                        .post(Entity.json(null)); // El recurso espera POST vacío
+                        .post(Entity.json(bodyJson));
 
-                if (respuesta.getStatus() != 200) {
+                try {
+                    int status = respuesta.getStatus();
+                    String respBody = respuesta.readEntity(String.class); // leer antes de cerrar
+
+                    if (status == 200) {
+                        // reservado OK -> continuar con el siguiente producto
+                        continue;
+                    } else if (status == 409) {
+                        throw new WebApplicationException("Stock insuficiente al realizar la reserva", Response.status(403).build());
+                    } else if (status == 401 || status == 403) {
+                        throw new WebApplicationException("No autorizado reservando stock: " + status + " -> " + respBody);
+                    } else {
+                        throw new WebApplicationException("Error inesperado reservando stock. Status: " + status + " Body: " + respBody);
+                    }
+                } finally {
                     respuesta.close();
-                    return respuesta;
                 }
-                respuesta.close();
             }
-            return Response.ok().build();
         } finally {
             client.close();
         }

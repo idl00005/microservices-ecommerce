@@ -39,7 +39,7 @@ public class CarritoResource {
             OrdenPago orden = carritoService.iniciarPago(userId, request.direccion, request.telefono);
             return Response.ok(orden).build();
         } catch (WebApplicationException e) {
-            return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
+            return Response.status(e.getResponse().getStatus()).entity("Error al iniciar el pago: "+e.getMessage()).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Error al iniciar el pago: " + e.getMessage()).build();

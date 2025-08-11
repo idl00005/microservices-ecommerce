@@ -97,10 +97,7 @@ public class CarritoService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // 1. Reservar stock de forma SÍNCRONA (esperando respuesta)
-        Response reservaExitosa = stockClient.reservarStock(productosAReservar);
-        if (reservaExitosa.getStatus() != 200) {
-            throw new WebApplicationException(reservaExitosa.toString(), reservaExitosa.getStatus());
-        }
+        stockClient.reservarStock(productosAReservar);
 
         List<LineaPago> lineas = carrito.stream()
                 .map(item -> new LineaPago(
