@@ -15,6 +15,8 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
 
@@ -33,6 +35,12 @@ public class CarritoResource {
     @Path("/ordenes-pago")
     @RolesAllowed({"user", "admin"})
     @Timeout(value = 4, unit = ChronoUnit.SECONDS)
+    @CircuitBreaker(
+            requestVolumeThreshold = 5,
+            delay = 5,
+            delayUnit = ChronoUnit.SECONDS
+    )
+    @Fallback(fallbackMethod = "iniciarPagoFallback")
     public Response iniciarPago(@Context SecurityContext ctx, @Valid IniciarPagoRequest request) {
         String userId = ctx.getUserPrincipal().getName();
         try {
@@ -40,10 +48,13 @@ public class CarritoResource {
             return Response.ok(orden).build();
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity("Error al iniciar el pago: "+e.getMessage()).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al iniciar el pago: " + e.getMessage()).build();
         }
+    }
+
+    public Response iniciarPagoFallback(SecurityContext ctx, @Valid IniciarPagoRequest request) {
+        return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                .entity("No se puede iniciar el pago en este momento. Por favor, inténtalo de nuevo más tarde.")
+                .build();
     }
 
     public record IniciarPagoRequest(

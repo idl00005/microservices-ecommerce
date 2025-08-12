@@ -14,6 +14,8 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
 
@@ -31,6 +33,12 @@ public class CatalogoResource {
     @GET
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @CircuitBreaker(
+            requestVolumeThreshold = 10,
+            delay = 5,
+            delayUnit = ChronoUnit.SECONDS
+    )
+    @Fallback(fallbackMethod = "fallbackGetProducts")
     public Response getProducts(@QueryParam("page") @DefaultValue("1") int page,
                                 @QueryParam("size") @DefaultValue("10") int size,
                                 @QueryParam("nombre") String nombre,
@@ -43,6 +51,12 @@ public class CatalogoResource {
         }
         List<ProductoDTO> productos = catalogoService.obtenerProductos(page, size, nombre, categoria, precioMin, precioMax);
         return Response.ok(productos).build();
+    }
+
+    public Response fallbackGetProducts(int page, int size, String nombre, String categoria, Double precioMin, Double precioMax) {
+        return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                .entity("Servicio de catálogo no disponible actualmente. Intente más tarde.")
+                .build();
     }
 
     @POST
@@ -87,6 +101,12 @@ public class CatalogoResource {
     @Path("/{id}")
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @CircuitBreaker(
+            requestVolumeThreshold = 10,
+            delay = 5,
+            delayUnit = ChronoUnit.SECONDS
+    )
+    @Fallback(fallbackMethod = "fallbackGetProductById")
     public Response getProductById(@PathParam("id") Long id) {
         if (id == null || id <= 0) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -100,9 +120,14 @@ public class CatalogoResource {
             }
             return Response.ok(producto).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error obteniendo el producto con id "+id+": "+e.getMessage()).build();
+            throw new RuntimeException(e);
         }
+    }
+
+    public Response fallbackGetProductById(Long id) {
+        return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                .entity("Producto no disponible actualmente. No es posible obtener el producto con ID " + id)
+                .build();
     }
 
     @POST

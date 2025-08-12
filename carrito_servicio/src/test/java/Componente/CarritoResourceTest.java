@@ -13,15 +13,11 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -159,12 +155,8 @@ public class CarritoResourceTest {
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
 
-        Map<Long, Integer> productosAReservar = new HashMap<>();
-        productosAReservar.put(item.getProductoId(), item.getCantidad());
-
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
-        //when(stockClient.reservarStock(productosAReservar)).doNothing();
         when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10));
         Mockito.doNothing().when(stockClient).reservarStock(Mockito.anyMap());
         Mockito.doNothing().when(ordenPagoRepository).persist(Mockito.any(OrdenPago.class));
@@ -209,12 +201,8 @@ public class CarritoResourceTest {
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
 
-        Map<Long, Integer> productosAReservar = new HashMap<>();
-        productosAReservar.put(item.getProductoId(), item.getCantidad());
-
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
-        //when(stockClient.reservarStock(productosAReservar)).thenReturn(true);
         when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10));
         Mockito.doNothing().when(stockClient).reservarStock(Mockito.anyMap());
         Mockito.doNothing().when(ordenPagoRepository).persist(Mockito.any(OrdenPago.class));
@@ -229,31 +217,6 @@ public class CarritoResourceTest {
                 .statusCode(200)
                 .body("estado", equalTo("CREADO"))
                 .body("montoTotal", equalTo(100));
-    }
-
-    @Test
-    @TestSecurity(user = "user", roles = {"user"})
-    public void testIniciarPagoErrorStripe() {
-        // Mock del carrito con productos
-        CarritoItem item = new CarritoItem();
-        item.setUserId("user");
-        item.setProductoId(1L);
-        item.setCantidad(2);
-
-        when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
-
-        // Simula un error en Stripe
-        doThrow(new WebApplicationException("Error al procesar el pago: StripeException", 500))
-                .when(carritoItemRepository).persist(item);
-
-        // Realizar la solicitud
-        given()
-                .contentType(ContentType.JSON)
-                .when()
-                .post("/carrito/ordenes-pago")
-                .then()
-                .statusCode(500)
-                .body(containsString("Error al iniciar el pago"));
     }
 
 }

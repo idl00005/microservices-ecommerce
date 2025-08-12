@@ -28,6 +28,7 @@ public class PedidoResource {
 
     @POST
     @RolesAllowed({"admin"})
+    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response crearPedido(@Valid Pedido pedido) {
         Pedido nuevoPedido = pedidoService.crearPedido(pedido);
         return Response.status(Response.Status.CREATED).entity(nuevoPedido).build();

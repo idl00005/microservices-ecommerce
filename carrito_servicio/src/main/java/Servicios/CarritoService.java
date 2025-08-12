@@ -401,6 +401,10 @@ public class CarritoService {
 
         // Validar stock disponible
         ProductoDTO producto = stockClient.obtenerProductoPorId(productoId);
+        if (producto == null) {
+            throw new WebApplicationException("El producto no existe", Response.Status.NOT_FOUND);
+        }
+
         if (producto.stock() < nuevaCantidad) {
             throw new WebApplicationException("Stock insuficiente para el producto: " + producto.nombre(), Response.Status.BAD_REQUEST);
         }
