@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 
 @Startup
 @ApplicationScoped
-@IfBuildProfile("!test")
+@IfBuildProfile("init")
 public class ApplicationInitializer {
 
     @Inject
