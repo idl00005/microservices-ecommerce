@@ -10,6 +10,9 @@ import jakarta.validation.constraints.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import org.eclipse.microprofile.faulttolerance.Timeout;
+import org.eclipse.microprofile.metrics.MetricUnits;
+import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.Timed;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -29,6 +32,8 @@ public class PedidoResource {
     @POST
     @RolesAllowed({"admin"})
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response crearPedido(@Valid Pedido pedido) {
         Pedido nuevoPedido = pedidoService.crearPedido(pedido);
         return Response.status(Response.Status.CREATED).entity(nuevoPedido).build();
@@ -37,6 +42,8 @@ public class PedidoResource {
     @GET
     @RolesAllowed({"user", "admin"})
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response listarPedidos(
             @Context SecurityContext securityContext,
             @BeanParam @Valid FiltroPedidoRequest filtro
@@ -69,6 +76,8 @@ public class PedidoResource {
     @Path("/{id}")
     @RolesAllowed({"user", "admin"})
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response obtenerPedidoPorId(@PathParam("id") Long id, @Context SecurityContext securityContext) {
         String usuarioId = securityContext.getUserPrincipal().getName();
         Pedido pedido;
@@ -93,6 +102,8 @@ public class PedidoResource {
     @Path("/{id}/estado")
     @RolesAllowed("admin")
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response cambiarEstadoPedido(@PathParam("id") Long id, @Valid CambioEstadoRequest request) {
         String nuevoEstado = request.estado;
         try {
@@ -110,6 +121,8 @@ public class PedidoResource {
     @Path("/{id}/valoracion")
     @RolesAllowed({"user","admin"})
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response crearValoracion(@PathParam("id") Long pedidoId, @Valid ValoracionRequest valoracionRequest, @Context SecurityContext securityContext) {
         String usuarioId = securityContext.getUserPrincipal().getName();
         String token = headers.getHeaderString(HttpHeaders.AUTHORIZATION);
