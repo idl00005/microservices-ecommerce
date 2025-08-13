@@ -104,9 +104,28 @@ Para ejecutar la aplicación empleando kubernetes, sigue los siguientes pasos:
     kubectl apply -f kubernetes/kafka
     kubectl apply -f kubernetes/microservicios
     kubectl apply -f kubernetes/ingress
-    kubectl apply -f kubernetes/prometheus
 ```
+8. Para ejecutar el servicio de monitorización realizamos los siguientes pasos
 
+```shell script
+  kubectl apply --server-side -f kubernetes/prometheus/kube-prometheus/manifests/setup
+  kubectl wait \
+      --for condition=Established \
+      --all CustomResourceDefinition \
+      --namespace=monitoring
+  kubectl apply -f kubernetes/prometheus/kube-prometheus/manifests/
+```
+A continuación querremos acceder a grafana, para ello primero necesitamos saber cuál es 
+el nombre del pod de grafana:
+```shell script
+  kubectl get pods -n monitoring
+```
+Una vez que tenemos el nombre del pod, podemos acceder a grafana mediante el siguiente comando:
+```shell script
+    kubectl port-forward -n monitoring <nombre_pod_grafana> 3000
+```
+Ahora grafana estará disponible en `http://localhost:3000`, y podremos acceder con las credenciales
+`admin:admin`.
 ## Ejecutar los test de integración mediante Postman
 Éxisten dos métodos diferentes para ejecutar los test de integración mediante Postman,
 se podrían importar las colecciones y los entornos de Postman a la aplicación y ejecutarlos
