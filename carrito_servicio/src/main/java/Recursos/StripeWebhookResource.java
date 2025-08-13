@@ -14,6 +14,9 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.metrics.MetricUnits;
+import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.Timed;
 
 @Path("/webhook/stripe")
 public class StripeWebhookResource {
@@ -29,6 +32,8 @@ public class StripeWebhookResource {
 
     @POST
     @Transactional
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response handleStripeWebhook(String payload, @jakarta.ws.rs.core.Context jakarta.ws.rs.core.HttpHeaders headers) {
         String sigHeader = headers.getHeaderString("Stripe-Signature");
         try {

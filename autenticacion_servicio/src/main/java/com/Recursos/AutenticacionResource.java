@@ -2,6 +2,7 @@ package com.Recursos;
 
 import com.Servicios.AutenticacionService;
 import io.quarkus.security.UnauthorizedException;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolation;
@@ -15,8 +16,11 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.Timeout;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.RegistryType;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 
 import java.time.temporal.ChronoUnit;
@@ -28,6 +32,18 @@ public class AutenticacionResource {
 
     @Inject
     AutenticacionService autenticacionService;
+
+    @Inject
+    @RegistryType(type = MetricRegistry.Type.APPLICATION)
+    MetricRegistry registry;
+
+    private Counter errorCounter;
+
+    @PostConstruct
+    public void init() {
+        // Crea el contador de errores
+        errorCounter = registry.counter("Aplication_AutenticacionResource_primality_errors_total");
+    }
 
     @POST
     @Path("/login")
@@ -44,6 +60,9 @@ public class AutenticacionResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         } catch (UnauthorizedException e) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -72,6 +91,9 @@ public class AutenticacionResource {
             return Response.status(Response.Status.CONFLICT)
                     .entity("El correo ya está registrado.")
                     .build();
+        } catch (Exception e) {
+            errorCounter.inc();
+            throw e;
         }
     }
 

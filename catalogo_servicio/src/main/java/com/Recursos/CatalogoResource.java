@@ -4,6 +4,7 @@ import com.DTO.ProductoDTO;
 import com.DTO.ValoracionDTO;
 import com.Otros.PaginacionResponse;
 import com.Servicios.CatalogoService;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -18,8 +19,11 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.RegistryType;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 
 import java.time.temporal.ChronoUnit;
@@ -32,6 +36,18 @@ public class CatalogoResource {
 
     @Inject
     public CatalogoService catalogoService;
+
+    @Inject
+    @RegistryType(type = MetricRegistry.Type.APPLICATION)
+    MetricRegistry registry;
+
+    private Counter errorCounter;
+
+    @PostConstruct
+    public void init() {
+        // Crea el contador de errores
+        errorCounter = registry.counter("Aplication_CatalogoResource_primality_errors_total");
+    }
 
     @GET
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
@@ -50,12 +66,17 @@ public class CatalogoResource {
                                 @QueryParam("categoria") String categoria,
                                 @QueryParam("precioMin") Double precioMin,
                                 @QueryParam("precioMax") Double precioMax) {
-        if (size > 100) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("El tamaño máximo permitido por página es 100").build();
+        try{
+            if (size > 100) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("El tamaño máximo permitido por página es 100").build();
+            }
+            List<ProductoDTO> productos = catalogoService.obtenerProductos(page, size, nombre, categoria, precioMin, precioMax);
+            return Response.ok(productos).build();
+        } catch (Exception e) {
+            errorCounter.inc();
+            throw e;
         }
-        List<ProductoDTO> productos = catalogoService.obtenerProductos(page, size, nombre, categoria, precioMin, precioMax);
-        return Response.ok(productos).build();
     }
 
     public Response fallbackGetProducts(int page, int size, String nombre, String categoria, Double precioMin, Double precioMax) {
@@ -70,8 +91,13 @@ public class CatalogoResource {
     @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
     @Counted(name = "performedChecks")
     public Response addProduct(@Valid ProductoDTO producto) {
-        ProductoDTO nuevoProducto = catalogoService.agregarProducto(producto);
-        return Response.status(Response.Status.CREATED).entity(nuevoProducto).build();
+        try {
+            ProductoDTO nuevoProducto = catalogoService.agregarProducto(producto);
+            return Response.status(Response.Status.CREATED).entity(nuevoProducto).build();
+        } catch (Exception e) {
+            errorCounter.inc();
+            throw e;
+        }
     }
 
     @PUT
@@ -87,7 +113,8 @@ public class CatalogoResource {
             }
             return Response.status(Response.Status.NOT_FOUND).entity("Producto con ID " + id + " no encontrado.").build();
         } catch (Exception e) {
-            return Response.serverError().entity("Error actualizando el producto: "+e.getMessage()).build();
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -104,7 +131,8 @@ public class CatalogoResource {
             }
             return Response.status(Response.Status.NOT_FOUND).entity("Producto con ID " + id + " no encontrado.").build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al eliminar el producto: " + e.getMessage()).build();
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -133,7 +161,8 @@ public class CatalogoResource {
             }
             return Response.ok(producto).build();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -162,8 +191,8 @@ public class CatalogoResource {
             return Response.status(e.getResponse().getStatus())
                     .entity("Error reservando stock: " + e.getMessage()).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error realizando reserva de stock para producto con id "+productoId+": "+e.getMessage()).build();
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -188,9 +217,8 @@ public class CatalogoResource {
                     .entity(new PaginacionResponse<>(valoraciones, pagina, tamanio, total))
                     .build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al obtener las valoraciones: " + e.getMessage())
-                    .build();
+            errorCounter.inc();
+            throw e;
         }
     }
 

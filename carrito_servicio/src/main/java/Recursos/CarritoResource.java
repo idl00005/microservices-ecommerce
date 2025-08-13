@@ -4,6 +4,7 @@ import DTO.CarritoItemDetalleDTO;
 import Entidades.CarritoItem;
 import Entidades.OrdenPago;
 import Servicios.CarritoService;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -19,8 +20,11 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.RegistryType;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 
 import java.time.temporal.ChronoUnit;
@@ -33,6 +37,18 @@ public class CarritoResource {
 
     @Inject
     CarritoService carritoService;
+
+    @Inject
+    @RegistryType(type = MetricRegistry.Type.APPLICATION)
+    MetricRegistry registry;
+
+    private Counter errorCounter;
+
+    @PostConstruct
+    public void init() {
+        // Crea el contador de errores
+        errorCounter = registry.counter("Aplication_CarritoResource_primality_errors_total");
+    }
 
     @POST
     @Path("/ordenes-pago")
@@ -53,6 +69,9 @@ public class CarritoResource {
             return Response.ok(orden).build();
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity("Error al iniciar el pago: "+e.getMessage()).build();
+        } catch (Exception e) {
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -80,9 +99,9 @@ public class CarritoResource {
             return Response.ok(item).build();
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al agregar el producto al carrito: "+e.getMessage()).build();
+        }  catch (Exception e) {
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -107,6 +126,9 @@ public class CarritoResource {
             return Response.ok(carrito).build();
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -123,6 +145,9 @@ public class CarritoResource {
             return Response.noContent().build();
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -136,9 +161,9 @@ public class CarritoResource {
         try {
             carritoService.vaciarCarrito(userId);
             return Response.noContent().build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al vaciar el carrito"+ e.getMessage()).build();
+        }  catch (Exception e) {
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -165,6 +190,9 @@ public class CarritoResource {
             return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            errorCounter.inc();
+            throw e;
         }
     }
 

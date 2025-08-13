@@ -3,6 +3,8 @@ package Recursos;
 import DTO.PedidoDTO;
 import Entidades.Pedido;
 import Servicios.PedidoService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -10,8 +12,11 @@ import jakarta.validation.constraints.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import org.eclipse.microprofile.faulttolerance.Timeout;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.RegistryType;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 
 import java.time.temporal.ChronoUnit;
@@ -29,14 +34,31 @@ public class PedidoResource {
     @Context
     HttpHeaders headers;
 
+    @Inject
+    @RegistryType(type = MetricRegistry.Type.APPLICATION)
+    MetricRegistry registry;
+
+    private Counter errorCounter;
+
+    @PostConstruct
+    public void init() {
+        // Crea el contador de errores
+        errorCounter = registry.counter("Aplication_PedidoResource_primality_errors_total");
+    }
+
     @POST
     @RolesAllowed({"admin"})
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
     @Counted(name = "performedChecks")
     public Response crearPedido(@Valid Pedido pedido) {
-        Pedido nuevoPedido = pedidoService.crearPedido(pedido);
-        return Response.status(Response.Status.CREATED).entity(nuevoPedido).build();
+        try{
+            Pedido nuevoPedido = pedidoService.crearPedido(pedido);
+            return Response.status(Response.Status.CREATED).entity(nuevoPedido).build();
+        } catch (Exception e) {
+            errorCounter.inc();
+            throw e;
+        }
     }
 
     @GET
@@ -67,8 +89,8 @@ public class PedidoResource {
             return Response.status(e.getResponse().getStatus())
                     .entity(Map.of("error", e.getMessage())).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al listar los pedidos: " + e.getMessage()).build();
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -94,7 +116,8 @@ public class PedidoResource {
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al obtener el pedido").build();
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -112,8 +135,8 @@ public class PedidoResource {
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al cambiar el estado del pedido").build();
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -123,7 +146,7 @@ public class PedidoResource {
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
     @Counted(name = "performedChecks")
-    public Response crearValoracion(@PathParam("id") Long pedidoId, @Valid ValoracionRequest valoracionRequest, @Context SecurityContext securityContext) {
+    public Response crearValoracion(@PathParam("id") Long pedidoId, @Valid ValoracionRequest valoracionRequest, @Context SecurityContext securityContext) throws JsonProcessingException {
         String usuarioId = securityContext.getUserPrincipal().getName();
         String token = headers.getHeaderString(HttpHeaders.AUTHORIZATION);
         try {
@@ -132,7 +155,8 @@ public class PedidoResource {
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity(e.getMessage()).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al crear la valoración: "+e.getMessage()).build();
+            errorCounter.inc();
+            throw e;
         }
     }
 
