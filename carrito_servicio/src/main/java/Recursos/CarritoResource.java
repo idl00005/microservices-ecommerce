@@ -19,6 +19,9 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
+import org.eclipse.microprofile.metrics.MetricUnits;
+import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.Timed;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -41,6 +44,8 @@ public class CarritoResource {
             delayUnit = ChronoUnit.SECONDS
     )
     @Fallback(fallbackMethod = "iniciarPagoFallback")
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response iniciarPago(@Context SecurityContext ctx, @Valid IniciarPagoRequest request) {
         String userId = ctx.getUserPrincipal().getName();
         try {
@@ -66,6 +71,8 @@ public class CarritoResource {
     @POST
     @RolesAllowed({"user", "admin"})
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response agregarProducto(@Valid AgregarProductoRequest req, @Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
         try {
@@ -91,6 +98,8 @@ public class CarritoResource {
     @RolesAllowed({"user", "admin"})
     @Retry()
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response obtenerCarrito(@Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
         try {
@@ -105,6 +114,8 @@ public class CarritoResource {
     @Path("/{productoId}")
     @RolesAllowed({"user", "admin"})
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response eliminarProducto(@PathParam("productoId") Long productoId, @Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
         try {
@@ -118,6 +129,8 @@ public class CarritoResource {
     @DELETE
     @RolesAllowed({"user", "admin"})
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response vaciarCarrito(@Context SecurityContext ctx) {
         String userId = ctx.getUserPrincipal().getName();
         try {
@@ -133,6 +146,8 @@ public class CarritoResource {
     @Path("/{productoId}")
     @RolesAllowed({"user","admin"})
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response actualizarCantidad(@PathParam("productoId") Long productoId,
                                        @Valid ActualizarCantidadRequest cantidadr,
                                        @Context SecurityContext securityContext) {

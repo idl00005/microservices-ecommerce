@@ -18,6 +18,9 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
+import org.eclipse.microprofile.metrics.MetricUnits;
+import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.Timed;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -39,6 +42,8 @@ public class CatalogoResource {
             delayUnit = ChronoUnit.SECONDS
     )
     @Fallback(fallbackMethod = "fallbackGetProducts")
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response getProducts(@QueryParam("page") @DefaultValue("1") int page,
                                 @QueryParam("size") @DefaultValue("10") int size,
                                 @QueryParam("nombre") String nombre,
@@ -62,6 +67,8 @@ public class CatalogoResource {
     @POST
     @RolesAllowed("admin")
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response addProduct(@Valid ProductoDTO producto) {
         ProductoDTO nuevoProducto = catalogoService.agregarProducto(producto);
         return Response.status(Response.Status.CREATED).entity(nuevoProducto).build();
@@ -70,6 +77,8 @@ public class CatalogoResource {
     @PUT
     @Path("/{id}")
     @RolesAllowed({"admin"})
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response updateProduct(@PathParam("id") Long id, @Valid ProductoDTO producto) {
         try {
@@ -85,6 +94,8 @@ public class CatalogoResource {
     @DELETE
     @Path("/{id}")
     @RolesAllowed("admin")
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response deleteProduct(@PathParam("id") Long id) {
         try {
@@ -107,6 +118,8 @@ public class CatalogoResource {
             delayUnit = ChronoUnit.SECONDS
     )
     @Fallback(fallbackMethod = "fallbackGetProductById")
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response getProductById(@PathParam("id") Long id) {
         if (id == null || id <= 0) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -133,6 +146,8 @@ public class CatalogoResource {
     @POST
     @RolesAllowed("admin")
     @Path("/{id}/reserva")
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     public Response reservarStock(@PathParam("id") Long productoId,
                                   @Valid ReservaRequest request) {
@@ -156,6 +171,8 @@ public class CatalogoResource {
     @Path("/{id}/valoraciones")
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response listarValoracionesDeProducto(@PathParam("id") Long idProducto,
                                                  @QueryParam("pagina") @DefaultValue("1") int pagina,
                                                  @QueryParam("tamanio") @DefaultValue("10") int tamanio) {
@@ -182,6 +199,8 @@ public class CatalogoResource {
     @RolesAllowed("user")
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response existeValoracion(
             @PathParam("productoId") Long productoId, @Context SecurityContext sctx) {
         try{

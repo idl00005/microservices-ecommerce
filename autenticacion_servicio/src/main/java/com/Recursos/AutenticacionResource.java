@@ -15,6 +15,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.Timeout;
+import org.eclipse.microprofile.metrics.MetricUnits;
+import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.Timed;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -31,6 +34,8 @@ public class AutenticacionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response login(@Valid UserCredentials credentials) {
         try {
             String token = autenticacionService.login(credentials);
@@ -47,6 +52,8 @@ public class AutenticacionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
+    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedChecks")
     public Response register(@Valid RegisterRequest newUser) {
         try {
             String token = autenticacionService.register(newUser);
