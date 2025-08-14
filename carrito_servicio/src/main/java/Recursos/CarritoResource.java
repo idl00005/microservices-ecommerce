@@ -12,10 +12,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.SecurityContext;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.*;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
@@ -37,6 +34,9 @@ public class CarritoResource {
 
     @Inject
     CarritoService carritoService;
+
+    @Context
+    HttpHeaders headers;
 
     @Inject
     @RegistryType(type = MetricRegistry.Type.APPLICATION)
@@ -64,8 +64,9 @@ public class CarritoResource {
     @Counted(name = "performedChecks")
     public Response iniciarPago(@Context SecurityContext ctx, @Valid IniciarPagoRequest request) {
         String userId = ctx.getUserPrincipal().getName();
+        String token = headers.getHeaderString(HttpHeaders.AUTHORIZATION);
         try {
-            OrdenPago orden = carritoService.iniciarPago(userId, request.direccion, request.telefono);
+            OrdenPago orden = carritoService.iniciarPago(userId, request.direccion, request.telefono, token);
             return Response.ok(orden).build();
         } catch (WebApplicationException e) {
             return Response.status(e.getResponse().getStatus()).entity("Error al iniciar el pago: "+e.getMessage()).build();

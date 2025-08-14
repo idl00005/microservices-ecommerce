@@ -3,11 +3,8 @@ package Cliente;
 import DTO.ProductoDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.cache.CacheResult;
-import io.quarkus.scheduler.Scheduled;
-import io.vertx.redis.client.Command;
-import io.vertx.redis.client.Request;
-import io.quarkus.redis.client.RedisClient;
-import jakarta.annotation.PostConstruct;
+import io.quarkus.redis.datasource.RedisDataSource;
+import io.quarkus.redis.datasource.value.ValueCommands;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -21,12 +18,8 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 
-import java.io.IOException;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 @ApplicationScoped
 public class StockClient {
@@ -34,29 +27,17 @@ public class StockClient {
     @ConfigProperty(name = "catalogo-service.url")
     String urlCatalogoService;
 
-    @ConfigProperty(name = "auth-service.url")
-    String urlAuthService;
-
-    @ConfigProperty(name = "auth.admin.user")
-    String adminUser;
-
-    @ConfigProperty(name = "auth.admin.password")
-    String adminPassword;
-
     @Inject
-    RedisClient redisClient;
-
-    String jwtToken = "";
+    RedisDataSource redisDataSource;
 
     /**
      * Intenta reservar stock para todos los productos especificados.
      * Es totalmente síncrono: realiza 1 petición HTTP por cada producto.
      * Devuelve true si todos los productos se pueden reservar, false si alguno falla.
      */
-    public void reservarStock(Map<Long, Integer> productos) {
-        Client client = ClientBuilder.newBuilder().build();
-        try {
-            if (jwtToken == null || jwtToken.isBlank()) {
+    public void reservarStock(Map<Long, Integer> productos, String jwt) {
+        try (Client client = ClientBuilder.newBuilder().build()) {
+            if (jwt == null || jwt.isBlank()) {
                 throw new RuntimeException("No hay token JWT válido. Llama a obtenerJwtParaCarrito primero.");
             }
 
@@ -67,14 +48,12 @@ public class StockClient {
                 // Construir body JSON que el recurso espera (ReservaRequest)
                 String bodyJson = String.format("{\"cantidad\": %d}", cantidad);
 
-                Response respuesta = client.target(urlCatalogoService)
+                try (Response respuesta = client.target(urlCatalogoService)
                         .path("/{id}/reserva")
                         .resolveTemplate("id", productoId)
                         .request(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + jwtToken)
-                        .post(Entity.json(bodyJson));
-
-                try {
+                        .header("Authorization", "Bearer " + jwt)
+                        .post(Entity.json(bodyJson))) {
                     int status = respuesta.getStatus();
                     String respBody = respuesta.readEntity(String.class); // leer antes de cerrar
 
@@ -88,40 +67,8 @@ public class StockClient {
                     } else {
                         throw new WebApplicationException("Error inesperado reservando stock. Status: " + status + " Body: " + respBody);
                     }
-                } finally {
-                    respuesta.close();
                 }
             }
-        } finally {
-            client.close();
-        }
-    }
-
-    @PostConstruct
-    public void obtenerJwtAlArrancar() {
-        if (System.getProperty("test.env") != null) {
-            return; // No hacer nada en el entorno de pruebas
-        }
-        obtenerJwtParaCarrito();
-    }
-
-    @Scheduled(every = "50m")
-    @Retry(maxRetries = 4, delay = 2, delayUnit = ChronoUnit.SECONDS)
-    public void obtenerJwtParaCarrito() {
-        String json = String.format("{\"username\": \"%s\", \"password\": \"%s\"}", adminUser, adminPassword);
-
-        Client client = ClientBuilder.newBuilder().build();
-        try {
-            Response resp = client.target(urlAuthService)
-                    .request(MediaType.APPLICATION_JSON)
-                    .post(Entity.json(json));
-            if (resp.getStatus() == 200) {
-                jwtToken = resp.readEntity(String.class);
-            } else {
-                throw new RuntimeException("No se obtuvo token: status " + resp.getStatus());
-            }
-        } finally {
-            client.close();
         }
     }
 
@@ -132,10 +79,9 @@ public class StockClient {
             delayUnit = ChronoUnit.SECONDS
     )
     @Fallback(fallbackMethod = "fallbackObtenerProductoPorId")
-    @Retry(maxRetries = 3, delay = 200, delayUnit = ChronoUnit.MILLIS)
+    @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
     public ProductoDTO obtenerProductoPorId(Long id) {
-        Client client = ClientBuilder.newBuilder().build();
-        try {
+        try (Client client = ClientBuilder.newBuilder().build()) {
             Response response = client.target(urlCatalogoService)
                     .path("/{id}")
                     .resolveTemplate("id", id)
@@ -153,8 +99,6 @@ public class StockClient {
             }
 
             return response.readEntity(ProductoDTO.class);
-        } finally {
-            client.close();
         }
     }
 
@@ -168,11 +112,16 @@ public class StockClient {
                     Response.Status.SERVICE_UNAVAILABLE);
         }
     }
+
     private ProductoDTO getProductoFromRedis(Long id) {
         String key = "producto-cache:" + id;
-        io.vertx.redis.client.Response response = redisClient.get(key);
-        if (response != null) {
-            String json = response.toString();
+
+        ValueCommands<String, String> valueCommands =
+                redisDataSource.value(String.class, String.class);
+
+        String json = valueCommands.get(key);
+
+        if (json != null) {
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 return mapper.readValue(json, ProductoDTO.class);

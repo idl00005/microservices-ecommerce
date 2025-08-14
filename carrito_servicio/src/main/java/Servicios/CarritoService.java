@@ -57,7 +57,7 @@ public class CarritoService {
 
     @Transactional
     // Todo: Reservar stock y obtener productos en una sola llamada
-    public OrdenPago iniciarPago(String userId, String direccion, String telefono) {
+    public OrdenPago iniciarPago(String userId, String direccion, String telefono, String jwt) {
         List<CarritoItem> carrito = carritoItemRepository.findByUserId(userId);
         if (carrito.isEmpty()) {
             throw new WebApplicationException("El carrito está vacío", 400);
@@ -97,7 +97,7 @@ public class CarritoService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // 1. Reservar stock de forma SÍNCRONA (esperando respuesta)
-        stockClient.reservarStock(productosAReservar);
+        stockClient.reservarStock(productosAReservar, jwt);
 
         List<LineaPago> lineas = carrito.stream()
                 .map(item -> new LineaPago(

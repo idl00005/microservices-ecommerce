@@ -86,7 +86,7 @@ public class CarritoServiceTest {
         Mockito.when(stockClient.obtenerProductoPorId(Mockito.anyLong())).thenReturn(productoDTO);
         Mockito.when(stripeService.crearPago(Mockito.any(), Mockito.any())).thenReturn(mockIntent);
 
-        OrdenPago orden = carritoService.iniciarPago(userId, "Calle Falsa", "123456");
+        OrdenPago orden = carritoService.iniciarPago(userId, "Calle Falsa", "123456","jwt");
 
         Assertions.assertEquals("CREADO", orden.getEstado());
         Assertions.assertEquals("pi_123", orden.getReferenciaExterna());
@@ -102,7 +102,7 @@ public class CarritoServiceTest {
         Mockito.when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoDTO);
         //Mockito.when(stockClient.reservarStock(Map.of(1L, 2))).thenReturn(Response.ok().build());
 
-        OrdenPago orden = carritoService.iniciarPago(userId, "Calle Gratis", "000");
+        OrdenPago orden = carritoService.iniciarPago(userId, "Calle Gratis", "000","jwt");
 
         Assertions.assertEquals("COMPLETADO", orden.getEstado());
         Assertions.assertNull(orden.getReferenciaExterna());
@@ -113,7 +113,7 @@ public class CarritoServiceTest {
         Mockito.when(carritoItemRepository.findByUserId("user123")).thenReturn(Collections.emptyList());
 
         WebApplicationException ex = Assertions.assertThrows(WebApplicationException.class, () ->
-                carritoService.iniciarPago("user123", "Calle", "123"));
+                carritoService.iniciarPago("user123", "Calle", "123","jwt"));
 
         Assertions.assertEquals(400, ex.getResponse().getStatus());
         Assertions.assertEquals("El carrito está vacío", ex.getMessage());
@@ -126,7 +126,7 @@ public class CarritoServiceTest {
         Mockito.when(stockClient.obtenerProductoPorId(1L)).thenReturn(null);
 
         WebApplicationException ex = Assertions.assertThrows(WebApplicationException.class, () ->
-                carritoService.iniciarPago("user123", "Calle", "123"));
+                carritoService.iniciarPago("user123", "Calle", "123","jwt"));
 
         Assertions.assertEquals(404, ex.getResponse().getStatus());
         Assertions.assertTrue(ex.getMessage().contains("Producto no encontrado"));
@@ -404,7 +404,7 @@ public class CarritoServiceTest {
         when(carritoItemRepository.findByUserId("user1")).thenReturn(List.of());
 
         WebApplicationException exception = assertThrows(WebApplicationException.class, () -> {
-            carritoService.iniciarPago("user1","Calle de ejemplo","2342233244");
+            carritoService.iniciarPago("user1","Calle de ejemplo","2342233244","jwt");
         });
 
         assertEquals(400, exception.getResponse().getStatus());

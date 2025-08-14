@@ -158,7 +158,7 @@ public class CarritoResourceTest {
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
         when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10));
-        Mockito.doNothing().when(stockClient).reservarStock(Mockito.anyMap());
+        Mockito.doNothing().when(stockClient).reservarStock(Mockito.anyMap(), Mockito.anyString());
         Mockito.doNothing().when(ordenPagoRepository).persist(Mockito.any(OrdenPago.class));
 
         // Realizar la solicitud
@@ -204,7 +204,7 @@ public class CarritoResourceTest {
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
         when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10));
-        Mockito.doNothing().when(stockClient).reservarStock(Mockito.anyMap());
+        Mockito.doNothing().when(stockClient).reservarStock(Mockito.anyMap(), Mockito.anyString());
         Mockito.doNothing().when(ordenPagoRepository).persist(Mockito.any(OrdenPago.class));
 
         // Realizar la solicitud
