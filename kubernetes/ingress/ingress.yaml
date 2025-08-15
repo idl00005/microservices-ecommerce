@@ -11,7 +11,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: auth
+                name: autenticacion
                 port:
                   number: 8080
 
@@ -19,7 +19,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: carrito-servicio
+                name: carrito
                 port:
                   number: 8080
 
@@ -27,7 +27,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: catalogo-servicio
+                name: catalogo
                 port:
                   number: 8080
 
@@ -35,7 +35,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: pedido-servicio
+                name: pedido
                 port:
                   number: 8080
 

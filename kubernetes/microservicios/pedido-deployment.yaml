@@ -46,7 +46,7 @@ spec:
             - name: QUARKUS_DATASOURCE_JDBC_URL
               value: "jdbc:postgresql://postgres-pedido:5432/pedidoBD"
             - name: CATALOGO_URL
-              value: "http://catalogo-servicio:8080/catalogo"
+              value: "http://catalogo:8080/catalogo"
             - name: KAFKA_URL
               value: "kafka-service:9092"
             - name: QUARKUS_PROFILE

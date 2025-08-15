@@ -289,7 +289,7 @@ public class CatalogoResourceTest {
     private static final Long PRODUCTO_ID = 1L;
 
     @Test
-    @TestSecurity(user = "admin", roles = {"admin"})
+    @TestSecurity(user = "user", roles = {"user"})
     public void reservarStock_suficiente() {
         Producto producto = new Producto("Teclado", "Teclado mecánico", new BigDecimal("89.99"), 10, "Electrónica", null);
         producto.setId(PRODUCTO_ID);
@@ -307,7 +307,7 @@ public class CatalogoResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "admin", roles = {"admin"})
+    @TestSecurity(user = "user", roles = {"user"})
     public void reservarStock_insuficiente() {
         Producto producto = new Producto("Mouse", "Mouse inalámbrico", new BigDecimal("49.99"), 2, "Electrónica", null);
         producto.setId(PRODUCTO_ID);
@@ -326,7 +326,7 @@ public class CatalogoResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "admin", roles = {"admin"})
+    @TestSecurity(user = "user", roles = {"user"})
     public void reservarStock_productoInexistente() {
         Mockito.when(productoRepositoryMock.findById(PRODUCTO_ID))
                 .thenReturn(null);
@@ -342,7 +342,7 @@ public class CatalogoResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "admin", roles = {"admin"})
+    @TestSecurity(user = "user", roles = {"user"})
     public void reservarStock_cantidadInvalida() {
         given()
                 .contentType(ContentType.JSON)
