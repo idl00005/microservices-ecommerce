@@ -1,12 +1,12 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: auth-hpa
+  name: pedido-hpa
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: autenticacion-microservicio
+    name: pedido-microservicio
   minReplicas: 2
   maxReplicas: 6
   metrics:
@@ -19,3 +19,4 @@ spec:
   behavior:
     scaleUp:
       stabilizationWindowSeconds: 180
+  

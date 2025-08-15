@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: catalogo-servicio
+  name: catalogo-microservicio
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: catalogo-servicio
+      app: catalogo-microservicio
   template:
     metadata:
       labels:
-        app: catalogo-servicio
+        app: catalogo-microservicio
     spec:
       containers:
-        - name: catalogo-servicio
+        - name: catalogo-microservicio
           image: catalogo_servicio_quarkus:v1
           ports:
             - containerPort: 8080
@@ -31,6 +31,13 @@ spec:
             initialDelaySeconds: 135
             periodSeconds: 3
             failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1024Mi"
           env:
             - name: QUARKUS_DATASOURCE_USERNAME
               value: "ignacio_ad"

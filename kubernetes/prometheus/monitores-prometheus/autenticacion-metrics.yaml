@@ -1,14 +1,14 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: auth-metrics
+  name: autenticacion-metrics
   namespace: default
   labels:
     release: prometheus
 spec:
   selector:
     matchLabels:
-      app: auth
+      app: autenticacion
   namespaceSelector:
     matchNames:
       - default

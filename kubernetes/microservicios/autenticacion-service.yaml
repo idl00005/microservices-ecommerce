@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth
+  name: autenticacion
   labels:
-    app: auth
+    app: autenticacion
 spec:
   selector:
-    app: auth
+    app: autenticacion-microservicio
   ports:
     - protocol: TCP
       port: 8080

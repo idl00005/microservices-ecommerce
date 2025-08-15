@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: carrito-servicio
+  name: carrito
   labels:
     app: carrito
 spec:
   selector:
-    app: carrito-servicio
+    app: carrito-microservicio
   ports:
     - protocol: TCP
       port: 8080
