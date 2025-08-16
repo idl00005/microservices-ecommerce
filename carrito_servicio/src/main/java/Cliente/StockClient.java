@@ -11,6 +11,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -52,7 +53,7 @@ public class StockClient {
                         .path("/{id}/reserva")
                         .resolveTemplate("id", productoId)
                         .request(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + jwt)
+                        .header(HttpHeaders.AUTHORIZATION, jwt)
                         .post(Entity.json(bodyJson))) {
                     int status = respuesta.getStatus();
                     String respBody = respuesta.readEntity(String.class); // leer antes de cerrar
@@ -65,7 +66,8 @@ public class StockClient {
                     } else if (status == 401 || status == 403) {
                         throw new WebApplicationException("No autorizado reservando stock: " + status + " -> " + respBody);
                     } else {
-                        throw new WebApplicationException("Error inesperado reservando stock. Status: " + status + " Body: " + respBody);
+                        throw new WebApplicationException("Error inesperado reservando stock. Status: " + status + " Body: " + respBody
+                        + "Token empleado: "+ jwt);
                     }
                 }
             }

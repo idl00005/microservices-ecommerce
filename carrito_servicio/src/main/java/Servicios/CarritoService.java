@@ -126,7 +126,7 @@ public class CarritoService {
             return orden;
         } else {
             try {
-                PaymentIntent pi = stripeService.crearPago(orden,itemsConPrecio);
+                PaymentIntent pi = stripeService.crearPago(orden);
                 orden.setReferenciaExterna(pi.getId());
                 orden.setProveedor("Stripe");
                 orden.setEstado("CREADO");
@@ -139,48 +139,20 @@ public class CarritoService {
     }
 
     @Transactional
-    // Todo: Decidir si quedarme con los metadatos de stripe para obtener el listado de productos comprados
     public void procesarCompra(OrdenPago orden) {
         List<CarritoItemDTO> itemsConPrecio;
 
         System.out.println("Enviando pedido...");//
 
-        if(orden.getReferenciaExterna() != null && !orden.getReferenciaExterna().isBlank()) {
-            // Recuperar el PaymentIntent de Stripe
-            PaymentIntent pi;
-            try {
-                pi = PaymentIntent.retrieve(orden.getReferenciaExterna());
-            } catch (StripeException e) {
-                throw new WebApplicationException("No pude recuperar el pago: " + e.getMessage(), 500);
-            }
-
-            // Leer la metadata y deserializar la lista de CarritoItemDTO
-            Jsonb jsonb = JsonbBuilder.create();
-
-            // Obtenemos el JSON de Stripe
-            String itemsJson = pi.getMetadata().get("items");
-
-            // Deserializamos a array
-            CarritoItemDTO[] array = jsonb.fromJson(itemsJson, CarritoItemDTO[].class);
-
-            // Convertimos a List
-            itemsConPrecio = Arrays.asList(array);
-
-            System.out.println("itemsJson: " + itemsJson);
-            System.out.println("itemsConPrecio: " + itemsConPrecio.get(0).productoId() + ", " + itemsConPrecio.get(0).cantidad() + ", " + itemsConPrecio.get(0).precio());
-
-        } else {
-            // Si no hay referencia externa significa que el precio es 0 (pago sin Stripe)
-            Hibernate.initialize(orden.getItemsComprados());
-            List<LineaPago> carrito = orden.getItemsComprados();
-            itemsConPrecio = carrito.stream()
-                    .map(item -> new CarritoItemDTO(
-                            item.getProductoId(),
-                            item.getCantidad(),
-                            BigDecimal.ZERO
-                    ))
-                    .toList();
-        }
+        Hibernate.initialize(orden.getItemsComprados());
+        List<LineaPago> carrito = orden.getItemsComprados();
+        itemsConPrecio = carrito.stream()
+                .map(item -> new CarritoItemDTO(
+                        item.getProductoId(),
+                        item.getCantidad(),
+                        BigDecimal.ZERO
+                ))
+                .toList();
 
         // 3) Armar y enviar el evento al servicio de pedidos
         NuevoPedidoEventDTO nuevoPedidoEvent = new NuevoPedidoEventDTO();

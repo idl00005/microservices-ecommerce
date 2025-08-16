@@ -19,6 +19,7 @@ import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.RegistryType;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
@@ -51,8 +52,9 @@ public class PedidoResource {
     @Timeout(value = 3, unit = ChronoUnit.SECONDS)
     @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
     @Counted(name = "performedChecks")
-    public Response crearPedido(@Valid Pedido pedido) {
+    public Response crearPedido(Pedido pedido) {
         try{
+            pedido.setFechaCreacion(LocalDateTime.now());
             Pedido nuevoPedido = pedidoService.crearPedido(pedido);
             return Response.status(Response.Status.CREATED).entity(nuevoPedido).build();
         } catch (Exception e) {

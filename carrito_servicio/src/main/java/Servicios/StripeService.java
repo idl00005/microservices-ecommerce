@@ -27,13 +27,11 @@ public class StripeService {
         Stripe.apiKey = stripeSecretKey;
     }
 
-    public PaymentIntent crearPago(OrdenPago ordenPago, List<CarritoItemDTO> itemsConPrecio) throws StripeException {
-        String itemsJson = JsonbBuilder.create().toJson(itemsConPrecio);
+    public PaymentIntent crearPago(OrdenPago ordenPago) throws StripeException {
 
         PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
                 .setAmount(ordenPago.getMontoTotal().multiply(BigDecimal.valueOf(100)).longValue())  // en céntimos
                 .setCurrency("eur")
-                .putMetadata("items", itemsJson)
                 .build();
 
         return PaymentIntent.create(params);

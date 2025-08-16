@@ -173,7 +173,7 @@ public class CatalogoResource {
     }
 
     @POST
-    @RolesAllowed("user")
+    @RolesAllowed({"user","admin"})
     @Path("/{id}/reserva")
     @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
     @Counted(name = "performedChecks")

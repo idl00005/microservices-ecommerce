@@ -84,7 +84,7 @@ public class CarritoServiceTest {
         Mockito.when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoDTO);
         //Mockito.when(stockClient.reservarStock(Map.of(1L, 2))).thenReturn(Response.ok().build());
         Mockito.when(stockClient.obtenerProductoPorId(Mockito.anyLong())).thenReturn(productoDTO);
-        Mockito.when(stripeService.crearPago(Mockito.any(), Mockito.any())).thenReturn(mockIntent);
+        Mockito.when(stripeService.crearPago(Mockito.any())).thenReturn(mockIntent);
 
         OrdenPago orden = carritoService.iniciarPago(userId, "Calle Falsa", "123456","jwt");
 
@@ -133,42 +133,7 @@ public class CarritoServiceTest {
     }
 
     @Test
-    public void testProcesarCompra_conReferenciaExterna() throws Exception {
-        // Arrange
-        OrdenPago orden = new OrdenPago();
-        orden.setId(10L);
-        orden.setUserId("user123");
-        orden.setReferenciaExterna("pi_test");
-        orden.setItemsComprados(new ArrayList<>()); // No se usan
-
-        CarritoItemDTO itemDTO = new CarritoItemDTO(1L, 2, new BigDecimal("100.00"));
-        String itemsJson = "[{\"productoId\":1,\"cantidad\":2,\"precio\":100.00}]";
-
-        Map<String, String> metadata = new HashMap<>();
-        metadata.put("items", itemsJson);
-
-        PaymentIntent paymentIntentMock = mock(PaymentIntent.class);
-        when(paymentIntentMock.getMetadata()).thenReturn(metadata);
-
-        mockStatic(PaymentIntent.class);
-        when(PaymentIntent.retrieve("pi_test")).thenReturn(paymentIntentMock);
-
-        // Act
-        carritoService.procesarCompra(orden);
-
-        // Assert
-        ArgumentCaptor<OutboxEvent> captor = ArgumentCaptor.forClass(OutboxEvent.class);
-        verify(outboxEventRepository, times(1)).persist(captor.capture());
-
-        OutboxEvent evento = captor.getValue();
-        assertEquals("Carrito", evento.getAggregateType());
-        assertEquals("user123", evento.getAggregateId());
-        assertEquals("Carrito.CompraProcesada", evento.getEventType());
-        assertTrue(evento.getPayload().contains("\"productoId\":1"));
-    }
-
-    @Test
-    public void testProcesarCompra_sinReferenciaExterna() {
+    public void testProcesarCompra() {
         // Arrange
         OrdenPago orden = new OrdenPago();
         orden.setId(20L);
