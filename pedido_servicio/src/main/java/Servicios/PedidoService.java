@@ -14,7 +14,6 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import DTO.NuevoPedidoEventDTO;
@@ -44,7 +43,8 @@ public class PedidoService {
     private static final Logger log = LoggerFactory.getLogger(PedidoService.class);
 
     @Transactional
-    public Pedido crearPedido(@Valid Pedido pedido) {
+    public Pedido crearPedido(Pedido pedido) {
+        pedido.setFechaCreacion(LocalDateTime.now());
         pedidoRepository.guardar(pedido);
         return pedido;
     }
