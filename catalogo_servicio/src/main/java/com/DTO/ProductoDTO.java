@@ -32,12 +32,17 @@ public class ProductoDTO {
     @Min(value = 0, message = "El stock no puede ser menor que 0")
     private Integer stock;
 
+    private double puntuacion;
+
+    @NotNull(message = "La URL de la imagen no puede ser nula")
+    private String imagenUrl;
+
     @Type(JsonBinaryType.class)
     private JsonNode detalles;
 
     public ProductoDTO() {
     }
-    public ProductoDTO(Long id,String nombre, String descripcion, BigDecimal precio, int stock, String categoria, JsonNode detalles) {
+    public ProductoDTO(Long id,String nombre, String descripcion, BigDecimal precio, int stock, String categoria, String imagenUrl, JsonNode detalles) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -45,6 +50,7 @@ public class ProductoDTO {
         this.stock = stock;
         this.categoria = categoria;
         this.detalles = detalles;
+        this.imagenUrl = imagenUrl;
     }
 
     public Long getId() {
@@ -101,5 +107,21 @@ public class ProductoDTO {
 
     public void setDetalles(JsonNode detalles) {
         this.detalles = detalles;
+    }
+
+    public String getImagenUrl() {
+        return imagenUrl;
+    }
+
+    public void setImagenUrl(String imagenURL) {
+        this.imagenUrl = imagenURL;
+    }
+
+    public double getPuntuacion() {
+        return puntuacion;
+    }
+
+    public void setPuntuacion(double puntuacion) {
+        this.puntuacion = puntuacion;
     }
 }

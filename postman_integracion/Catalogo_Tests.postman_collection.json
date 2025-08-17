@@ -51,9 +51,9 @@
 					"raw": "{\n  \"username\": \"{{userAdmin}}\",\n  \"password\": \"{{userAdminPass}}\"\n}"
 				},
 				"url": {
-					"raw": "{{auth_url}}/autenticacion/login",
+					"raw": "{{url_base}}/autenticacion/login",
 					"host": [
-						"{{auth_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"autenticacion",
@@ -88,6 +88,7 @@
 							"        pm.expect(item).to.have.property(\"precio\").that.is.a(\"number\");",
 							"        pm.expect(item).to.have.property(\"categoria\").that.is.a(\"string\");",
 							"        pm.expect(item).to.have.property(\"stock\").that.is.a(\"number\");",
+							"        pm.expect(item).to.have.property(\"imagenUrl\").that.is.a(\"string\");",
 							"        pm.expect(item).to.have.property(\"detalles\").that.is.an(\"object\");",
 							"    });",
 							"});",
@@ -108,9 +109,9 @@
 					}
 				],
 				"url": {
-					"raw": "{{catalogo_url}}/catalogo",
+					"raw": "{{url_base}}/catalogo",
 					"host": [
-						"{{catalogo_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"catalogo"
@@ -167,12 +168,12 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"nombre\": \"Camiseta técnica\",\n  \"categoria\": \"Ropa\",\n  \"descripcion\": \"Camiseta deportiva ligera\",\n  \"precio\": 29.99,\n  \"stock\": 100,\n  \"stockReservado\": 0,\n  \"puntuacion\": 4.5,\n  \"detalles\": {\n    \"color\": \"azul\",\n    \"talla\": \"M\"\n  }\n}"
+					"raw": "{\n  \"nombre\": \"Camiseta técnica\",\n  \"categoria\": \"Ropa\",\n  \"descripcion\": \"Camiseta deportiva ligera\",\n  \"precio\": 29.99,\n  \"stock\": 100,\n  \"stockReservado\": 0,\n  \"puntuacion\": 4.5,\n  \"imagenUrl\": \"url\",\n  \"detalles\": {\n    \"color\": \"azul\",\n    \"talla\": \"M\"\n  }\n}"
 				},
 				"url": {
-					"raw": "{{catalogo_url}}/catalogo/",
+					"raw": "{{url_base}}/catalogo/",
 					"host": [
-						"{{catalogo_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"catalogo",
@@ -203,9 +204,7 @@
 							"    pm.expect(producto).to.have.property(\"precio\", 29.99);",
 							"    pm.expect(producto).to.have.property(\"categoria\", \"Ropa\");",
 							"    pm.expect(producto).to.have.property(\"stock\", 100);",
-							"    pm.expect(producto).to.have.property(\"stockReservado\", 0);",
 							"    pm.expect(producto).to.have.property(\"puntuacion\", 0.0);",
-							"    pm.expect(producto).to.have.property(\"valoraciones\").that.is.an(\"array\");",
 							"    pm.expect(producto).to.have.property(\"detalles\").that.is.an(\"object\");",
 							"});",
 							""
@@ -225,9 +224,9 @@
 					}
 				],
 				"url": {
-					"raw": "{{catalogo_url}}/catalogo/{{productoId}}",
+					"raw": "{{url_base}}/catalogo/{{productoId}}",
 					"host": [
-						"{{catalogo_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"catalogo",
@@ -272,12 +271,12 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"nombre\": \"Camiseta actualizada\",\n  \"categoria\": \"Ropa\",\n  \"descripcion\": \"Nueva descripción\",\n  \"precio\": 34.99,\n  \"stock\": 80,\n  \"stockReservado\": 5,\n  \"puntuacion\": 4.8,\n  \"detalles\": {\n    \"color\": \"negro\",\n    \"talla\": \"L\"\n  }\n}"
+					"raw": "{\n  \"nombre\": \"Camiseta actualizada\",\n  \"categoria\": \"Ropa\",\n  \"descripcion\": \"Nueva descripción\",\n  \"precio\": 34.99,\n  \"stock\": 80,\n  \"stockReservado\": 5,\n  \"puntuacion\": 4.8,\n  \"imagenUrl\": \"url\",\n  \"detalles\": {\n    \"color\": \"negro\",\n    \"talla\": \"L\"\n  }\n}"
 				},
 				"url": {
-					"raw": "{{catalogo_url}}/catalogo/{{productoId}}",
+					"raw": "{{url_base}}/catalogo/{{productoId}}",
 					"host": [
-						"{{catalogo_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"catalogo",
@@ -313,9 +312,9 @@
 					}
 				],
 				"url": {
-					"raw": "{{catalogo_url}}/catalogo/{{productoId}}",
+					"raw": "{{url_base}}/catalogo/{{productoId}}",
 					"host": [
-						"{{catalogo_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"catalogo",

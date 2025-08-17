@@ -211,9 +211,9 @@
 					"raw": "{\n  \"cantidad\": 3\n}"
 				},
 				"url": {
-					"raw": "{{carrito_url}}/carrito/1",
+					"raw": "{{url_base}}/carrito/1",
 					"host": [
-						"{{carrito_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"carrito",
@@ -248,9 +248,9 @@
 					}
 				],
 				"url": {
-					"raw": "{{carrito_url}}/carrito/1",
+					"raw": "{{url_base}}/carrito/1",
 					"host": [
-						"{{carrito_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"carrito",
@@ -285,9 +285,9 @@
 					}
 				],
 				"url": {
-					"raw": "{{carrito_url}}/carrito/",
+					"raw": "{{url_base}}/carrito/",
 					"host": [
-						"{{carrito_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"carrito",
@@ -351,9 +351,9 @@
 					"raw": "{\n  \"productoId\": 1,\n  \"cantidad\": 2\n}"
 				},
 				"url": {
-					"raw": "{{carrito_url}}/carrito/",
+					"raw": "{{url_base}}/carrito/",
 					"host": [
-						"{{carrito_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"carrito",
@@ -400,7 +400,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"id\": 1,\n    \"nombre\": \"Smartphone Samsung Galaxy S21\",\n    \"descripcion\": \"Teléfono móvil de última generación con cámara de alta resolución.\",\n    \"precio\": 0,\n    \"categoria\": \"Teléfono\",\n    \"stock\": 100,\n    \"stockReservado\": 8,\n    \"puntuacion\": 0.0,\n    \"detalles\": {\n        \"color\": \"Negro\",\n        \"procesador\": \"Exynos 2100\",\n        \"almacenamiento\": \"128GB\"\n    }\n}",
+					"raw": "{\n    \"id\": 1,\n    \"nombre\": \"Smartphone Samsung Galaxy S21\",\n    \"descripcion\": \"Teléfono móvil de última generación con cámara de alta resolución.\",\n    \"precio\": 0,\n    \"categoria\": \"Teléfono\",\n    \"stock\": 100,\n    \"stockReservado\": 8,\n    \"puntuacion\": 0.0,\n    \"imagenUrl\": \"url\",\n    \"detalles\": {\n        \"color\": \"Negro\",\n        \"procesador\": \"Exynos 2100\",\n        \"almacenamiento\": \"128GB\"\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -408,9 +408,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{catalogo_url}}/catalogo/1",
+					"raw": "{{url_base}}/catalogo/1",
 					"host": [
-						"{{catalogo_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"catalogo",
@@ -467,9 +467,9 @@
 					"raw": "{\n  \"telefono\": \"+59170000000\",\n  \"direccion\": \"Calle Ejemplo 123\"\n}"
 				},
 				"url": {
-					"raw": "{{carrito_url}}/carrito/ordenes-pago",
+					"raw": "{{url_base}}/carrito/ordenes-pago",
 					"host": [
-						"{{carrito_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"carrito",
@@ -522,9 +522,9 @@
 					}
 				],
 				"url": {
-					"raw": "{{pedido_url}}/pedidos",
+					"raw": "{{url_base}}/pedidos",
 					"host": [
-						"{{pedido_url}}"
+						"{{url_base}}"
 					],
 					"path": [
 						"pedidos"

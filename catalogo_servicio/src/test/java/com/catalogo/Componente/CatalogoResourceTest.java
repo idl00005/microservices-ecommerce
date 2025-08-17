@@ -46,6 +46,7 @@ public class CatalogoResourceTest {
             "precio": 59.99,
             "stock": 10,
             "categoria": "Ropa",
+            "imagenUrl": "http://example.com/zapato.jpg",
             "detalles": null
         }
         """;
@@ -58,6 +59,7 @@ public class CatalogoResourceTest {
             "precio": 59.99,
             "stock": 10,
             "categoria": "Ropa",
+            "imagenUrl": "http://example.com/zapato.jpg",
             "detalles": null
         }
         """;
@@ -94,8 +96,10 @@ public class CatalogoResourceTest {
     public void testObtenerProductosConFiltros() {
         // Datos simulados que devuelve el repositorio mockeado
         List<Producto> productosMock = List.of(
-                new Producto("Zapato", "Zapato deportivo", BigDecimal.valueOf(59.99), 10, "Ropa", null),
-                new Producto("Camisa", "Camisa formal", BigDecimal.valueOf(39.99), 5, "Ropa", null)
+                new Producto("Zapato", "Zapato deportivo",
+                        BigDecimal.valueOf(59.99), 10, "Ropa","url", null),
+                new Producto("Camisa", "Camisa formal",
+                        BigDecimal.valueOf(39.99), 5, "Ropa","url", null)
         );
 
         // Configuramos el mock para devolver la lista sin filtrar
@@ -249,7 +253,8 @@ public class CatalogoResourceTest {
     @Test
     public void obtenerProductoPorIdExistente() {
         // Mock producto existente
-        Producto producto = new Producto("Zapato", "Zapato deportivo", BigDecimal.valueOf(59.99), 10, "Ropa", null);
+        Producto producto = new Producto("Zapato", "Zapato deportivo",
+                BigDecimal.valueOf(59.99), 10, "Ropa","url", null);
         producto.setId(1L);
 
         Mockito.when(productoRepositoryMock.findById(1L)).thenReturn(producto);
@@ -291,7 +296,8 @@ public class CatalogoResourceTest {
     @Test
     @TestSecurity(user = "user", roles = {"user"})
     public void reservarStock_suficiente() {
-        Producto producto = new Producto("Teclado", "Teclado mecánico", new BigDecimal("89.99"), 10, "Electrónica", null);
+        Producto producto = new Producto("Teclado", "Teclado mecánico",
+                new BigDecimal("89.99"), 10, "Electrónica","url", null);
         producto.setId(PRODUCTO_ID);
 
         Mockito.when(productoRepositoryMock.findById(PRODUCTO_ID))
@@ -309,7 +315,8 @@ public class CatalogoResourceTest {
     @Test
     @TestSecurity(user = "user", roles = {"user"})
     public void reservarStock_insuficiente() {
-        Producto producto = new Producto("Mouse", "Mouse inalámbrico", new BigDecimal("49.99"), 2, "Electrónica", null);
+        Producto producto = new Producto("Mouse", "Mouse inalámbrico",
+                new BigDecimal("49.99"), 2, "Electrónica","url", null);
         producto.setId(PRODUCTO_ID);
 
         Mockito.when(productoRepositoryMock.findById(PRODUCTO_ID))

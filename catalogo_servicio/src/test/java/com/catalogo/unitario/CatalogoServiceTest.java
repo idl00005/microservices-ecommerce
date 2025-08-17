@@ -55,10 +55,10 @@ class CatalogoServiceTest {
 
     private List<Producto> crearProductosDeEjemplo() {
         return List.of(
-                new Producto("Zapato", "Zapato deportivo", new BigDecimal("59.99"), 10, "Ropa", null),
-                new Producto("Camisa", "Camisa formal", new BigDecimal("39.99"), 5, "Ropa", null),
-                new Producto("Laptop", "Portátil", new BigDecimal("999.99"), 3, "Electrónica", null),
-                new Producto("Libro", "Novela", new BigDecimal("15.00"), 20, "Libros", null)
+                new Producto("Zapato", "Zapato deportivo", new BigDecimal("59.99"), 10, "Ropa", "url",null),
+                new Producto("Camisa", "Camisa formal", new BigDecimal("39.99"), 5, "Ropa", "url", null),
+                new Producto("Laptop", "Portátil", new BigDecimal("999.99"), 3, "Electrónica", "url", null),
+                new Producto("Libro", "Novela", new BigDecimal("15.00"), 20, "Libros", "url", null)
         );
     }
 
@@ -127,7 +127,7 @@ class CatalogoServiceTest {
         ProductoDTO dto = new ProductoDTO(
                 2L,"Zapato", "Zapato deportivo",
                 new BigDecimal("59.99"), 10,
-                "Ropa", null
+                "Ropa","url", null
         );
 
         // Act
@@ -153,7 +153,7 @@ class CatalogoServiceTest {
         ProductoDTO dto = new ProductoDTO(
                 2L,"Camisa", "Camisa formal",
                 new BigDecimal("39.99"), 5,
-                "Ropa", detallesNode
+                "Ropa", "url",detallesNode
         );
 
         ArgumentCaptor<Producto> captor = ArgumentCaptor.forClass(Producto.class);
@@ -180,7 +180,7 @@ class CatalogoServiceTest {
         ProductoDTO dto = new ProductoDTO(
                 3L, "Zapatilla", "Zapatilla running",
                 new BigDecimal("89.99"), 20,
-                "Calzado", null
+                "Calzado", "url",null
         );
 
         // Simular que el repositorio actualiza correctamente
@@ -208,7 +208,7 @@ class CatalogoServiceTest {
         ProductoDTO dto = new ProductoDTO(
                 4L,"NoExiste", "Producto no existente",
                 new BigDecimal("49.99"), 0,
-                "Desconocido", null
+                "Desconocido", "url", null
         );
 
         // Simular que el repositorio no actualiza nada

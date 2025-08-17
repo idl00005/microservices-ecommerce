@@ -5,7 +5,6 @@ import com.DTO.StockEventDTO;
 import com.DTO.ValoracionDTO;
 import com.Entidades.Producto;
 import com.Entidades.Valoracion;
-import com.Excepciones.ValoracionDuplicadaException;
 import com.Otros.ProductEvent;
 import com.Repositorios.RepositorioProducto;
 import com.Repositorios.ValoracionRepository;
@@ -16,15 +15,12 @@ import io.quarkus.cache.CacheKey;
 import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.NoResultException;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -69,6 +65,7 @@ public class CatalogoService {
                         p.getPrecio(),
                         p.getStock(),
                         p.getCategoria(),
+                        p.getImagenURL(),
                         p.getDetalles()
                 ))
                 .collect(Collectors.toList());
@@ -79,13 +76,13 @@ public class CatalogoService {
         Producto nuevoProducto = new Producto(
                 producto.getNombre(), producto.getDescripcion(),
                 producto.getPrecio(), producto.getStock(),
-                producto.getCategoria(), producto.getDetalles()
+                producto.getCategoria(), producto.getImagenUrl(), producto.getDetalles()
         );
         productoRepository.persist(nuevoProducto);
 
         return new ProductoDTO(nuevoProducto.getId(),nuevoProducto.getNombre(), nuevoProducto.getDescripcion(),
                 nuevoProducto.getPrecio(), nuevoProducto.getStock(),
-                nuevoProducto.getCategoria(), nuevoProducto.getDetalles());
+                nuevoProducto.getCategoria(), nuevoProducto.getImagenURL(), nuevoProducto.getDetalles());
     }
 
     public boolean actualizarProducto(Long id, ProductoDTO producto) {
@@ -235,11 +232,13 @@ public class CatalogoService {
         if(producto == null) {
             return null;
         } else {
-            return new ProductoDTO(
+            ProductoDTO productoDTO = new ProductoDTO(
                     producto.getId(),producto.getNombre(), producto.getDescripcion(),
                     producto.getPrecio(), producto.getStock(), producto.getCategoria(),
-                    producto.getDetalles()
+                    producto.getImagenURL(), producto.getDetalles()
             );
+            productoDTO.setPuntuacion(producto.getPuntuacion());
+            return productoDTO;
         }
     }
 

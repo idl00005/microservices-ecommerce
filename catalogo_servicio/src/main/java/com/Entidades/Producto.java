@@ -38,6 +38,9 @@ public class Producto {
     @Min(value = 0, message = "El stock no puede ser menor que 0")
     private Integer stock;
 
+    @NotNull
+    private String imagenURL;
+
     private Integer stockReservado = 0;
 
     @NotNull
@@ -57,12 +60,13 @@ public class Producto {
     public Producto() {
     }
 
-    public Producto(String nombre, String descripcion, BigDecimal precio, int stock, String categoria, JsonNode detalles) {
+    public Producto(String nombre, String descripcion, BigDecimal precio, int stock, String categoria, String imagenUrl, JsonNode detalles) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
         this.stock = stock;
         this.categoria = categoria;
+        this.imagenURL = imagenUrl;
         this.detalles = detalles;
     }
 
@@ -149,5 +153,13 @@ public class Producto {
 
     public List<Valoracion> getValoraciones() {
         return valoraciones;
+    }
+
+    public String getImagenURL() {
+        return imagenURL;
+    }
+
+    public void setImagenURL(String imagenURL) {
+        this.imagenURL = imagenURL;
     }
 }
