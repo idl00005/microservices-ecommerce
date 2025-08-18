@@ -44,20 +44,8 @@ public class CatalogoService {
     public List<ProductoDTO> obtenerProductos(int page, int size, String nombre, String categoria, Double precioMin, Double precioMax) {
         List<Producto> productos = productoRepository.buscarProductos(page, size, nombre, categoria, precioMin, precioMax);
 
-        if (productos.isEmpty()) {
-            return List.of(); // Retorna una lista vacía si no hay productos
-        }
-
-        int startIndex = (page - 1) * size;
-        int endIndex = Math.min(startIndex + size, productos.size());
-
-        if (startIndex >= productos.size()) {
-            throw new IllegalArgumentException("Página fuera de rango.");
-        }
-        List<Producto> productosDTO = productos.subList(startIndex, endIndex);
-
         // Mapeo a DTO
-        return productosDTO.stream()
+        return productos.stream()
                 .map(p -> new ProductoDTO(
                         p.getId(),
                         p.getNombre(),
