@@ -269,6 +269,7 @@ public class CarritoService {
         return new CarritoItemDetalleDTO(
                 item.getProductoId(),
                 producto.nombre(),
+                producto.imagenUrl(),
                 item.getCantidad(),
                 producto.precio()
         );
@@ -289,6 +290,7 @@ public class CarritoService {
             CarritoItemDetalleDTO detalle = new CarritoItemDetalleDTO(
                     item.getProductoId(),
                     producto.nombre(),
+                    producto.imagenUrl(),
                     item.getCantidad(),
                     producto.precio()
             );

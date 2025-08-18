@@ -39,7 +39,7 @@ public class CarritoResourceTest {
     @TestSecurity(user = "user", roles = {"user"})
     public void testAgregarEliminarProducto() {
         // Mock del cliente de producto
-        ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10);
+        ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10,"url");
         when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoMock);
         // Agregar producto
         AgregarProductoRequest request = new AgregarProductoRequest();
@@ -68,7 +68,7 @@ public class CarritoResourceTest {
         item.setCantidad(2);
 
         when(carritoItemRepository.findByUserId("user")).thenReturn(List.of(item));
-        when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10));
+        when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10,"url"));
 
         // Realiza la solicitud y verifica la respuesta
         given()
@@ -119,7 +119,7 @@ public class CarritoResourceTest {
     @TestSecurity(user = "user", roles = {"user"})
     public void testActualizarCantidad() {
         // Mock del cliente de producto
-        ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10);
+        ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10,"url");
         when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoMock);
 
         // Mock del repositorio para la búsqueda
@@ -157,7 +157,7 @@ public class CarritoResourceTest {
 
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
-        when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10));
+        when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10,"url"));
         Mockito.doNothing().when(stockClient).reservarStock(Mockito.anyMap(), Mockito.anyString());
         Mockito.doNothing().when(ordenPagoRepository).persist(Mockito.any(OrdenPago.class));
 
@@ -203,7 +203,7 @@ public class CarritoResourceTest {
 
         IniciarPagoRequest requestBody = new IniciarPagoRequest("2123456789","Calle Test");
 
-        when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10));
+        when(stockClient.obtenerProductoPorId(item.getProductoId())).thenReturn(new ProductoDTO(item.getProductoId(), "Producto Test", BigDecimal.valueOf(100), 10,"url"));
         Mockito.doNothing().when(stockClient).reservarStock(Mockito.anyMap(), Mockito.anyString());
         Mockito.doNothing().when(ordenPagoRepository).persist(Mockito.any(OrdenPago.class));
 

@@ -1,7 +1,6 @@
 package Unitario;
 
 import Cliente.StockClient;
-import DTO.CarritoItemDTO;
 import DTO.CarritoItemDetalleDTO;
 import DTO.ProductoDTO;
 import Entidades.CarritoItem;
@@ -23,7 +22,6 @@ import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,7 +74,7 @@ public class CarritoServiceTest {
     void iniciarPago_conProductos() throws StripeException {
         String userId = "user123";
         List<CarritoItem> carrito = List.of(crearItem(1L, 2));
-        ProductoDTO productoDTO = new ProductoDTO(1L, "Producto 1", BigDecimal.TEN, 10);
+        ProductoDTO productoDTO = new ProductoDTO(1L, "Producto 1", BigDecimal.TEN, 10,"url");
         PaymentIntent mockIntent = new PaymentIntent();
         mockIntent.setId("pi_123");
 
@@ -96,7 +94,7 @@ public class CarritoServiceTest {
     void iniciarPago_montoCero() {
         String userId = "user123";
         List<CarritoItem> carrito = List.of(crearItem(1L, 2));
-        ProductoDTO productoDTO = new ProductoDTO(1L, "Gratis", BigDecimal.ZERO, 10);
+        ProductoDTO productoDTO = new ProductoDTO(1L, "Gratis", BigDecimal.ZERO, 10,"url");
 
         Mockito.when(carritoItemRepository.findByUserId(userId)).thenReturn(carrito);
         Mockito.when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoDTO);
@@ -214,7 +212,7 @@ public class CarritoServiceTest {
     final Long productoId = 1L;
 
     ProductoDTO productoConStock(int stock) {
-        return new ProductoDTO(productoId, "Producto Test", BigDecimal.valueOf(10.0), stock);
+        return new ProductoDTO(productoId, "Producto Test", BigDecimal.valueOf(10.0), stock,"url");
     }
 
     @Test
@@ -254,7 +252,7 @@ public class CarritoServiceTest {
     @TestTransaction
     public void testAgregarProductoNuevo() {
         // Mock del producto
-        ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10);
+        ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10,"url");
         when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoMock);
 
         // Mock del repositorio
@@ -294,7 +292,7 @@ public class CarritoServiceTest {
         item.setCantidad(2);
 
         when(carritoItemRepository.findByUserId("user1")).thenReturn(List.of(item));
-        when(stockClient.obtenerProductoPorId(1L)).thenReturn(new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10));
+        when(stockClient.obtenerProductoPorId(1L)).thenReturn(new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10,"url"));
 
         // Llamada al método
         List<CarritoItemDetalleDTO> carrito = carritoService.obtenerCarrito("user1");
@@ -342,7 +340,7 @@ public class CarritoServiceTest {
     @TestTransaction
     public void testActualizarCantidad() {
         // Mock del producto
-        ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10);
+        ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10,"url");
         when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoMock);
 
         // Mock del repositorio
