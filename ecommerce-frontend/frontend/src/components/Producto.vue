@@ -1,13 +1,13 @@
 <template>
   <div class="card">
     <img :src="urlImg" alt="producto" class="card-img">
-    <h4>
+    <h6>
       {{nombre}}
-    </h4>
+    </h6>
     <p class="price">
       {{precio}}€
     </p>
-    <button @click="agregarAlCarrito">
+    <button @click="agregarAlCarrito" class="buy-btn">Comprar
       <i class="bi bi-cart-plus"></i>
     </button>
   </div>
@@ -16,16 +16,55 @@
 <script>
 export default {
   name: 'Producto',
-  methods: {
-    agregarAlCarrito() {
-      this.$emit('agregarAlCarrito',this.id);
-    }
-  },
   props: {
     id: Number,
     nombre: String,
     precio: Number,
     urlImg: String
+  },
+  methods: {
+    async agregarAlCarrito() {
+      const token = localStorage.getItem("jwt");
+
+      if (!token) {
+        // No hay sesión, redirigir al login
+        alert("Debes iniciar sesión para agregar productos al carrito.");
+        if (this.$router && typeof this.$router.push === 'function') {
+          this.$router.push('/login');
+        } else {
+          window.location.href = '/login';
+        }
+        return;
+      }
+
+      const bodyPayload = {
+        productoId: this.id,
+        cantidad: 1
+      };
+
+      try {
+        const res = await fetch("http://microservicios.local/carrito", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(bodyPayload)
+        });
+
+        if (!res.ok) {
+          console.error("No se pudo agregar el producto al carrito.");
+          return;
+        }
+
+        const data = await res.json();
+        console.log("Producto agregado al carrito:", data);
+
+      } catch (err) {
+        console.error("Error al agregar al carrito:", err);
+      }
+    }
   }
 }
 import 'bootstrap-icons/font/bootstrap-icons.css'
@@ -37,9 +76,10 @@ import 'bootstrap-icons/font/bootstrap-icons.css'
   border: 1px solid rgba(184, 184, 184, 0.5);
   border-radius: 5px;
   padding: 5px;
-  width: 275px;
+  width: 225px;
   box-shadow: 2px 2px 8px rgba(248, 248, 248, 0.75);
-  margin: 20px;
+  margin-bottom: 10px;
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -54,6 +94,11 @@ import 'bootstrap-icons/font/bootstrap-icons.css'
 }
 
 .price {
-  font-size: 25px;
+  font-size: 17px;
+}
+
+.buy-btn {
+  margin-top: auto;
+  align-self: flex-start;
 }
 </style>
