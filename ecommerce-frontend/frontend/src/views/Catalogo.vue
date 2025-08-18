@@ -58,6 +58,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(275px, 1fr));
   width: auto;
+  justify-items: center;
 }
 
 .load-more-container {
