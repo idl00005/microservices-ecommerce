@@ -1,10 +1,10 @@
 <template>
   <div class="card">
-    <img :src="urlImg" alt="producto" class="card-img">
-    <h6>
+    <img :src="urlImg" alt="producto" class="card-img clickable" @click="irADetalle">
+    <h6 @click="irADetalle" class="clickable">
       {{nombre}}
     </h6>
-    <p class="price">
+    <p class="price clickable" @click="irADetalle">
       {{precio}}€
     </p>
     <button @click="agregarAlCarrito" class="buy-btn">Comprar
@@ -64,6 +64,12 @@ export default {
       } catch (err) {
         console.error("Error al agregar al carrito:", err);
       }
+    },
+    irADetalle() {
+      this.$router.push({
+        name: "detalle",
+        params: { id: this.id }
+      });
     }
   }
 }
@@ -91,6 +97,10 @@ import 'bootstrap-icons/font/bootstrap-icons.css'
   height: 200px;
   object-fit: contain;
   border-radius: 5px;
+}
+
+.clickable:hover {
+  cursor: pointer;
 }
 
 .price {
