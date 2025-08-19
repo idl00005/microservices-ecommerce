@@ -156,6 +156,7 @@ public class CatalogoService {
             // Deserializar el mensaje
             ValoracionDTO valoracionDTO = objectMapper.readValue(mensaje, ValoracionDTO.class);
 
+            System.out.println("Obtenida la siguiente valoración: " + valoracionDTO);
             // Buscar el producto asociado
             Producto producto = productoRepository.findById(valoracionDTO.idProducto());
             if (producto == null) {
@@ -178,8 +179,7 @@ public class CatalogoService {
 
             // Invalidar el caché de número de valoraciones
             invalidarCacheNumValoraciones(valoracionDTO.idProducto());
-
-            System.out.println("Valoración procesada y guardada: " + valoracionDTO);
+            invalidarCacheProducto(valoracionDTO.idProducto());
         } catch (Exception e) {
             System.err.println("Error al procesar el evento de valoración: " + e.getMessage());
         }
@@ -202,7 +202,6 @@ public class CatalogoService {
     public void actualizarPuntuacionProducto(Producto producto, int puntuacion) {
         long totalValoraciones = productoRepository.contarValoraciones(producto.getId());
         producto.actualizarPuntuacion(puntuacion, totalValoraciones);
-        productoRepository.persist(producto);
     }
 
     @Transactional

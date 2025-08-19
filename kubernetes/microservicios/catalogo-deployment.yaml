@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: catalogo-microservicio
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: catalogo-microservicio
@@ -21,14 +21,14 @@ spec:
             httpGet:
               path: /q/health/ready
               port: 8080
-            initialDelaySeconds: 115
-            periodSeconds: 15
+            initialDelaySeconds: 5
+            periodSeconds: 3
             failureThreshold: 2
           livenessProbe:
             httpGet:
               path: /q/health/live
               port: 8080
-            initialDelaySeconds: 135
+            initialDelaySeconds: 45
             periodSeconds: 3
             failureThreshold: 3
           resources:

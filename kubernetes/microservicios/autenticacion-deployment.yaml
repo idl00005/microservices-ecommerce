@@ -21,14 +21,14 @@ spec:
             httpGet:
               path: /q/health/ready
               port: 8080
-            initialDelaySeconds: 100
-            periodSeconds: 15
+            initialDelaySeconds: 5
+            periodSeconds: 3
             failureThreshold: 2
           livenessProbe:
             httpGet:
               path: /q/health/live
               port: 8080
-            initialDelaySeconds: 130
+            initialDelaySeconds: 45
             periodSeconds: 3
             failureThreshold: 3
           resources:

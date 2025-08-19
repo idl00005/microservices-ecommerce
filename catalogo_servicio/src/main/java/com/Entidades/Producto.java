@@ -45,7 +45,7 @@ public class Producto {
 
     @NotNull
     @Min(value = 0, message = "La puntuación no puede ser menor que 0")
-    private double puntuacion = 0.0;
+    private double puntuacion;
 
     @OneToMany(cascade = CascadeType.ALL,
             orphanRemoval = true,
@@ -68,6 +68,7 @@ public class Producto {
         this.categoria = categoria;
         this.imagenURL = imagenUrl;
         this.detalles = detalles;
+        this.puntuacion = 0.0;
     }
 
     // Getters y Setters
@@ -144,7 +145,7 @@ public class Producto {
     }
 
     public void actualizarPuntuacion(int nuevaPuntuacion, long totalValoraciones) {
-        this.puntuacion = ((this.puntuacion * (totalValoraciones - 1)) + nuevaPuntuacion) / totalValoraciones;
+        this.puntuacion = (this.puntuacion * (totalValoraciones - 1.0) + nuevaPuntuacion) / totalValoraciones;
     }
 
     public void agregarValoracion(Valoracion valoracion) {
