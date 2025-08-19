@@ -200,13 +200,17 @@ public class CatalogoService {
 
     @Transactional
     public void actualizarPuntuacionProducto(Producto producto, int puntuacion) {
-        long totalValoraciones = productoRepository.contarValoraciones(producto.getId());
+        Integer totalValoraciones = productoRepository.contarValoraciones(producto.getId());
+        System.out.println("Total de valoraciones para el producto " + producto.getId() + ": " + totalValoraciones);
+        System.out.println("Puntuación actual: " + producto.getPuntuacion());
+        System.out.println("Nueva puntuación a insertar: " + puntuacion);
         producto.actualizarPuntuacion(puntuacion, totalValoraciones);
+        System.out.println("Puntuación actualizada: " + producto.getPuntuacion());
     }
 
     @Transactional
     @CacheResult(cacheName = "num-valoracion-cache")
-    public long contarValoracionesPorProducto(Long idProducto) {
+    public Integer contarValoracionesPorProducto(Long idProducto) {
         return productoRepository.contarValoraciones(idProducto);
     }
 

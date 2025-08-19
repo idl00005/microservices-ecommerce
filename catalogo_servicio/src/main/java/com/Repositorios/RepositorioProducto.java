@@ -65,8 +65,12 @@ public class RepositorioProducto implements PanacheRepository<Producto> {
         return filas > 0;
     }
 
-    public long contarValoraciones(Long productoId) {
-        return count("SELECT SIZE(p.valoraciones) FROM Producto p WHERE p.id = ?1", productoId);
+    public Integer contarValoraciones(Long productoId) {
+        return entityManager.createQuery(
+                        "SELECT SIZE(p.valoraciones) FROM Producto p WHERE p.id = :id",
+                        Integer.class
+                ).setParameter("id", productoId)
+                .getSingleResult();
     }
 
     public List<Valoracion> findValoracionesPaginadas(Long idProducto, int page, int size) {

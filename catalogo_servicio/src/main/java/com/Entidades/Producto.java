@@ -144,7 +144,7 @@ public class Producto {
         this.puntuacion = puntuacion;
     }
 
-    public void actualizarPuntuacion(int nuevaPuntuacion, long totalValoraciones) {
+    public void actualizarPuntuacion(int nuevaPuntuacion, Integer totalValoraciones) {
         this.puntuacion = (this.puntuacion * (totalValoraciones - 1.0) + nuevaPuntuacion) / totalValoraciones;
     }
 
