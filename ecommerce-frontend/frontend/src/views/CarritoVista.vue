@@ -136,6 +136,7 @@ export default {
         if (!res.ok) {
           console.warn("DELETE carrito devolvió", res.status);
         }
+        window.dispatchEvent(new Event("carrito-actualizado"));
       } catch (e) {
         console.warn("No se pudo llamar DELETE carrito:", e);
       } finally {
@@ -167,6 +168,7 @@ export default {
         if (!res.ok) {
           console.warn("PUT carrito devolvió", res.status);
         }
+        window.dispatchEvent(new Event("carrito-actualizado"));
       } catch (e) {
         console.warn("Error actualizando cantidad en backend:", e);
       } finally {

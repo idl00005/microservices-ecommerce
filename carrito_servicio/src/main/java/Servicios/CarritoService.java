@@ -6,7 +6,7 @@ import Entidades.CarritoItem;
 import Entidades.LineaPago;
 import Entidades.OrdenPago;
 import Entidades.OutboxEvent;
-import Otros.ProductEvent;
+import DTO.ProductEventDTO;
 import Repositorios.CarritoItemRepository;
 import Repositorios.OrdenPagoRepository;
 import Repositorios.OutboxEventRepository;
@@ -19,7 +19,6 @@ import io.quarkus.cache.CacheKey;
 import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
@@ -303,7 +302,7 @@ public class CarritoService {
     @Incoming("productos-in")
     @Transactional
     public void procesarEventoProducto(String eventJson) throws JsonProcessingException {
-        ProductEvent event = parseEvent(eventJson);
+        ProductEventDTO event = parseEvent(eventJson);
         LOGGER.info("Iniciando operación...");
 
         if ("DELETED".equals(event.getAction())) {
@@ -315,9 +314,9 @@ public class CarritoService {
         }
     }
 
-    private ProductEvent parseEvent(String eventJson) throws JsonProcessingException {
+    private ProductEventDTO parseEvent(String eventJson) throws JsonProcessingException {
         System.out.println("Recibido: " + eventJson);
-        return new ObjectMapper().readValue(eventJson, ProductEvent.class);
+        return new ObjectMapper().readValue(eventJson, ProductEventDTO.class);
     }
 
     @Transactional

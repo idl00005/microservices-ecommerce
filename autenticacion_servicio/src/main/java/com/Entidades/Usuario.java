@@ -7,12 +7,12 @@ import jakarta.validation.constraints.*;
 @Entity
 public class Usuario {
     @NotBlank(message = "El correo no puede estar vacío.")
-    @Email(message = "El correo debe tener un formato válido.") // Validación del formato de correo electrónico
+    @Email(message = "El correo debe tener un formato válido.")
     @Id
     private String correo;
 
-    @NotBlank(message = "El nombre no puede estar vacío.") // No permite nulo ni cadenas vacías
-    @Size(max = 50, message = "El nombre no puede superar los 50 caracteres.") // Longitud máxima de 50 caracteres
+    @NotBlank(message = "El nombre no puede estar vacío.")
+    @Size(max = 50, message = "El nombre no puede superar los 50 caracteres.")
     private String nombre;
 
     @NotBlank(message = "El apellido no puede estar vacío.")
@@ -23,10 +23,10 @@ public class Usuario {
     private String telefono;
 
     @NotBlank(message = "La contraseña no puede estar vacía.")
-    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres.") // Longitud mínima de 8 caracteres
+    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres.")
     private String password;
 
-    @NotBlank(message = "El rol no puede estar vacío.") // Obligatorio
+    @NotBlank(message = "El rol no puede estar vacío.")
     private String rol;
 
 

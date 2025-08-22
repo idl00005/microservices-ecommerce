@@ -32,6 +32,17 @@
       <p v-if="validationError" class="validation-error">{{ validationError }}</p>
     </section>
 
+    <transition name="fade-down">
+      <div
+          v-if="toast.visible"
+          class="toast-success"
+          role="status"
+          aria-live="polite"
+      >
+        {{ toast.message }}
+      </div>
+    </transition>
+
     <section class="cards-container">
       <Producto
           v-for="producto in listaproductos"
@@ -82,11 +93,9 @@ const filters = reactive({
   precioMax: ""
 });
 
-// Debounce para búsqueda por nombre (500ms)
 let nombreDebounceTimer = null;
 function onNombreInput() {
-  // Si quieres búsqueda al tipear, descomenta la línea siguiente para auto-aplicar con debounce
-  // debounceApplyFilters();
+  debounceApplyFilters();
 }
 
 function debounceApplyFilters() {
@@ -96,13 +105,10 @@ function debounceApplyFilters() {
   }, 500);
 }
 
-/**
- * Construye la URL con parámetros de query según filtros y paginación
- */
 function buildQuery(pageNum = 1) {
   const params = new URLSearchParams();
   params.append("page", String(pageNum));
-  params.append("size", String(Math.min(PAGE_SIZE, 100))); // asegurar <= 100
+  params.append("size", String(Math.min(PAGE_SIZE, 100)));
 
   if (filters.nombre && filters.nombre.trim() !== "") {
     params.append("nombre", filters.nombre.trim());
@@ -137,7 +143,7 @@ function buildQuery(pageNum = 1) {
  * Fetch de productos
  */
 async function fetchProducts(pageNum = 1, append = false) {
-  if (validationError.value) return; // no hacer petición si hay error de validación
+  if (validationError.value) return;
 
   loading.value = true;
   errorMsg.value = "";
@@ -157,6 +163,7 @@ async function fetchProducts(pageNum = 1, append = false) {
       // reemplazamos lista (aplicar filtros o carga inicial)
       listaproductos.value = data;
     }
+    console.log("Productos obtenidos:", listaproductos.value);
   } catch (err) {
     console.error("Error al obtener los productos:", err);
     errorMsg.value = err.message || "Error al obtener los productos";
@@ -199,6 +206,28 @@ function cargarProductos() {
 function agregarAlCarrito(productId) {
   // Evento hacia componente padre o llamada a API de carrito
   console.log("Producto agregado al carrito:", productId);
+  showSuccessToast("Producto agregado al carrito correctamente");
+}
+
+const toast = reactive({
+  visible: false,
+  message: "",
+  timerId: null
+});
+
+function showSuccessToast(msg = "Producto agregado al carrito correctamente") {
+  // limpia cualquier temporizador previo
+  if (toast.timerId) {
+    clearTimeout(toast.timerId);
+    toast.timerId = null;
+  }
+  toast.message = msg;
+  toast.visible = true;
+  // Oculta automáticamente a los 2.5s
+  toast.timerId = setTimeout(() => {
+    toast.visible = false;
+    toast.timerId = null;
+  }, 2500);
 }
 
 /**
@@ -275,5 +304,31 @@ onMounted(() => {
   color: #b00020;
   text-align: center;
   margin-top: 8px;
+}
+
+.toast-success {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: rgba(111, 207, 107, 0.6);
+  color: #275511;
+  padding: 12px 18px;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  font-weight: 600;
+  backdrop-filter: blur(2px);
+}
+
+/* Transición de entrada/salida hacia abajo */
+.fade-down-enter-active,
+.fade-down-leave-active {
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.fade-down-enter-from,
+.fade-down-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -8px);
 }
 </style>

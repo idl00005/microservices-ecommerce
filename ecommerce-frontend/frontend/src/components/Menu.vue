@@ -3,7 +3,12 @@
     <div class="logo">Mi Tienda</div>
     <ul class="menu-links">
       <li><router-link to="/">Productos</router-link></li>
-      <li><router-link to="/carrito">Carrito</router-link></li>
+      <li class="carrito-item">
+        <router-link to="/carrito">
+          Carrito
+          <span v-if="tieneProductos" class="cart-indicator"></span>
+        </router-link>
+      </li>
       <li v-if="!estaLogueado">
         <router-link to="/login" custom v-slot="{ navigate }">
           <button @click="navigate" class="btn-login">Iniciar Sesión</button>
@@ -21,17 +26,41 @@ export default {
   name: "Menu",
   data() {
     return {
-      estaLogueado: false
+      estaLogueado: false,
+      tieneProductos: false
     };
   },
   mounted() {
     this.checkLogin();
     window.addEventListener("login", this.checkLogin);
+    window.addEventListener("carrito-actualizado", this.checkCart);
   },
   methods: {
     checkLogin() {
       const token = localStorage.getItem("jwt");
       this.estaLogueado = !!token;
+    },
+    async checkCart() {
+      try {
+        const token = localStorage.getItem("jwt");
+        if (!token) {
+          this.tieneProductos = false;
+          return;
+        }
+        const resp = await fetch("http://microservicios.local/carrito/", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!resp.ok) {
+          this.tieneProductos = false;
+          return;
+        }
+        const data = await resp.json();
+        this.tieneProductos = Array.isArray(data) && data.length > 0;
+
+      } catch (e) {
+        console.error("Error consultando el carrito:", e);
+        this.tieneProductos = false;
+      }
     },
     cerrarSesion() {
       localStorage.removeItem("jwt");
@@ -112,5 +141,54 @@ export default {
 
 .btn-logout:hover {
   background-color: #a71d2a;
+}
+
+.carrito-item {
+  position: relative;
+}
+
+.cart-indicator {
+  position: absolute;
+  top: 5px;
+  right: 0px;
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* ondas */
+.cart-indicator::before,
+.cart-indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 11px;
+  height: 11px;
+  background-color: rgba(255, 0, 0, 0.4);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  animation: wave 1.6s infinite;
+}
+
+.cart-indicator::after {
+  animation-delay: 1s;
+}
+
+@keyframes wave {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.7;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 </style>

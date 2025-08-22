@@ -41,7 +41,6 @@ public class AutenticacionResource {
 
     @PostConstruct
     public void init() {
-        // Crea el contador de errores
         errorCounter = registry.counter("Aplication_AutenticacionResource_primality_errors_total");
     }
 

@@ -21,10 +21,10 @@ public class ApplicationInitializer {
     RepositorioProducto repositorioProducto;
 
     @Inject
-    ObjectMapper objectMapper; // Jackson para construir detalles JSON
+    ObjectMapper objectMapper;
 
     @PostConstruct
-    @Transactional // Indica que el método se ejecuta dentro de una transacción
+    @Transactional
     public void init() {
         if(repositorioProducto.count() == 0) {
             agregarProducto(new Producto("Smartphone Samsung Galaxy S21",
@@ -191,11 +191,9 @@ public class ApplicationInitializer {
 
     @Transactional
     protected void agregarProducto(Producto producto) {
-        // Persistimos el producto a través del repositorio
         repositorioProducto.persist(producto);
     }
 
-    // Método para construir un ObjectNode con atributos personalizados
     private ObjectNode createJsonNode(String... atributos) {
         ObjectNode detalles = objectMapper.createObjectNode();
         for (String atributo : atributos) {

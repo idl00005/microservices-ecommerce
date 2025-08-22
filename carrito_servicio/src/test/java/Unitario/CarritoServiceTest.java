@@ -7,7 +7,7 @@ import Entidades.CarritoItem;
 import Entidades.LineaPago;
 import Entidades.OrdenPago;
 import Entidades.OutboxEvent;
-import Otros.ProductEvent;
+import DTO.ProductEventDTO;
 import Repositorios.CarritoItemRepository;
 import Repositorios.OrdenPagoRepository;
 import Repositorios.OutboxEventRepository;
@@ -272,7 +272,7 @@ public class CarritoServiceTest {
     @TestTransaction
     public void testProcesarEventoProductoDeleted() throws JsonProcessingException {
         // Mock del evento
-        ProductEvent event = new ProductEvent(1L, "DELETED", null);
+        ProductEventDTO event = new ProductEventDTO(1L, "DELETED", null);
         String eventJson = new ObjectMapper().writeValueAsString(event);
 
         // Llamada al método

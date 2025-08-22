@@ -183,6 +183,7 @@ export default {
         const data = await res.json();
         console.log("Producto agregado al carrito:", data);
         alert("Producto agregado al carrito correctamente.");
+        window.dispatchEvent(new Event("carrito-actualizado"));
       } catch (err) {
         console.error("Error al agregar al carrito:", err);
         alert("Error al agregar al carrito. Revisa la consola.");
