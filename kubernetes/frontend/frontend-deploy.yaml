@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: frontend-vue:latest
+          image: frontend_vue:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

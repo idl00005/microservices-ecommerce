@@ -84,11 +84,12 @@ Para ejecutar la aplicación empleando kubernetes, sigue los siguientes pasos:
   cd ejemplo_servicio
   ./mvnw clean package -DskipTests
   cd ..
-  # Creamos la imagen de docker para cada undo de los servicios (desde la raíz del proyecto):
+  # Creamos la imagen de docker para cada undo de los servicios y para el frontend (desde la raíz del proyecto):
   docker build -t autenticacion_servicio_quarkus:v1 -f ./autenticacion_servicio/src/main/docker/Dockerfile.jvm ./autenticacion_servicio
   docker build -t catalogo_servicio_quarkus:v1 -f ./catalogo_servicio/src/main/docker/Dockerfile.jvm ./catalogo_servicio
   docker build -t carrito_servicio_quarkus:v1 -f ./carrito_servicio/src/main/docker/Dockerfile.jvm ./carrito_servicio
   docker build -t pedido_servicio_quarkus:v1 -f ./pedido_servicio/src/main/docker/Dockerfile.jvm ./pedido_servicio
+  docker build -t frontend_vue:v1 -f ./frontend/Dockerfile ./frontend
 ```
 5. Activamos el plugin de ingress de minikube:
 ```shell script
@@ -105,6 +106,7 @@ Para ejecutar la aplicación empleando kubernetes, sigue los siguientes pasos:
     kubectl apply -f kubernetes/microservicios
     kubectl apply -f kubernetes/ingress
 ```
+En este punto, la aplicación debería estar disponible en `http://microservicios.local`.
 8. Para ejecutar el servicio de monitorización realizamos los siguientes pasos:
 Clonamos el repositorio de kube-prometheus:
 ```shell script
@@ -120,7 +122,7 @@ Creamos el servicio de monitoreo empleando la configuración de los manifiestos:
       --namespace=monitoring
   kubectl apply -f kubernetes/prometheus/kube-prometheus/manifests/
 ```
-A continuación querremos acceder a grafana, para ello primero necesitamos saber cuál es 
+Si queremos acceder a grafana, para ello primero necesitamos saber cuál es 
 el nombre del pod de grafana:
 ```shell script
   kubectl get pods -n monitoring
