@@ -6,19 +6,17 @@ import java.util.Map;
 import java.util.UUID;
 
 public record StockEventDTO(
-        String tipo,                            // LIBERAR_STOCK o CONFIRMAR_COMPRA
-        Map<Long, Integer> productos,           // Map de productoId -> cantidad
-        Long ordenId,                          // ID de la orden relacionada
-        LocalDateTime timestamp,                // Momento del evento
-        String correlationId                   // ID para rastrear el flujo de eventos
+        String tipo,
+        Map<Long, Integer> productos,
+        Long ordenId,
+        LocalDateTime timestamp
 ) {
     public static StockEventDTO liberacionStock(Map<Long, Integer> productos, Long ordenId) {
         return new StockEventDTO(
                 "LIBERAR_STOCK",
                 productos,
                 ordenId,
-                LocalDateTime.now(),
-                UUID.randomUUID().toString()
+                LocalDateTime.now()
         );
     }
 
@@ -27,8 +25,7 @@ public record StockEventDTO(
                 "CONFIRMAR_COMPRA",
                 productos,
                 ordenId,
-                LocalDateTime.now(),
-                UUID.randomUUID().toString()
+                LocalDateTime.now()
         );
     }
 }

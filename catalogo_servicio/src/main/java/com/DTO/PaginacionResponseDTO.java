@@ -1,14 +1,14 @@
-package com.Otros;
+package com.DTO;
 
 import java.util.List;
 
-public class PaginacionResponse<T> {
+public class PaginacionResponseDTO<T> {
     private List<T> datos;
     private int pagina;
     private int tamanio;
     private long total;
 
-    public PaginacionResponse(List<T> datos, int pagina, int tamanio, long total) {
+    public PaginacionResponseDTO(List<T> datos, int pagina, int tamanio, long total) {
         this.datos = datos;
         this.pagina = pagina;
         this.tamanio = tamanio;

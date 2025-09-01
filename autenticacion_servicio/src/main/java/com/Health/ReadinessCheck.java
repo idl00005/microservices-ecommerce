@@ -1,4 +1,4 @@
-package com.Otros;
+package com.Health;
 
 import com.Repositorios.RepositorioUsuario;
 import jakarta.enterprise.context.ApplicationScoped;

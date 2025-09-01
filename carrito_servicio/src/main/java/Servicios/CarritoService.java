@@ -75,15 +75,6 @@ public class CarritoService {
                         }
                 ));
 
-        // 2) Construir lista de DTO con precio
-        List<CarritoItemDTO> itemsConPrecio = carrito.stream()
-                .map(item -> new CarritoItemDTO(
-                        item.getProductoId(),
-                        item.getCantidad(),
-                        precios.get(item.getProductoId())
-                ))
-                .toList();
-
         Map<Long, Integer> productosAReservar = carrito.stream()
                 .collect(Collectors.toMap(
                         item -> item.getProductoId(),

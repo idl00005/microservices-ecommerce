@@ -82,6 +82,8 @@
 </template>
 
 <script>
+const URL_CARRITO= window.APP_CONFIG.API_CARRITO;
+
 export default {
   name: "CheckoutCompra",
   data() {
@@ -150,7 +152,7 @@ export default {
 
       this.loading = true;
       try {
-        const res = await fetch("http://microservicios.local/carrito/ordenes-pago", {
+        const res = await fetch(URL_CARRITO+"/ordenes-pago", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

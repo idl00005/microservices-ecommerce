@@ -22,6 +22,7 @@
 </template>
 
 <script>
+const URL_CARRITO = window.APP_CONFIG.API_CARRITO;
 export default {
   name: "Menu",
   data() {
@@ -47,7 +48,7 @@ export default {
           this.tieneProductos = false;
           return;
         }
-        const resp = await fetch("http://microservicios.local/carrito/", {
+        const resp = await fetch(URL_CARRITO, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (!resp.ok) {

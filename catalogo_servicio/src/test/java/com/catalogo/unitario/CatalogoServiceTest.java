@@ -4,7 +4,7 @@ import com.DTO.ProductoDTO;
 import com.DTO.ValoracionDTO;
 import com.Entidades.Producto;
 import com.Entidades.Valoracion;
-import com.Otros.ProductEvent;
+import com.DTO.ProductEventDTO;
 import com.Repositorios.RepositorioProducto;
 import com.Repositorios.ValoracionRepository;
 import com.Servicios.CatalogoService;
@@ -35,7 +35,7 @@ class CatalogoServiceTest {
     RepositorioProducto productoRepository;
 
     @Mock
-    Emitter<ProductEvent> productEventEmitter;
+    Emitter<ProductEventDTO> productEventEmitter;
 
     @Mock
     ValoracionRepository valoracionRepository;

@@ -14,6 +14,7 @@
 </template>
 
 <script>
+const URL_CARRITO= window.APP_CONFIG.API_CARRITO;
 export default {
   name: 'Producto',
   props: {
@@ -43,7 +44,7 @@ export default {
       };
 
       try {
-        const res = await fetch("http://microservicios.local/carrito", {
+        const res = await fetch(URL_CARRITO, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

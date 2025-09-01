@@ -41,6 +41,9 @@
 </template>
 
 <script>
+
+const URL_AUTENTICACION= window.APP_CONFIG.API_AUTENTICACION;
+
 export default {
   name: "Login",
   data() {
@@ -80,7 +83,7 @@ export default {
           password: this.password
         };
 
-        const res = await fetch("http://microservicios.local/autenticacion/login", {
+        const res = await fetch(URL_AUTENTICACION + "/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

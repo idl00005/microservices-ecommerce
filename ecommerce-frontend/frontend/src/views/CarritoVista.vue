@@ -47,6 +47,8 @@
 <script>
 import CarritoItem from "@/components/CarritoItem.vue";
 
+const URL_CARRITO= window.APP_CONFIG.API_CARRITO;
+
 export default {
   name: "CarritoVista",
   components: { CarritoItem },
@@ -90,7 +92,7 @@ export default {
       }
 
       try {
-        const res = await fetch("http://microservicios.local/carrito", {
+        const res = await fetch(URL_CARRITO, {
           method: "GET",
           headers: {
             "Accept": "application/json",
@@ -126,7 +128,7 @@ export default {
       }
 
       try {
-        const res = await fetch(`http://microservicios.local/carrito/${productoId}`, {
+        const res = await fetch(URL_CARRITO+`/${productoId}`, {
           method: "DELETE",
           headers: {
             "Accept": "application/json",
@@ -156,7 +158,7 @@ export default {
       }
 
       try {
-        const res = await fetch(`http://microservicios.local/carrito/${productoId}`, {
+        const res = await fetch(URL_CARRITO+`/${productoId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

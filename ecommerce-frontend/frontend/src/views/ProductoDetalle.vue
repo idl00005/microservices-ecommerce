@@ -92,6 +92,9 @@
 </template>
 
 <script>
+const URL_CATALOGO= window.APP_CONFIG.API_CATALOGO;
+const URL_CARRITO= window.APP_CONFIG.API_CARRITO;
+
 export default {
   name: "ProductoDetalle",
   data() {
@@ -107,7 +110,7 @@ export default {
     this.id = id;
     if (!id) return;
 
-    fetch(`http://microservicios.local/catalogo/${id}`)
+    fetch(URL_CATALOGO+`/${id}`)
         .then(res => {
           if (!res.ok) throw new Error("Error al obtener el producto");
           return res.json();
@@ -163,7 +166,7 @@ export default {
 
       this.loading = true;
       try {
-        const res = await fetch("http://microservicios.local/carrito", {
+        const res = await fetch(URL_CARRITO, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

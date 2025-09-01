@@ -74,7 +74,7 @@ import Producto from "@/components/Producto.vue";
  * Config
  */
 const PAGE_SIZE = 16; // <= 100 (backend limita 100)
-const BASE_URL = "http://microservicios.local/catalogo";
+const BASE_URL_CATALOGO = window.APP_CONFIG.API_CATALOGO;
 
 /**
  * Reactive state
@@ -136,7 +136,7 @@ function buildQuery(pageNum = 1) {
     validationError.value = "El precio mínimo no puede ser mayor que el precio máximo.";
   }
 
-  return `${BASE_URL}?${params.toString()}`;
+  return `${BASE_URL_CATALOGO}?${params.toString()}`;
 }
 
 /**

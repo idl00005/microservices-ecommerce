@@ -1,13 +1,13 @@
-package com.Otros;
+package com.DTO;
 
 import com.Entidades.Producto;
 
-public class ProductEvent {
+public class ProductEventDTO {
     private Long productId;
     private String action; // "DELETED" or "UPDATED"
     private Producto producto;
 
-    public ProductEvent(Long productId, String action, Producto producto) {
+    public ProductEventDTO(Long productId, String action, Producto producto) {
         this.productId = productId;
         this.action = action;
         this.producto = producto;

@@ -5,7 +5,7 @@ import com.DTO.StockEventDTO;
 import com.DTO.ValoracionDTO;
 import com.Entidades.Producto;
 import com.Entidades.Valoracion;
-import com.Otros.ProductEvent;
+import com.DTO.ProductEventDTO;
 import com.Repositorios.RepositorioProducto;
 import com.Repositorios.ValoracionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,7 +39,7 @@ public class CatalogoService {
 
     @Inject
     @Channel("product-events")
-    public Emitter<ProductEvent> productEventEmitter;
+    public Emitter<ProductEventDTO> productEventEmitter;
 
     public List<ProductoDTO> obtenerProductos(int page, int size, String nombre, String categoria, Double precioMin, Double precioMax) {
         List<Producto> productos = productoRepository.buscarProductos(page, size, nombre, categoria, precioMin, precioMax);
@@ -79,7 +79,7 @@ public class CatalogoService {
                 producto.getPrecio(), producto.getStock(), producto.getDetalles()
         );
         if (actualizado) {
-            ProductEvent event = new ProductEvent(id, "UPDATED", null);
+            ProductEventDTO event = new ProductEventDTO(id, "UPDATED", null);
             emitirEventoProducto(event);
             invalidarCacheProducto(id);
             return true;
@@ -92,7 +92,7 @@ public class CatalogoService {
         boolean eliminado = productoRepository.eliminarPorId(id);
         if (eliminado) {
             invalidarCacheProducto(id);
-            ProductEvent event = new ProductEvent(id, "DELETED", null);
+            ProductEventDTO event = new ProductEventDTO(id, "DELETED", null);
             emitirEventoProducto(event);
         }
         return eliminado;
@@ -236,7 +236,7 @@ public class CatalogoService {
     @CacheInvalidate(cacheName = "procducto-cache")
     protected void invalidarCacheProducto(@CacheKey Long id) {}
 
-    public void emitirEventoProducto(ProductEvent event) {
+    public void emitirEventoProducto(ProductEventDTO event) {
         productEventEmitter.send(event);
     }
 

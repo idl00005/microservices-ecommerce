@@ -2,7 +2,7 @@ package com.Recursos;
 
 import com.DTO.ProductoDTO;
 import com.DTO.ValoracionDTO;
-import com.Otros.PaginacionResponse;
+import com.DTO.PaginacionResponseDTO;
 import com.Servicios.CatalogoService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
@@ -214,7 +214,7 @@ public class CatalogoResource {
             long total = catalogoService.contarValoracionesPorProducto(idProducto);
 
             return Response.ok()
-                    .entity(new PaginacionResponse<>(valoraciones, pagina, tamanio, total))
+                    .entity(new PaginacionResponseDTO<>(valoraciones, pagina, tamanio, total))
                     .build();
         } catch (Exception e) {
             errorCounter.inc();
