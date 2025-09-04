@@ -249,14 +249,10 @@ public class CarritoServiceTest {
 
 
     @Test
-    @TestTransaction
     public void testAgregarProductoNuevo() {
         // Mock del producto
         ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10,"url");
         when(stockClient.obtenerProductoPorId(1L)).thenReturn(productoMock);
-
-        // Mock del repositorio
-        doNothing().when(carritoItemRepository).persist(any(CarritoItem.class));
 
         // Llamada al método
         CarritoItemDetalleDTO result = carritoService.agregarProducto("user1", 1L, 2);
@@ -269,7 +265,6 @@ public class CarritoServiceTest {
     }
 
     @Test
-    @TestTransaction
     public void testProcesarEventoProductoDeleted() throws JsonProcessingException {
         // Mock del evento
         ProductEventDTO event = new ProductEventDTO(1L, "DELETED", null);
@@ -283,7 +278,6 @@ public class CarritoServiceTest {
     }
 
     @Test
-    @TestTransaction
     public void testObtenerCarrito() {
         // Mock del repositorio
         CarritoItem item = new CarritoItem();
@@ -304,7 +298,6 @@ public class CarritoServiceTest {
     }
 
     @Test
-    @TestTransaction
     public void testEliminarProducto() {
         // Mock del repositorio
         CarritoItem item = new CarritoItem();
@@ -324,7 +317,6 @@ public class CarritoServiceTest {
     }
 
     @Test
-    @TestTransaction
     public void testVaciarCarrito() {
         // Mock del repositorio: Simula el método delete
         doAnswer(invocation -> null).when(carritoItemRepository).delete("userId", "user1");
@@ -337,7 +329,6 @@ public class CarritoServiceTest {
     }
 
     @Test
-    @TestTransaction
     public void testActualizarCantidad() {
         // Mock del producto
         ProductoDTO productoMock = new ProductoDTO(1L, "Producto Test", BigDecimal.valueOf(100), 10,"url");
@@ -362,7 +353,6 @@ public class CarritoServiceTest {
     }
 
     @Test
-    @TestTransaction
     public void testIniciarPagoCarritoVacio() {
         when(carritoItemRepository.findByUserId("user1")).thenReturn(List.of());
 

@@ -114,7 +114,7 @@ export default {
         })) : [];
       } catch (err) {
         console.error("Error cargando carrito:", err);
-        this.error = "No se pudo cargar el carrito. Revisa la consola.";
+        this.error = "No se pudo cargar el carrito.";
       } finally {
         this.loading = false;
       }
