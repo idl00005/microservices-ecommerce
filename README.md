@@ -91,9 +91,10 @@ Para ejecutar la aplicación empleando kubernetes, sigue los siguientes pasos:
   docker build -t pedido_servicio_quarkus:v1 -f ./pedido_servicio/src/main/docker/Dockerfile.jvm ./pedido_servicio
   docker build -t frontend_vue:v1 -f ./frontend/Dockerfile ./frontend
 ```
-5. Activamos el plugin de ingress de minikube:
+5. Activamos el plugin de ingress y metrics-server de minikube:
 ```shell script
   minikube addons enable ingress
+  minikube addons enable metrics-server
 ```
 6. Necesitaremos que resuelva el nombre de dominio `microservicios.local` a la IP de minikube. Para ello, añadimos la siguiente línea al archivo `/etc/hosts`:
 ```shell script
@@ -105,6 +106,9 @@ Para ejecutar la aplicación empleando kubernetes, sigue los siguientes pasos:
     kubectl apply -f kubernetes/kafka
     kubectl apply -f kubernetes/microservicios
     kubectl apply -f kubernetes/ingress
+    kubectl apply -f kubernetes/redis
+    kubectl apply -f kubernetes/metrics-server
+    kubectl apply -f kubernetes/frontend
 ```
 En este punto, la aplicación debería estar disponible en `http://microservicios.local`.
 8. Para ejecutar el servicio de monitorización realizamos los siguientes pasos:
@@ -121,6 +125,10 @@ Creamos el servicio de monitoreo empleando la configuración de los manifiestos:
       --all CustomResourceDefinition \
       --namespace=monitoring
   kubectl apply -f kubernetes/prometheus/kube-prometheus/manifests/
+```
+Para poder obtener las métricas personalizadas, deberemos aplicar los siguientes manifiestos:
+```shell script
+  kubectl apply -f kubernetes/prometheus/monitores-prometheus
 ```
 Si queremos acceder a grafana, para ello primero necesitamos saber cuál es 
 el nombre del pod de grafana:
