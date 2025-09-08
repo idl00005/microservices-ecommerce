@@ -1,65 +1,3 @@
-# Microservicios con Quarkus
-## Ejecutar la aplicación en local
-
-Para ejecutar la aplicación en local, sigue los siguientes pasos:
-1. Actualiza la lista de paquetes:
-```shell script
-  sudo apt update
-```
-2. Instala PostgreSQL y activa el servicio:
-```shell script
-  apt-get install -y postgresql postgresql-contrib
-  systemctl enable postgresql
-  systemctl start postgresql
-```
-3. Crea el usuario y las bases de datos necesarias:
-```shell script
-  sudo -u postgres psql -c "CREATE USER ignacio_ad WITH PASSWORD '1234';"
-  sudo -u postgres psql -c "CREATE DATABASE "autenticacionBD" OWNER ignacio_ad;"
-  sudo -u postgres psql -c "CREATE DATABASE "catalogoBD" OWNER ignacio_ad;"
-  sudo -u postgres psql -c "CREATE DATABASE "carritoBD" OWNER ignacio_ad;"
-  sudo -u postgres psql -c "CREATE DATABASE "catalogoBD" OWNER ignacio_ad;"
-```
-4. Instala java 17:
-```shell script
-  sudo apt install openjdk-17-jdk
-```
-5. Instala Maven:
-```shell script
-  sudo apt install maven
-```
-6. Iniciamos el servicio de kafka. Para este paso suponemos que docker y docker-compose ya están instalados,
-en caso contrario será necesaria su instalación.
-```shell script
-  cd docker-compose_solo_kafka
-  docker-compose up -d
-```
-> **_NOTA:_**  En ocasiones el contenedor de kafka se cierra al arrancar por primera vez debido a
-que zookeeper no ha completado su arranque. En ese caso, volvemos a ejecutar "docker-compose up -d".
-6. Arrancamos los distintos servicios de la aplicación:
-```shell script
-  # Para cada servicio:
-  cd ejemplo_servicio
-  ./mvnw quarkus:dev
-```
-## Ejecutar la aplicación empleando Docker-Compose
-En este apartado se da por hecho que ya se dispone de Docker y Docker-Compose instalados en el sistema. 
-Para ejecutar la aplicación empleando Docker-Compose, sigue los siguientes pasos:
-1. Empaquetamos los distintos servicios:
-```shell script
-  # Para cada servicio:
-  cd ejemplo_servicio
-  ./mvnw clean package -DskipTests
-```
-2. En caso de que se disponga de postgresql instalado en el sistema, es necesario detener el servicio de postgresql:
-```shell script
-  sudo systemctl stop postgresql
-```
-3. Ejecutamos el comando de docker-compose para levantar los distintos servicios:
-```shell script
-  cd docker-compose
-  docker-compose up -d
-```
 ## Ejecutar la aplicación empleando kubernetes
 Para ejecutar la aplicación empleando kubernetes, sigue los siguientes pasos:
 1. Instala kubectl:
@@ -80,15 +18,12 @@ Para ejecutar la aplicación empleando kubernetes, sigue los siguientes pasos:
 4. Creamos las imágenes de los distintos servicios de la aplicación:
 ```shell script
   eval $(minikube docker-env)
-  # Para cada servicio:
-  cd ejemplo_servicio
-  ./mvnw clean package -DskipTests
-  cd ..
+
   # Creamos la imagen de docker para cada undo de los servicios y para el frontend (desde la raíz del proyecto):
-  docker build -t autenticacion_servicio_quarkus:v1 -f ./autenticacion_servicio/src/main/docker/Dockerfile.jvm ./autenticacion_servicio
-  docker build -t catalogo_servicio_quarkus:v1 -f ./catalogo_servicio/src/main/docker/Dockerfile.jvm ./catalogo_servicio
-  docker build -t carrito_servicio_quarkus:v1 -f ./carrito_servicio/src/main/docker/Dockerfile.jvm ./carrito_servicio
-  docker build -t pedido_servicio_quarkus:v1 -f ./pedido_servicio/src/main/docker/Dockerfile.jvm ./pedido_servicio
+  docker build -t autenticacion_servicio_quarkus:v1 -f ./autenticacion_servicio/src/main/docker/Dockerfile.native ./autenticacion_servicio
+  docker build -t catalogo_servicio_quarkus:v1 -f ./catalogo_servicio/src/main/docker/Dockerfile.native ./catalogo_servicio
+  docker build -t carrito_servicio_quarkus:v1 -f ./carrito_servicio/src/main/docker/Dockerfile.native ./carrito_servicio
+  docker build -t pedido_servicio_quarkus:v1 -f ./pedido_servicio/src/main/docker/Dockerfile.native ./pedido_servicio
   docker build -t frontend_vue:v1 -f ./frontend/Dockerfile ./frontend
 ```
 5. Activamos el plugin de ingress y metrics-server de minikube:

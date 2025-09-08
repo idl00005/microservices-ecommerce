@@ -1,9 +1,9 @@
 package com.DTO;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.validation.constraints.*;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 
@@ -37,7 +37,7 @@ public class ProductoDTO {
     @NotNull(message = "La URL de la imagen no puede ser nula")
     private String imagenUrl;
 
-    @Type(JsonBinaryType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode detalles;
 
     public ProductoDTO() {
