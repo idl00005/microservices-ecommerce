@@ -6,6 +6,7 @@ import com.DTO.ValoracionDTO;
 import com.Entidades.Producto;
 import com.Entidades.Valoracion;
 import com.DTO.ProductEventDTO;
+import com.Recursos.CatalogoResource;
 import com.Repositorios.RepositorioProducto;
 import com.Repositorios.ValoracionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,7 +23,7 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -113,6 +114,60 @@ public class CatalogoService {
         }
         return false;
     }
+
+    @Transactional
+    public ReservaBatchResult reservarStockMultiple(List<CatalogoResource.ReservaItemRequest> items) {
+        // normalizar ids (evitar multiples lookups redundantes)
+        List<Long> ids = items.stream()
+                .map(CatalogoResource.ReservaItemRequest::productoId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // cargar productos (podrías optimizar con un findAllById si tu repo lo soporta)
+        Map<Long, Producto> productosMap = new HashMap<>();
+        for (Long id : ids) {
+            Producto p = productoRepository.findById(id);
+            if (p != null) {
+                productosMap.put(id, p);
+            }
+        }
+
+        List<FailedItem> failures = new ArrayList<>();
+
+        // Validaciones: existencia y stock
+        for (CatalogoResource.ReservaItemRequest item : items) {
+            Producto p = productosMap.get(item.productoId());
+            if (p == null) {
+                failures.add(new FailedItem(item.productoId(), "Producto no encontrado"));
+                continue;
+            }
+            int disponible = p.getStock() - p.getStockReservado();
+            if (disponible < item.cantidad()) {
+                failures.add(new FailedItem(item.productoId(),
+                        "Stock insuficiente. Disponible=" + disponible + ", pedido=" + item.cantidad()));
+            }
+        }
+
+        // Si hay fallos, no persistimos nada (transacción se revertiría si lanzas excepción;
+        // aquí devolvemos el detalle para que el controlador retorne 409 con la lista de failures)
+        if (!failures.isEmpty()) {
+            return new ReservaBatchResult(false, failures);
+        }
+
+        // Todos los items son reservables -> persistir cambios
+        for (CatalogoResource.ReservaItemRequest item : items) {
+            Producto p = productosMap.get(item.productoId());
+            p.setStockReservado(p.getStockReservado() + item.cantidad());
+            productoRepository.persist(p);
+            invalidarCacheProducto(item.productoId());
+        }
+
+        return new ReservaBatchResult(true, Collections.emptyList());
+    }
+
+    public record FailedItem(Long productoId, String reason) {}
+
+    public record ReservaBatchResult(boolean reserved, List<FailedItem> failures) {}
 
     @Incoming("eventos-stock")
     @Transactional

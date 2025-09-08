@@ -20,7 +20,9 @@ import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class StockClient {
@@ -37,40 +39,44 @@ public class StockClient {
      * Devuelve true si todos los productos se pueden reservar, false si alguno falla.
      */
     public void reservarStock(Map<Long, Integer> productos, String jwt) {
-        try (Client client = ClientBuilder.newBuilder().build()) {
-            if (jwt == null || jwt.isBlank()) {
-                throw new RuntimeException("No hay token JWT válido. Llama a obtenerJwtParaCarrito primero.");
+        if (jwt == null || jwt.isBlank()) {
+            throw new RuntimeException("No hay token JWT válido. Llama a obtenerJwtParaCarrito primero.");
+        }
+
+        // Construir payload batch según ReservaBatchRequest
+        Map<String, Object> bodyJson = Map.of(
+                "items", productos.entrySet()
+                        .stream()
+                        .map(e -> Map.of(
+                                "productoId", e.getKey(),
+                                "cantidad", e.getValue()
+                        ))
+                        .collect(Collectors.toList())
+        );
+
+        try (Client client = ClientBuilder.newBuilder().build();
+             Response respuesta = client.target(urlCatalogoService)
+                     .path("/reservas")  // nuevo endpoint batch
+                     .request(MediaType.APPLICATION_JSON)
+                     .header(HttpHeaders.AUTHORIZATION, jwt)
+                     .post(Entity.json(bodyJson))) {
+
+            int status = respuesta.getStatus();
+            String respBody = respuesta.readEntity(String.class); // leer antes de cerrar
+
+            if (status == 200) {
+                // Todos los productos reservados correctamente
+                return;
+            } else if (status == 409) {
+                // Algunos productos no pudieron reservarse
+                throw new WebApplicationException("Stock insuficiente al realizar la reserva: " + respBody, Response.status(409).build());
+            } else if (status == 401 || status == 403) {
+                throw new WebApplicationException("No autorizado reservando stock: " + status + " -> " + respBody);
+            } else {
+                throw new WebApplicationException("Error inesperado reservando stock. Status: " + status + " Body: " + respBody
+                        + " Token empleado: "+ jwt);
             }
 
-            for (Map.Entry<Long, Integer> entrada : productos.entrySet()) {
-                Long productoId = entrada.getKey();
-                Integer cantidad = entrada.getValue();
-
-                // Construir body JSON que el recurso espera (ReservaRequest)
-                String bodyJson = String.format("{\"cantidad\": %d}", cantidad);
-
-                try (Response respuesta = client.target(urlCatalogoService)
-                        .path("/{id}/reserva")
-                        .resolveTemplate("id", productoId)
-                        .request(MediaType.APPLICATION_JSON)
-                        .header(HttpHeaders.AUTHORIZATION, jwt)
-                        .post(Entity.json(bodyJson))) {
-                    int status = respuesta.getStatus();
-                    String respBody = respuesta.readEntity(String.class); // leer antes de cerrar
-
-                    if (status == 200) {
-                        // reservado OK -> continuar con el siguiente producto
-                        continue;
-                    } else if (status == 409) {
-                        throw new WebApplicationException("Stock insuficiente al realizar la reserva", Response.status(403).build());
-                    } else if (status == 401 || status == 403) {
-                        throw new WebApplicationException("No autorizado reservando stock: " + status + " -> " + respBody);
-                    } else {
-                        throw new WebApplicationException("Error inesperado reservando stock. Status: " + status + " Body: " + respBody
-                        + "Token empleado: "+ jwt);
-                    }
-                }
-            }
         }
     }
 

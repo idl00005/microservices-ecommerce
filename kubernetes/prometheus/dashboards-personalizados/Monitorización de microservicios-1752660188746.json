@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 37,
+  "id": 35,
   "links": [],
   "panels": [
     {
@@ -1212,8 +1212,8 @@
             "uid": "P1809F7CD0C75ACF3"
           },
           "disableTextWrap": false,
-          "editorMode": "builder",
-          "expr": "sum(avg_over_time(application_com_Recursos_AutenticacionResource_performedChecks_total[1m]))",
+          "editorMode": "code",
+          "expr": "sum(rate(application_com_Recursos_AutenticacionResource_performedChecks_total[1m]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -2765,12 +2765,12 @@
     "list": []
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "UTC",
   "title": "Monitorización de los microservicios",
   "uid": "510480c4-994b-4326-be94-2f10c1961bef",
-  "version": 49
+  "version": 2
 }

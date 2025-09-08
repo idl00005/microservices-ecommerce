@@ -9,6 +9,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -196,6 +197,31 @@ public class CatalogoResource {
         }
     }
 
+    @POST
+    @RolesAllowed({"user","admin"})
+    @Path("/reservas")
+    @Timed(name = "checksBatchTimer", unit = MetricUnits.MILLISECONDS)
+    @Counted(name = "performedBatchChecks")
+    @Timeout(value = 5, unit = ChronoUnit.SECONDS) // mayor timeout porque puede procesar varios items
+    public Response reservarStockMultiple(@Valid ReservaBatchRequest request) {
+        try {
+            CatalogoService.ReservaBatchResult resultado = catalogoService.reservarStockMultiple(request.items());
+            if (resultado.reserved()) {
+                return Response.ok().build();
+            } else {
+                // 409 CONFLICT con detalle de los productos que fallaron
+                return Response.status(Response.Status.CONFLICT)
+                        .entity(resultado.failures()).build();
+            }
+        } catch(WebApplicationException e) {
+            return Response.status(e.getResponse().getStatus())
+                    .entity("Error reservando stock: " + e.getMessage()).build();
+        } catch (Exception e) {
+            errorCounter.inc();
+            throw e;
+        }
+    }
+
     @GET
     @Path("/{id}/valoraciones")
     @Retry(delay = 200, delayUnit = ChronoUnit.MILLIS)
@@ -246,5 +272,18 @@ public class CatalogoResource {
         @Min(1)
         @NotNull
         int cantidad
+    ) {}
+
+    public record ReservaItemRequest(
+            @NotNull
+            Long productoId,
+            @Min(1)
+            int cantidad
+    ) {}
+
+    public record ReservaBatchRequest(
+            @NotEmpty
+            @Valid
+            List<ReservaItemRequest> items
     ) {}
 }
