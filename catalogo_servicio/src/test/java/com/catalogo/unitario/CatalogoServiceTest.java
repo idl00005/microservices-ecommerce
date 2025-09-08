@@ -5,6 +5,7 @@ import com.DTO.ValoracionDTO;
 import com.Entidades.Producto;
 import com.Entidades.Valoracion;
 import com.DTO.ProductEventDTO;
+import com.Recursos.CatalogoResource;
 import com.Repositorios.RepositorioProducto;
 import com.Repositorios.ValoracionRepository;
 import com.Servicios.CatalogoService;
@@ -21,6 +22,7 @@ import org.mockito.*;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -231,7 +233,7 @@ class CatalogoServiceTest {
     }
 
     @Test
-    void reservarStock_conSuficienteStockDebeActualizarYInvalidarCache() {
+    void reservarStockBatch_conSuficienteStockDebeActualizar() {
         Long productoId = 1L;
         Producto producto = new Producto();
         producto.setId(productoId);
@@ -240,31 +242,31 @@ class CatalogoServiceTest {
 
         Mockito.when(productoRepository.findById(productoId)).thenReturn(producto);
 
-        boolean resultado = catalogoService.reservarStock(productoId, 5);
+        List<CatalogoResource.ReservaItemRequest> request = List.of(new CatalogoResource.ReservaItemRequest(productoId, 3));
+        CatalogoService.ReservaBatchResult resultado = catalogoService.reservarStockMultiple(request);
 
-        assertTrue(resultado);
-        assertEquals(7, producto.getStockReservado());
+        assertTrue(resultado.reserved());
+        assertEquals(5, producto.getStockReservado());
 
-        Mockito.verify(productoRepository).persist(producto);
         Mockito.verify(productoRepository).findById(productoId);
     }
 
     @Test
-    void reservarStock_productoNoExisteDebeLanzarExcepcion404() {
+    void reservarStockBatch_productoNoExisteDebeLanzarExcepcion404() {
         Long productoId = 999L;
 
         Mockito.when(productoRepository.findById(productoId)).thenReturn(null);
 
-        WebApplicationException ex = assertThrows(WebApplicationException.class, () ->
-                catalogoService.reservarStock(productoId, 1)
-        );
+        List<CatalogoResource.ReservaItemRequest> request = List.of(new CatalogoResource.ReservaItemRequest(productoId, 3));
 
-        assertEquals(404, ex.getResponse().getStatus());
-        assertTrue(ex.getMessage().contains("Producto no encontrado"));
+        CatalogoService.ReservaBatchResult resultado = catalogoService.reservarStockMultiple(request);
+
+        assertFalse(resultado.reserved());
+        assertFalse(resultado.failures().isEmpty());
     }
 
     @Test
-    void reservarStock_sinStockSuficienteDebeDevolverFalse() {
+    void reservarStockBatch_sinStockSuficienteDebeDevolverFalse() {
         Long productoId = 2L;
         Producto producto = new Producto();
         producto.setId(productoId);
@@ -273,9 +275,11 @@ class CatalogoServiceTest {
 
         Mockito.when(productoRepository.findById(productoId)).thenReturn(producto);
 
-        boolean resultado = catalogoService.reservarStock(productoId, 3);
+        List<CatalogoResource.ReservaItemRequest> request = List.of(new CatalogoResource.ReservaItemRequest(productoId, 3));
 
-        assertFalse(resultado);
+        CatalogoService.ReservaBatchResult resultado = catalogoService.reservarStockMultiple(request);
+
+        assertFalse(resultado.reserved());
     }
 
     @Test

@@ -295,7 +295,7 @@ public class CatalogoResourceTest {
 
     @Test
     @TestSecurity(user = "user", roles = {"user"})
-    public void reservarStock_suficiente() {
+    public void reservarStockMultiple_suficiente() {
         Producto producto = new Producto("Teclado", "Teclado mecánico",
                 new BigDecimal("89.99"), 10, "Electrónica","url", null);
         producto.setId(PRODUCTO_ID);
@@ -303,18 +303,26 @@ public class CatalogoResourceTest {
         Mockito.when(productoRepositoryMock.findById(PRODUCTO_ID))
                 .thenReturn(producto);
 
+        String body = """
+        {
+          "items": [
+            { "productoId": 1, "cantidad": 3 }
+          ]
+        }
+        """;
+
         given()
                 .contentType(ContentType.JSON)
-                .body("{\"cantidad\": 3}")
+                .body(body)
                 .when()
-                .post("/catalogo/" + PRODUCTO_ID + "/reserva")
+                .post("/catalogo/reservas")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
     }
 
     @Test
     @TestSecurity(user = "user", roles = {"user"})
-    public void reservarStock_insuficiente() {
+    public void reservarStockMultiple_insuficiente() {
         Producto producto = new Producto("Mouse", "Mouse inalámbrico",
                 new BigDecimal("49.99"), 2, "Electrónica","url", null);
         producto.setId(PRODUCTO_ID);
@@ -322,40 +330,64 @@ public class CatalogoResourceTest {
         Mockito.when(productoRepositoryMock.findById(PRODUCTO_ID))
                 .thenReturn(producto);
 
+        String body = """
+        {
+          "items": [
+            { "productoId": 1, "cantidad": 5 }
+          ]
+        }
+        """;
+
         given()
                 .contentType(ContentType.JSON)
-                .body("{\"cantidad\": 5}")
+                .body(body)
                 .when()
-                .post("/catalogo/" + PRODUCTO_ID + "/reserva")
+                .post("/catalogo/reservas")
                 .then()
                 .statusCode(Response.Status.CONFLICT.getStatusCode())
-                .body(containsString("Stock insuficiente"));
+                .body(containsString("1")); // debería listar productoId fallido
     }
 
     @Test
     @TestSecurity(user = "user", roles = {"user"})
-    public void reservarStock_productoInexistente() {
+    public void reservarStockMultiple_productoInexistente() {
         Mockito.when(productoRepositoryMock.findById(PRODUCTO_ID))
                 .thenReturn(null);
 
+        String body = """
+        {
+          "items": [
+            { "productoId": 1, "cantidad": 2 }
+          ]
+        }
+        """;
+
         given()
                 .contentType(ContentType.JSON)
-                .body("{\"cantidad\": 2}")
+                .body(body)
                 .when()
-                .post("/catalogo/" + PRODUCTO_ID + "/reserva")
+                .post("/catalogo/reservas")
                 .then()
-                .statusCode(Response.Status.NOT_FOUND.getStatusCode())
-                .body(containsString("Error reservando stock: Producto no encontrado con id 1"));
+                .statusCode(Response.Status.CONFLICT.getStatusCode())
+                .body(containsString("Producto no encontrado"));
     }
 
     @Test
     @TestSecurity(user = "user", roles = {"user"})
-    public void reservarStock_cantidadInvalida() {
+    public void reservarStockMultiple_cantidadInvalida() {
+        String body = """
+        {
+          "items": [
+            { "productoId": 1, "cantidad": 0 }
+          ]
+        }
+        """;
+
         given()
                 .contentType(ContentType.JSON)
-                .body("{\"cantidad\": 0}")
+                .body(body)
                 .when()
-                .post("/catalogo/" + PRODUCTO_ID + "/reserva")
+                .post("/catalogo/reservas")
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }

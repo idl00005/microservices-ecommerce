@@ -175,30 +175,6 @@ public class CatalogoResource {
 
     @POST
     @RolesAllowed({"user","admin"})
-    @Path("/{id}/reserva")
-    @Timed(name = "checksTimer", unit = MetricUnits.MILLISECONDS)
-    @Counted(name = "performedChecks")
-    @Timeout(value = 3, unit = ChronoUnit.SECONDS)
-    public Response reservarStock(@PathParam("id") Long productoId,
-                                  @Valid ReservaRequest request) {
-        try {
-            boolean reservado = catalogoService.reservarStock(productoId, request.cantidad);
-            if (reservado) {
-                return Response.ok().build();
-            }
-            return Response.status(Response.Status.CONFLICT)
-                    .entity("Stock insuficiente").build();
-        } catch(WebApplicationException e) {
-            return Response.status(e.getResponse().getStatus())
-                    .entity("Error reservando stock: " + e.getMessage()).build();
-        } catch (Exception e) {
-            errorCounter.inc();
-            throw e;
-        }
-    }
-
-    @POST
-    @RolesAllowed({"user","admin"})
     @Path("/reservas")
     @Timed(name = "checksBatchTimer", unit = MetricUnits.MILLISECONDS)
     @Counted(name = "performedBatchChecks")

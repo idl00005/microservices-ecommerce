@@ -108,8 +108,6 @@ public class CatalogoService {
 
         if (producto.getStock() - producto.getStockReservado() >= cantidad) {
             producto.setStockReservado(producto.getStockReservado() + cantidad);
-            productoRepository.persist(producto);
-            invalidarCacheProducto(productoId);
             return true;
         }
         return false;
@@ -148,18 +146,15 @@ public class CatalogoService {
             }
         }
 
-        // Si hay fallos, no persistimos nada (transacción se revertiría si lanzas excepción;
         // aquí devolvemos el detalle para que el controlador retorne 409 con la lista de failures)
         if (!failures.isEmpty()) {
             return new ReservaBatchResult(false, failures);
         }
 
-        // Todos los items son reservables -> persistir cambios
+        // Todos los items son reservables
         for (CatalogoResource.ReservaItemRequest item : items) {
             Producto p = productosMap.get(item.productoId());
             p.setStockReservado(p.getStockReservado() + item.cantidad());
-            productoRepository.persist(p);
-            invalidarCacheProducto(item.productoId());
         }
 
         return new ReservaBatchResult(true, Collections.emptyList());
