@@ -5,7 +5,7 @@ FROM eclipse-temurin:21-jre
 WORKDIR /work/
 
 # Copiar el uber-jar ya generado
-COPY target/*-runner.jar /work/application.jar
+COPY ejecutables/*-runner.jar /work/application.jar
 
 # Puerto expuesto (cambia si tu Quarkus usa otro)
 EXPOSE 8080

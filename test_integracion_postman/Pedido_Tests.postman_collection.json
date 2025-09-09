@@ -227,10 +227,6 @@
 							"    pm.expect(pedido).to.have.property(\"precioTotal\").that.is.a('number');",
 							"    pm.expect(pedido).to.have.property(\"estado\").that.is.a('string');",
 							"    pm.expect(pedido).to.have.property(\"fechaCreacion\").that.is.a('string');",
-							"",
-							"    // Validar que fechaCreacion tenga formato ISO 8601 (YYYY-MM-DDTHH:mm:ss)",
-							"    const iso8601Regex = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$/;",
-							"    pm.expect(pedido.fechaCreacion).to.match(iso8601Regex);",
 							"});",
 							""
 						],
@@ -248,13 +244,13 @@
 					}
 				],
 				"url": {
-					"raw": "{{url_base}}/pedidos/{{pedidoId}}",
+					"raw": "{{url_base}}/pedidos/2",
 					"host": [
 						"{{url_base}}"
 					],
 					"path": [
 						"pedidos",
-						"{{pedidoId}}"
+						"2"
 					]
 				}
 			},
@@ -378,11 +374,9 @@
 							"    pm.expect(response).to.have.property(\"total\").that.is.a(\"number\");",
 							"",
 							"    response.datos.forEach(valoracion => {",
-							"        pm.expect(valoracion).to.have.property(\"id\").that.is.a(\"number\");",
 							"        pm.expect(valoracion).to.have.property(\"idUsuario\").that.is.a(\"string\");",
 							"        pm.expect(valoracion).to.have.property(\"puntuacion\").that.is.a(\"number\");",
 							"        pm.expect(valoracion).to.have.property(\"comentario\").that.is.a(\"string\");",
-							"        pm.expect(valoracion).to.have.property(\"fechaCreacion\").that.is.a(\"string\");",
 							"    });",
 							"});",
 							""

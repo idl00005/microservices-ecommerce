@@ -14,7 +14,6 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
-import org.jboss.logging.annotations.Param;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
