@@ -128,10 +128,8 @@ public class PedidoService {
                         pedidoRepository.guardar(pedido);
                     }
                 })
-                // Siempre ack al final, tanto si todo fue bien como si Mutiny captura una excepción
                 .onItem().transformToUni(x -> Uni.createFrom().completionStage(msg.ack()))
                 .onFailure().recoverWithUni(err -> {
-                    // Loguea el error, pero como failure-strategy=ignore, lo descartas
                     log.error("Error procesando mensaje, lo descarto", err);
                     return Uni.createFrom().completionStage(msg.ack());
                 });
@@ -167,12 +165,6 @@ public class PedidoService {
             throw new WebApplicationException("Solo se pueden valorar pedidos completados", 400);
         }
 
-        //  Ya no se comprueba si la valoración existe, esto se realiza en el microservicio de catálogo
-        // if(catalogoClient.comprobarValoracionExistente(pedido.getProductoId(), jwtToken)){
-        //     throw new WebApplicationException("Producto ya valorado por el usuario", 409);
-        // }
-
-        // Crear la valoración
         ValoracionDTO valoracionDTO = new ValoracionDTO(usuarioId, pedido.getProductoId(), puntuacion, comentario);
 
         // Crear el evento de valoración

@@ -41,7 +41,7 @@ class PedidoServiceTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
-        pedidoService.objectMapper = objectMapper;  // asignar ObjectMapper real
+        pedidoService.objectMapper = objectMapper;
     }
 
     @Test
@@ -57,7 +57,6 @@ class PedidoServiceTest {
 
     @Test
     public void obtenerPedidoPorIdUsuario() {
-        // Arrange
         Long pedidoId = 1L;
         String usuarioId = "user123";
 
@@ -67,10 +66,8 @@ class PedidoServiceTest {
 
         when(pedidoRepository.buscarPorId(pedidoId)).thenReturn(pedido);
 
-        // Act
         Pedido resultado = pedidoService.obtenerPedidoPorIdParaUsuario(pedidoId, usuarioId);
 
-        // Assert
         assertNotNull(resultado);
         assertEquals(pedidoId, resultado.getId());
         assertEquals(usuarioId, resultado.getUsuarioId());
@@ -79,13 +76,11 @@ class PedidoServiceTest {
 
     @Test
     public void obtenerPedidoPorIdUsuario_PedidoNoExiste() {
-        // Arrange
         Long pedidoId = 2L;
         String usuarioId = "user123";
 
         when(pedidoRepository.buscarPorId(pedidoId)).thenReturn(null);
 
-        // Act & Assert
         WebApplicationException ex = assertThrows(WebApplicationException.class,
                 () -> pedidoService.obtenerPedidoPorIdParaUsuario(pedidoId, usuarioId));
         assertEquals(404, ex.getResponse().getStatus());
@@ -96,7 +91,6 @@ class PedidoServiceTest {
 
     @Test
     public void obtenerPedidoPorIdUsuario_PedidoNoEsDelUsuario() {
-        // Arrange
         Long pedidoId = 3L;
         String usuarioId = "user123";
 
@@ -106,7 +100,6 @@ class PedidoServiceTest {
 
         when(pedidoRepository.buscarPorId(pedidoId)).thenReturn(pedido);
 
-        // Act & Assert
         WebApplicationException ex = assertThrows(WebApplicationException.class,
                 () -> pedidoService.obtenerPedidoPorIdParaUsuario(pedidoId, usuarioId));
         assertEquals(403, ex.getResponse().getStatus());
@@ -139,7 +132,6 @@ class PedidoServiceTest {
 
     @Test
     public void listarPedidos_deberiaRetornarListaPaginadaFiltrada() {
-        // Arrange
         String estado = "COMPLETADO";
         String usuarioId = "user123";
         int pagina = 2;
@@ -170,10 +162,8 @@ class PedidoServiceTest {
         when(pedidoRepository.buscarPorEstadoYUsuarioConPaginacion(estado, usuarioId, offsetEsperado, tamanio))
                 .thenReturn(pedidos);
 
-        // Act
         List<PedidoDTO> resultado = pedidoService.listarPedidos(estado, usuarioId, pagina, tamanio);
 
-        // Assert
         assertNotNull(resultado);
         assertEquals(2, resultado.size());
         assertEquals(10L, resultado.get(0).id());
@@ -184,33 +174,28 @@ class PedidoServiceTest {
 
     @Test
     void procesarMensajeCarrito() throws JsonProcessingException {
-        // Crear el objeto CarritoItemDTO
         CarritoItemDTO item = new CarritoItemDTO(2L, 3, BigDecimal.valueOf(10.0));
 
-        // Crear el objeto CarritoEventDTO con ítems válidos
         NuevoPedidoEventDTO carritoEvent = new NuevoPedidoEventDTO();
         carritoEvent.setUserId("usuario123");
         carritoEvent.setItems(List.of(item));
 
-        // Configurar el mock de ObjectMapper para devolver el objeto simulado
         String json = "{\"userId\":\"usuario123\",\"items\":[{\"productoId\":2,\"cantidad\":3,\"precio\":10.0}]}";
         Message<String> msg = Message.of(json);
         pedidoService.procesarMensajeCarrito(msg).await().indefinitely();
 
         ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
 
-        // Capturar y verificar el pedido guardado
         verify(pedidoRepository, times(1)).guardar(captor.capture());
 
         Pedido pedidoGuardado = captor.getValue();
         assertEquals("usuario123", pedidoGuardado.getUsuarioId());
         assertEquals(2L, pedidoGuardado.getProductoId());
-        assertEquals(BigDecimal.valueOf(30.0), pedidoGuardado.getPrecioTotal()); // 10.0 * 3
+        assertEquals(BigDecimal.valueOf(30.0), pedidoGuardado.getPrecioTotal());
     }
 
     @Test
     public void actualizarPedido() {
-        // Arrange
         Long pedidoId = 1L;
         String nuevoEstado = "COMPLETADO";
 
@@ -220,14 +205,11 @@ class PedidoServiceTest {
 
         when(pedidoRepository.buscarPorId(pedidoId)).thenReturn(pedidoExistente);
 
-        // Para el método invalidarCachePedidoPorId, usamos spy para verificar llamada
         PedidoService spyService = Mockito.spy(pedidoService);
-        spyService.pedidoRepository = pedidoRepository;  // inyectar mock
+        spyService.pedidoRepository = pedidoRepository;
 
-        // Act
         spyService.actualizarPedido(pedidoId, nuevoEstado);
 
-        // Assert
         assertEquals(nuevoEstado, pedidoExistente.getEstado());
         verify(pedidoRepository).actualizar(pedidoExistente);
         verify(spyService).invalidarCachePedidoPorId(pedidoId);
@@ -235,13 +217,11 @@ class PedidoServiceTest {
 
     @Test
     public void actualizarPedido_PedidoNoExiste() {
-        // Arrange
         Long pedidoId = 999L;
         String nuevoEstado = "COMPLETADO";
 
         when(pedidoRepository.buscarPorId(pedidoId)).thenReturn(null);
 
-        // Act & Assert
         WebApplicationException ex = assertThrows(WebApplicationException.class, () -> {
             pedidoService.actualizarPedido(pedidoId, nuevoEstado);
         });
@@ -266,10 +246,8 @@ class PedidoServiceTest {
 
         when(pedidoRepository.buscarPorId(pedidoId)).thenReturn(pedido);
 
-        // Llamar al método a testear
         pedidoService.crearValoracion(pedidoId, usuarioId, puntuacion, comentario, jwtToken);
 
-        // Verificar que se persiste un evento outbox con la info correcta
         ArgumentCaptor<OutboxEvent> eventCaptor = ArgumentCaptor.forClass(OutboxEvent.class);
         verify(outboxEventRepository).persist(eventCaptor.capture());
 
@@ -279,7 +257,6 @@ class PedidoServiceTest {
         assertEquals("ValoracionCreada", evento.eventType);
         assertEquals(OutboxEvent.Status.PENDING, evento.status);
 
-        // Comprobar que el payload contiene los datos esperados (usuarioId, productoId, puntuacion, comentario)
         String payload = evento.payload;
         assertTrue(payload.contains(usuarioId));
         assertTrue(payload.contains(pedido.getProductoId().toString()));
@@ -328,7 +305,7 @@ class PedidoServiceTest {
 
         Pedido pedido = new Pedido();
         pedido.setUsuarioId(usuarioId);
-        pedido.setEstado("PENDIENTE"); // No completado
+        pedido.setEstado("PENDIENTE");
 
         when(pedidoRepository.buscarPorId(pedidoId)).thenReturn(pedido);
 

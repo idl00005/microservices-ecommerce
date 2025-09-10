@@ -42,7 +42,6 @@ public class PedidoResource {
 
     @PostConstruct
     public void init() {
-        // Crea el contador de errores
         errorCounter = registry.counter("Aplication_PedidoResource_primality_errors_total");
     }
 

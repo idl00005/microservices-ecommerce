@@ -101,7 +101,6 @@ public class AutenticacionResourceTest {
                 .then()
                 .statusCode(201);
 
-        // Attempt to log in with the registered user's credentials
         UserCredentials credentials = new UserCredentials(
                 "john.doe@example.com",
                 "password123"

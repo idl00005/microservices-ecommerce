@@ -115,13 +115,11 @@ public class CatalogoService {
 
     @Transactional
     public ReservaBatchResult reservarStockMultiple(List<CatalogoResource.ReservaItemRequest> items) {
-        // normalizar ids (evitar multiples lookups redundantes)
         List<Long> ids = items.stream()
                 .map(CatalogoResource.ReservaItemRequest::productoId)
                 .distinct()
                 .collect(Collectors.toList());
 
-        // cargar productos (podrías optimizar con un findAllById si tu repo lo soporta)
         Map<Long, Producto> productosMap = new HashMap<>();
         for (Long id : ids) {
             Producto p = productoRepository.findById(id);
@@ -132,7 +130,6 @@ public class CatalogoService {
 
         List<FailedItem> failures = new ArrayList<>();
 
-        // Validaciones: existencia y stock
         for (CatalogoResource.ReservaItemRequest item : items) {
             Producto p = productosMap.get(item.productoId());
             if (p == null) {
@@ -146,12 +143,10 @@ public class CatalogoService {
             }
         }
 
-        // aquí devolvemos el detalle para que el controlador retorne 409 con la lista de failures)
         if (!failures.isEmpty()) {
             return new ReservaBatchResult(false, failures);
         }
 
-        // Todos los items son reservables
         for (CatalogoResource.ReservaItemRequest item : items) {
             Producto p = productosMap.get(item.productoId());
             p.setStockReservado(p.getStockReservado() + item.cantidad());
@@ -203,17 +198,14 @@ public class CatalogoService {
     @Transactional
     public void procesarEventoValoracion(String mensaje) {
         try {
-            // Deserializar el mensaje
             ValoracionDTO valoracionDTO = objectMapper.readValue(mensaje, ValoracionDTO.class);
 
             System.out.println("Obtenida la siguiente valoración: " + valoracionDTO);
-            // Buscar el producto asociado
             Producto producto = productoRepository.findById(valoracionDTO.idProducto());
             if (producto == null) {
                 throw new IllegalArgumentException("Producto no encontrado con ID: " + valoracionDTO.idProducto());
             }
 
-            // Crear y guardar la valoración (asociada al producto)
             Valoracion valoracionEntity = new Valoracion();
             valoracionEntity.setProducto(producto);
             valoracionEntity.setIdUsuario(valoracionDTO.idUsuario());
@@ -221,13 +213,10 @@ public class CatalogoService {
             valoracionEntity.setComentario(valoracionDTO.comentario());
             valoracionEntity.setFechaCreacion(LocalDateTime.now());
 
-            // Agregar la valoración al producto (manejo de la relación unidireccional)
             producto.agregarValoracion(valoracionEntity);
 
-            // Actualizar la puntuación promedio del producto
             actualizarPuntuacionProducto(producto, valoracionDTO.puntuacion());
 
-            // Invalidar el caché de número de valoraciones
             invalidarCacheNumValoraciones(valoracionDTO.idProducto());
             invalidarCacheProducto(valoracionDTO.idProducto());
         } catch (Exception e) {

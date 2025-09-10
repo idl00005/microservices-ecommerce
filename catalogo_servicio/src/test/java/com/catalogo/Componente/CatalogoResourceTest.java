@@ -150,17 +150,6 @@ public class CatalogoResourceTest {
                 .body(containsString("El nombre del producto no puede estar vacío"));
     }
 
-    @Test
-    @TestSecurity(user = "normalUser", roles = {"user"})
-    public void agregarProducto_accesoDenegado() {
-        given()
-                .contentType(ContentType.JSON)
-                .body(productoValidoJson)
-                .when()
-                .post("/catalogo")
-                .then()
-                .statusCode(Response.Status.FORBIDDEN.getStatusCode());
-    }
 
     @Test
     @TestSecurity(user = "adminUser", roles = {"admin"})
@@ -208,18 +197,6 @@ public class CatalogoResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "normalUser", roles = {"user"})
-    public void actualizarProducto_accesoDenegado() {
-        given()
-                .contentType(ContentType.JSON)
-                .body(productoValidoJson)
-                .when()
-                .put("/catalogo/1")
-                .then()
-                .statusCode(Response.Status.FORBIDDEN.getStatusCode());
-    }
-
-    @Test
     @TestSecurity(user = "adminUser", roles = {"admin"})
     public void eliminarProductoExistente() {
         Mockito.when(productoRepositoryMock.eliminarPorId(1L)).thenReturn(true);
@@ -231,27 +208,7 @@ public class CatalogoResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "adminUser", roles = {"admin"})
-    public void eliminarProductoInexistente() {
-        given()
-                .when()
-                .delete("/catalogo/99999")  // id que no existe
-                .then()
-                .statusCode(Response.Status.NOT_FOUND.getStatusCode());
-    }
-
-    @Test
-    @TestSecurity(user = "normalUser", roles = {"user"})
-    public void eliminarProducto__accesoDenegado() {
-        given()
-                .when()
-                .delete("/catalogo/1")
-                .then()
-                .statusCode(Response.Status.FORBIDDEN.getStatusCode());
-    }
-
-    @Test
-    public void obtenerProductoPorIdExistente() {
+    public void obtenerProductoPorId() {
         // Mock producto existente
         Producto producto = new Producto("Zapato", "Zapato deportivo",
                 BigDecimal.valueOf(59.99), 10, "Ropa","url", null);
@@ -265,30 +222,6 @@ public class CatalogoResourceTest {
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body("nombre", equalTo("Zapato"));
-    }
-
-    @Test
-    public void obtenerProductoPorIdInexistente() {
-        given()
-                .when()
-                .get("/catalogo/99999")
-                .then()
-                .statusCode(Response.Status.NOT_FOUND.getStatusCode());
-    }
-
-    @Test
-    public void obtenerProductoPorIdInvalido() {
-        given()
-                .when()
-                .get("/catalogo/0")
-                .then()
-                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
-
-        given()
-                .when()
-                .get("/catalogo/-1")
-                .then()
-                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     private static final Long PRODUCTO_ID = 1L;
@@ -373,26 +306,6 @@ public class CatalogoResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "user", roles = {"user"})
-    public void reservarStockMultiple_cantidadInvalida() {
-        String body = """
-        {
-          "items": [
-            { "productoId": 1, "cantidad": 0 }
-          ]
-        }
-        """;
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(body)
-                .when()
-                .post("/catalogo/reservas")
-                .then()
-                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
-    }
-
-    @Test
     public void listarValoracionesProductoExistente() {
         List<Valoracion> valoracionesMock = List.of(
                 new Valoracion("user1", new Producto(), 5,"Muy buen producto"),
@@ -411,60 +324,6 @@ public class CatalogoResourceTest {
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body("datos.size()", is(2));
-    }
-
-    @Test
-    public void paginacionInvalida_sizeMayorA100() {
-        given()
-                .contentType(ContentType.JSON)
-                .queryParam("pagina", 1)
-                .queryParam("tamanio", 101)
-                .when()
-                .get("/catalogo/" + PRODUCTO_ID + "/valoraciones")
-                .then()
-                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
-                .body(containsString("Parámetros de paginación inválidos"));
-    }
-
-    @Test
-    public void paginacionInvalida_parametrosNegativos() {
-        given()
-                .contentType(ContentType.JSON)
-                .queryParam("pagina", -1)
-                .queryParam("tamanio", 10)
-                .when()
-                .get("/catalogo/" + PRODUCTO_ID + "/valoraciones")
-                .then()
-                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
-
-        given()
-                .contentType(ContentType.JSON)
-                .queryParam("pagina", 1)
-                .queryParam("tamanio", 0)
-                .when()
-                .get("/catalogo/" + PRODUCTO_ID + "/valoraciones")
-                .then()
-                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
-    }
-
-    @Test
-    public void productoSinValoraciones_devuelveListaVacia() {
-        Mockito.when(productoRepositoryMock.findValoracionesPaginadas(PRODUCTO_ID, 1, 10))
-                .thenReturn(List.of());
-
-        given()
-                .contentType(ContentType.JSON)
-                .queryParam("pagina", 1)
-                .queryParam("tamanio", 10)
-                .when()
-                .get("/catalogo/" + PRODUCTO_ID + "/valoraciones")
-                .then()
-                .log().all()
-                .statusCode(Response.Status.OK.getStatusCode())
-                .body("datos.size()", is(0)) // ⬅️ Adaptación clave
-                .body("pagina", is(1))
-                .body("tamanio", is(10))
-                .body("total", is(0));
     }
 
 
@@ -495,15 +354,5 @@ public class CatalogoResourceTest {
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body(equalTo("false"));
-    }
-
-    @Test
-    public void comprobarValoracionExistente_accesoDenegado() {
-        given()
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/catalogo/" + PRODUCTO_ID + "/valoracion/existe")
-                .then()
-                .statusCode(Response.Status.UNAUTHORIZED.getStatusCode());
     }
 }

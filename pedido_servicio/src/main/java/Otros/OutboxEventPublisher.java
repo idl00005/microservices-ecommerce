@@ -30,8 +30,6 @@ public class OutboxEventPublisher {
 
     @Scheduled(every = "5s")
     public void procesarEventos() {
-        //System.out.println("Publicando eventos pendientes...");
-        //LOG.info("Iniciando la acción...");
         List<OutboxEvent> eventos = outboxRepo.findPending();
         for (OutboxEvent evento : eventos) {
             try {
@@ -40,7 +38,6 @@ public class OutboxEventPublisher {
                 markPublished(evento);
             } catch (Exception e) {
                 LOG.warning("Error al deserializar o enviar evento: " + e.getMessage());
-                // Aquí puedes decidir si marcar como fallido o dejarlo para reintento
             }
         }
     }
@@ -48,6 +45,6 @@ public class OutboxEventPublisher {
     @Transactional
     void markPublished(OutboxEvent evt) {
         evt.status = OutboxEvent.Status.PUBLISHED;
-        outboxRepo.merge(evt); // Persistir el cambio de estado
+        outboxRepo.merge(evt);
     }
 }

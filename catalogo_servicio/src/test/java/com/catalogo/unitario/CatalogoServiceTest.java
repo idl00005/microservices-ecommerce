@@ -49,9 +49,9 @@ class CatalogoServiceTest {
         objectMapper.registerModule(new JavaTimeModule());
         MockitoAnnotations.openMocks(this);
         catalogoService = new CatalogoService();
-        catalogoService.productEventEmitter = productEventEmitter; // Inyecta el mock
-        catalogoService.productoRepository = productoRepository; // Inyecta el mock
-        catalogoService.valoracionRepository = valoracionRepository; // Inyecta el mock
+        catalogoService.productEventEmitter = productEventEmitter;
+        catalogoService.productoRepository = productoRepository;
+        catalogoService.valoracionRepository = valoracionRepository;
         catalogoService.objectMapper = new ObjectMapper();
     }
 
@@ -111,10 +111,8 @@ class CatalogoServiceTest {
                 "Ropa","url", null
         );
 
-        // Act
         ProductoDTO result = catalogoService.agregarProducto(dto);
 
-        // Assert
         assertNotNull(result);
         assertEquals(dto.getNombre(), result.getNombre());
         assertEquals(dto.getDescripcion(), result.getDescripcion());
@@ -128,7 +126,6 @@ class CatalogoServiceTest {
 
     @Test
     void validarProductoGuardadoCoincideConDTO() throws JsonProcessingException {
-        // Arrange
         JsonNode detallesNode = objectMapper.readTree("{\"color\": \"azul\"}");
 
         ProductoDTO dto = new ProductoDTO(
@@ -139,10 +136,8 @@ class CatalogoServiceTest {
 
         ArgumentCaptor<Producto> captor = ArgumentCaptor.forClass(Producto.class);
 
-        // Act
         catalogoService.agregarProducto(dto);
 
-        // Assert: Captura el producto persistido
         Mockito.verify(productoRepository).persist(captor.capture());
 
         Producto guardado = captor.getValue();
@@ -156,7 +151,6 @@ class CatalogoServiceTest {
 
     @Test
     void actualizarProductoExistente() {
-        // Arrange
         Long productoId = 1L;
         ProductoDTO dto = new ProductoDTO(
                 3L, "Zapatilla", "Zapatilla running",
@@ -174,17 +168,14 @@ class CatalogoServiceTest {
                 eq(dto.getDetalles())
         )).thenReturn(true);
 
-        // Act
         boolean resultado = catalogoService.actualizarProducto(productoId, dto);
 
-        // Assert
         assertTrue(resultado);
         Mockito.verify(productoRepository).updateProduct(anyLong(), anyString(), anyString(), any(), anyInt(), any());
     }
 
     @Test
     void actualizarProductoInexistente() {
-        // Arrange
         Long productoId = 999L;
         ProductoDTO dto = new ProductoDTO(
                 4L,"NoExiste", "Producto no existente",
@@ -196,38 +187,30 @@ class CatalogoServiceTest {
         Mockito.when(productoRepository.updateProduct(anyLong(), anyString(), anyString(), any(), anyInt(), any()))
                 .thenReturn(false);
 
-        // Act
         boolean resultado = catalogoService.actualizarProducto(productoId, dto);
 
-        // Assert
         assertFalse(resultado);
     }
 
     @Test
     void eliminarProductoExistente() {
-        // Arrange
         Long productoId = 1L;
 
         Mockito.when(productoRepository.eliminarPorId(productoId)).thenReturn(true);
 
-        // Act
         boolean resultado = catalogoService.eliminarProducto(productoId);
 
-        // Assert
         assertTrue(resultado);
     }
 
     @Test
     void eliminarProductoInexistente_debeRetornarFalseSinEventoNiCache() {
-        // Arrange
         Long productoId = 999L;
 
         Mockito.when(productoRepository.eliminarPorId(productoId)).thenReturn(false);
 
-        // Act
         boolean resultado = catalogoService.eliminarProducto(productoId);
 
-        // Assert
         assertFalse(resultado);
         Mockito.verify(productoRepository).eliminarPorId(productoId);
     }
@@ -284,7 +267,6 @@ class CatalogoServiceTest {
 
     @Test
     void procesarEventoValoracion_valida() throws Exception {
-        // Arrange
         Long productoId = 1L;
         ValoracionDTO dto = new ValoracionDTO("user123", productoId, 5, "Muy bueno");
         String mensaje = new ObjectMapper().writeValueAsString(dto);
@@ -296,10 +278,8 @@ class CatalogoServiceTest {
         CatalogoService spyService = Mockito.spy(catalogoService);
         Mockito.doNothing().when(spyService).actualizarPuntuacionProducto(Mockito.eq(producto), Mockito.anyInt());
 
-        // Act
         spyService.procesarEventoValoracion(mensaje);
 
-        // Assert
         Mockito.verify(spyService).actualizarPuntuacionProducto(producto, dto.puntuacion());
         assertEquals(1, producto.getValoraciones().size());
         Valoracion valoracionGuardada = producto.getValoraciones().get(0);
@@ -309,28 +289,22 @@ class CatalogoServiceTest {
 
     @Test
     void procesarEventoValoracion_productoNoExiste() throws Exception {
-        // Arrange
         Long productoId = 99L;
         ValoracionDTO dto = new ValoracionDTO("user123", productoId, 4, "Ok");
         String mensaje = new ObjectMapper().writeValueAsString(dto);
 
         Mockito.when(productoRepository.findById(productoId)).thenReturn(null);
 
-        // Act & Assert
         CatalogoService spyService = Mockito.spy(catalogoService);
         assertDoesNotThrow(() -> spyService.procesarEventoValoracion(mensaje));
-        // El método atrapa la excepción internamente y sólo imprime error, no lanza
     }
 
     @Test
     void procesarEventoValoracion_mensajeMalFormado() {
-        // Arrange
         String mensaje = "{malformed json...";
 
-        // Act & Assert
         CatalogoService spyService = Mockito.spy(catalogoService);
         assertDoesNotThrow(() -> spyService.procesarEventoValoracion(mensaje));
-        // Se espera que no lance excepción, solo imprima error
     }
 }
 

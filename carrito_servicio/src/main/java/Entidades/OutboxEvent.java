@@ -10,18 +10,15 @@ public class OutboxEvent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Tipo de agregación (p. ej. "Carrito")
     @Column(nullable = false)
     private String aggregateType;
 
-    // ID de la entidad raíz (p. ej. userId)
     @Column(nullable = false)
     private String aggregateId;
 
     @Column(nullable = false)
     private String eventType;
 
-    // Payload JSON con los datos del evento
     @Column(columnDefinition = "TEXT", nullable = false)
     private String payload;
 

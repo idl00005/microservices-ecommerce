@@ -33,11 +33,7 @@ public class StockClient {
     @Inject
     RedisDataSource redisDataSource;
 
-    /**
-     * Intenta reservar stock para todos los productos especificados.
-     * Es totalmente síncrono: realiza 1 petición HTTP por cada producto.
-     * Devuelve true si todos los productos se pueden reservar, false si alguno falla.
-     */
+    // Intenta reservar stock para todos los productos especificados.
     public void reservarStock(Map<Long, Integer> productos, String jwt) {
         if (jwt == null || jwt.isBlank()) {
             throw new RuntimeException("No hay token JWT válido. Llama a obtenerJwtParaCarrito primero.");
@@ -56,13 +52,13 @@ public class StockClient {
 
         try (Client client = ClientBuilder.newBuilder().build();
              Response respuesta = client.target(urlCatalogoService)
-                     .path("/reservas")  // nuevo endpoint batch
+                     .path("/reservas")
                      .request(MediaType.APPLICATION_JSON)
                      .header(HttpHeaders.AUTHORIZATION, jwt)
                      .post(Entity.json(bodyJson))) {
 
             int status = respuesta.getStatus();
-            String respBody = respuesta.readEntity(String.class); // leer antes de cerrar
+            String respBody = respuesta.readEntity(String.class);
 
             if (status == 200) {
                 // Todos los productos reservados correctamente

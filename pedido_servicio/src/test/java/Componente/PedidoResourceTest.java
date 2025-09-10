@@ -163,7 +163,6 @@ public class PedidoResourceTest {
     @Test
     @TestSecurity(user = "admin", roles = {"admin"})
     public void testCambiarEstadoPedido() {
-        // Crear un pedido de prueba
         Pedido pedido = new Pedido();
         pedido.setId(1L); // Asignar un ID válido
         pedido.setUsuarioId("user1");
@@ -173,10 +172,9 @@ public class PedidoResourceTest {
         pedido.setEstado("PENDIENTE");
         pedido.setFechaCreacion(LocalDateTime.now());
 
-        // Configurar el mock para devolver el pedido
+
         Mockito.when(pedidoRepository.buscarPorId(1L)).thenReturn(pedido);
 
-        // Ejecutar el test
         given()
                 .auth().basic("admin", "adminpassword")
                 .contentType("application/json")
@@ -224,7 +222,7 @@ public class PedidoResourceTest {
         pedido.setOrdenId(1L);
 
         Mockito.when(pedidoRepository.buscarPorId(1L)).thenReturn(pedido);
-        // Crear valoración
+
         String valoracionJson = """
         {
             "puntuacion": 5,
@@ -265,7 +263,7 @@ public class PedidoResourceTest {
                 .post("/pedidos/" + pedidoId + "/valoracion")
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
-                .body("parameterViolations[0].message", containsString("La puntuación debe ser mayor que 0"));  // ajusta al mensaje real de tu validación
+                .body("parameterViolations[0].message", containsString("La puntuación debe ser mayor que 0"));
     }
 
 }

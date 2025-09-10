@@ -40,21 +40,17 @@ public class RepositorioProducto implements PanacheRepository<Producto> {
         // Buscar el producto por ID
         Producto producto = entityManager.find(Producto.class, id);
         if (producto == null) {
-            // Retorna false si el producto no existe
             return false;
         }
 
-        // Si el producto existe, actualiza sus valores
         producto.setNombre(nombre);
         producto.setDescripcion(descripcion);
         producto.setPrecio(precio);
         producto.setStock(stock);
         producto.setDetalles(detalles);
 
-        // Persistir los cambios
         entityManager.merge(producto);
 
-        // Retorna true si la operación tuvo éxito
         return true;
     }
 
@@ -79,7 +75,7 @@ public class RepositorioProducto implements PanacheRepository<Producto> {
                         Valoracion.class
                 )
                 .setParameter("idProducto", idProducto)
-                .setFirstResult((page - 1) * size)  // Cálculo del offset
+                .setFirstResult((page - 1) * size)
                 .setMaxResults(size)
                 .getResultList();
     }
@@ -117,7 +113,7 @@ public class RepositorioProducto implements PanacheRepository<Producto> {
         }
 
         PanacheQuery<Producto> panacheQuery = find(query.toString(), params)
-                .page(Page.of(page - 1, size));  // Ajustamos porque Panache usa índice 0 para página
+                .page(Page.of(page - 1, size));
 
         return panacheQuery.list();
     }

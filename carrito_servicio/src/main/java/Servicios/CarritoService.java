@@ -55,7 +55,6 @@ public class CarritoService {
     public StockClient stockClient;
 
     @Transactional
-    // Todo: Reservar stock y obtener productos en una sola llamada
     public OrdenPago iniciarPago(String userId, String direccion, String telefono, String jwt) {
         List<CarritoItem> carrito = carritoItemRepository.findByUserId(userId);
         if (carrito.isEmpty()) {
@@ -86,7 +85,6 @@ public class CarritoService {
                 .map(item -> precios.get(item.getProductoId()).multiply(BigDecimal.valueOf(item.getCantidad())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 1. Reservar stock de forma SÍNCRONA (esperando respuesta)
         stockClient.reservarStock(productosAReservar, jwt);
 
         List<LineaPago> lineas = carrito.stream()
@@ -144,7 +142,6 @@ public class CarritoService {
                 ))
                 .toList();
 
-        // 3) Armar y enviar el evento al servicio de pedidos
         NuevoPedidoEventDTO nuevoPedidoEvent = new NuevoPedidoEventDTO();
         nuevoPedidoEvent.setUserId(orden.getUserId());
         nuevoPedidoEvent.setOrdenId(orden.getId());
@@ -158,7 +155,6 @@ public class CarritoService {
         evt.setPayload(payloadJson);
         outboxRepo.persist(evt);
 
-        // 4) Finalizar estado y vaciar carrito
         orden.setEstado("COMPLETADO");
         carritoItemRepository.delete("userId", orden.getUserId());
     }
@@ -181,7 +177,7 @@ public class CarritoService {
                 String payload = JsonbBuilder.create().toJson(evento);
                 OutboxEvent outboxEvent = new OutboxEvent();
                 outboxEvent.setAggregateType("Catalogo");
-                outboxEvent.setAggregateId(String.valueOf(orden.getId())); // O userId si prefieres
+                outboxEvent.setAggregateId(String.valueOf(orden.getId()));
                 outboxEvent.setEventType("PAGO_COMPLETADO");
                 outboxEvent.setPayload(payload);
                 outboxEvent.setStatus(OutboxEvent.Status.PENDING);

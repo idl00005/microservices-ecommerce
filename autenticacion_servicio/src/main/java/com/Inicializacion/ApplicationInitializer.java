@@ -34,7 +34,6 @@ public class ApplicationInitializer {
             // Crear usuario 2
             Usuario user = new Usuario("Pedro","Rodríguez","user@red.ujaen.es","123321123",passwordEncoder.encode("1234"),"user");
 
-            // Usar el método `save` del repositorio para guardar los usuarios
             usuarioRepository.save(admin, user);
 
             logger.info("Usuarios iniciales creados correctamente.");
